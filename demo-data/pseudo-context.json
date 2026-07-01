@@ -40,7 +40,7 @@
       "nightOffsetReference": "most recently completed night of sleep"
     }
   },
-  "activitiesContext": [
+  "routine": [
     "Morning commute from Kirkland to Bellevue office",
     "Deep work block for product planning",
     "Lunch walk near the office",
@@ -316,8 +316,10 @@
     ],
     "trend": "Slightly under-rested today, but not severely fatigued"
   },
-  "activity": [
-    {
+  "activity": {
+    "averageActiveCaloriesBurnedPerDayFromLastWeek": 621,
+    "days": [
+      {
       "relativeDay": "today",
       "dateOffset": 0,
       "observedActivities": [
@@ -355,7 +357,7 @@
       "exerciseGoalProgressPercent": 107,
       "summary": "Goal reached, but sitting time is high; a short walk before the 3:00 PM meeting would rebalance the afternoon"
     },
-    {
+      {
       "relativeDay": "yesterday",
       "dateOffset": -1,
       "observedActivities": [
@@ -393,7 +395,7 @@
       "exerciseGoalProgressPercent": 79,
       "summary": "Strong total activity day, but dedicated exercise came in slightly under goal"
     },
-    {
+      {
       "relativeDay": "2 days ago",
       "dateOffset": -2,
       "observedActivities": [
@@ -431,7 +433,7 @@
       "exerciseGoalProgressPercent": 95,
       "summary": "Balanced day with strong walking volume and a near-goal easy run"
     },
-    {
+      {
       "relativeDay": "3 days ago",
       "dateOffset": -3,
       "observedActivities": [
@@ -468,8 +470,9 @@
       "exerciseCaloriesForGoal": 512,
       "exerciseGoalProgressPercent": 171,
       "summary": "Highest-output day in the recent window; recovery should stay easy today"
-    }
-  ],
+      }
+    ]
+  },
   "weather": [
     {
       "relativeDay": "today",

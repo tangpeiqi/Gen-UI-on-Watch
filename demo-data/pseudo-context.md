@@ -16,7 +16,7 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Current focus: Wrap up afternoon work, remember errands, and fit in an evening run if weather allows
 - Preferred audio: Podcasts during commute, upbeat playlists during workouts
 
-### Activities
+### Routine
 - Morning commute from Kirkland to Bellevue office
 - Deep work block for product planning
 - Lunch walk near the office
@@ -76,6 +76,8 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Trend: Slightly under-rested today, but not severely fatigued
 
 ### Activity
+- Average active calories burned per day from last week: 621 calories
+
 #### Today, runtime date offset 0
 - Observed activities:
   - Sitting: 4 hr 35 min, 58 calories
