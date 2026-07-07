@@ -1,0 +1,398 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Exact webpage rendering specs for watch-face circular gauges. Agents should use these specs to generate HTML/CSS/SVG instead of inferring visuals from screenshots.",
+  "coordinateSystem": {
+    "unit": "px",
+    "origin": "top-left",
+    "angleConvention": {
+      "degrees": true,
+      "zeroDegrees": "right edge of the circle",
+      "positiveDirection": "clockwise",
+      "examples": {
+        "0": "right",
+        "90": "bottom",
+        "180": "left",
+        "270": "top"
+      }
+    }
+  },
+  "webImplementation": {
+    "preferred": "inline_svg_with_html_text_overlay",
+    "requirements": [
+      "Render rings and measured dots in SVG for precise geometry.",
+      "Render text either as absolutely positioned HTML or SVG text using the provided typography tokens.",
+      "Use vector-effect='non-scaling-stroke' only if the SVG viewBox is scaled by CSS; otherwise render at the exact size token.",
+      "Do not rasterize the Figma component for final webpage UI.",
+      "Do not stretch circular gauges outside their fixed size token."
+    ],
+    "arcMath": {
+      "pointOnCircle": "angleRadians = degToRad(angleDegrees); x = centerX + radius * cos(angleRadians); y = centerY + radius * sin(angleRadians)",
+      "normalizedValue": "normalized = clamp((value - min) / (max - min), 0, 1)",
+      "angleForMeasuredDot": "angle = arc.startAngle + normalized * arc.sweepAngle",
+      "invalidRangeFallback": "If max equals min, set normalized to 0.5 and do not imply precision."
+    }
+  },
+  "colorPolicy": {
+    "agentMayChooseColors": true,
+    "rule": "The agent may choose progress, gradient, measured-dot, and text accent colors based on the content, while preserving geometry and contrast.",
+    "minimumContrast": {
+      "primaryTextOnBlack": "4.5:1",
+      "secondaryTextOnBlack": "3:1",
+      "measuredDotAgainstRing": "3:1 or use black outline"
+    },
+    "fixedDefaults": {
+      "background": "#1F1F1F",
+      "trackGray": "rgba(140, 140, 140, 0.28)",
+      "trackDark": "#3D3D3D",
+      "primaryText": "#FFFFFF",
+      "secondaryText": "rgba(242, 244, 252, 0.6)",
+      "dotOutline": "#000000"
+    },
+    "semanticPalettes": {
+      "default": {
+        "progress": "#FF385E",
+        "gradient": ["#FF6D38", "#FF385E"],
+        "low": "#FF6E39",
+        "high": "#FF385E",
+        "measuredDot": "#FF564A"
+      },
+      "weather_temperature": {
+        "gradient": ["#38D4FF", "#38FF4F", "#FF7139"],
+        "low": "#38D4FF",
+        "high": "#FF7139",
+        "measuredDot": "interpolateAlongGradient"
+      },
+      "activity": {
+        "progress": "#FF385E",
+        "gradient": ["#FF6D38", "#FF385E"],
+        "measuredDot": "#FF385E"
+      },
+      "battery": {
+        "progress": "#38FF4F",
+        "gradient": ["#38FF4F", "#B7FF38"],
+        "measuredDot": "#38FF4F"
+      },
+      "heart_rate": {
+        "progress": "#FF385E",
+        "gradient": ["#FF7139", "#FF385E"],
+        "measuredDot": "#FF385E"
+      }
+    }
+  },
+  "sharedTypography": {
+    "fontFamily": "SF Compact, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+    "fontWeight": 457,
+    "letterSpacing": 0,
+    "textRendering": "optimizeLegibility"
+  },
+  "components": {
+    "close_gauge": {
+      "figmaReference": {
+        "componentSetNodeId": "560:871",
+        "componentName": "Close Gauge"
+      },
+      "semanticComponentSpec": {
+        "description": "Closed circular gauge for a single metric with optional center icon or value plus label.",
+        "validProperties": ["icon", "text"],
+        "validSizes": ["S", "M", "L"]
+      },
+      "variantApi": {
+        "component": "close_gauge",
+        "variant": {
+          "property": "icon|text",
+          "size": "S|M|L"
+        },
+        "data": {
+          "progress": "number from 0 to 1",
+          "value": "required for property=text",
+          "label": "required for property=text",
+          "icon": "required for property=icon",
+          "metricKind": "optional semantic color hint"
+        }
+      },
+      "exactVisualTokens": {
+        "shape": "closed_progress_ring",
+        "sizes": {
+          "S": {
+            "diameter": 72,
+            "strokeWidth": 8,
+            "radius": 31.5,
+            "center": { "x": 36, "y": 36 },
+            "iconBox": { "x": 20, "y": 20, "width": 32, "height": 32 },
+            "text": {
+              "value": { "fontSize": 22, "lineHeight": 24.5, "centerX": 36, "centerY": 36, "box": { "x": 9.6, "y": 24.8, "width": 52.8, "height": 22.4 } },
+              "label": { "fontSize": 10, "lineHeight": 12.5, "centerX": 36, "centerY": 52, "box": { "x": 16, "y": 47.2, "width": 40, "height": 9.6 } }
+            }
+          },
+          "M": {
+            "diameter": 90,
+            "strokeWidth": 10,
+            "radius": 39.5,
+            "center": { "x": 45, "y": 45 },
+            "iconBox": { "x": 26, "y": 26, "width": 38, "height": 38 },
+            "text": {
+              "value": { "fontSize": 32, "lineHeight": 34.5, "centerX": 45, "centerY": 45, "box": { "x": 12, "y": 31, "width": 66, "height": 28 } },
+              "label": { "fontSize": 15, "lineHeight": 17.5, "centerX": 45, "centerY": 65, "box": { "x": 20, "y": 59, "width": 50, "height": 12 } }
+            }
+          },
+          "L": {
+            "diameter": 149,
+            "strokeWidth": 15,
+            "radius": 66.5,
+            "center": { "x": 74.5, "y": 74.5 },
+            "iconBox": { "x": 42, "y": 43, "width": 64, "height": 64 },
+            "text": {
+              "value": { "fontSize": 42, "lineHeight": 44.5, "centerX": 74.5, "centerY": 74.5, "box": { "x": 41, "y": 52, "width": 67, "height": 45 } },
+              "label": { "fontSize": 18, "lineHeight": 20.5, "centerX": 74.5, "centerY": 107.5, "box": { "x": 57, "y": 97, "width": 35, "height": 21 } }
+            }
+          }
+        },
+        "arc": {
+          "track": {
+            "draw": "full_circle",
+            "colorToken": "trackGray",
+            "lineCap": "round"
+          },
+          "progress": {
+            "draw": "partial_arc",
+            "startAngle": 270,
+            "maxSweepAngle": 300,
+            "direction": "clockwise",
+            "lineCap": "round",
+            "colorToken": "progress"
+          }
+        },
+        "colors": {
+          "defaults": {
+            "progress": "#FF385E",
+            "track": "rgba(140, 140, 140, 0.28)",
+            "valueText": "#FFFFFF",
+            "labelText": "rgba(242, 244, 252, 0.6)"
+          },
+          "contentAware": true
+        }
+      },
+      "preferredWebImplementation": {
+        "container": "position: relative; width: diameter; height: diameter;",
+        "svg": "absolute inset: 0; width: 100%; height: 100%; overflow: visible;",
+        "ring": "Use SVG path arcs with stroke-width from the size token and stroke-linecap='round'.",
+        "text": "Absolutely position text boxes using the box values, center-align, and use sharedTypography."
+      },
+      "exampleProps": {
+        "component": "close_gauge",
+        "variant": { "property": "text", "size": "L" },
+        "data": {
+          "value": "100",
+          "label": "text",
+          "progress": 0.72,
+          "metricKind": "activity"
+        }
+      }
+    },
+    "open_gauge": {
+      "figmaReference": {
+        "componentSetNodeId": "560:885",
+        "componentName": "Open Gauge"
+      },
+      "semanticComponentSpec": {
+        "description": "Open arc gauge for a metric with optional icon, text, range labels, or offset/reference comparison.",
+        "validProperties": ["text", "icon", "range", "offset"],
+        "validSizes": ["S", "M", "L"]
+      },
+      "variantApi": {
+        "component": "open_gauge",
+        "variant": {
+          "property": "text|icon|range|offset",
+          "size": "S|M|L"
+        },
+        "data": {
+          "value": "required for text, range, and offset",
+          "label": "required for property=text",
+          "icon": "required for property=icon",
+          "min": "required for range and offset measured-dot placement",
+          "max": "required for range and offset measured-dot placement",
+          "lowLabel": "required for property=range",
+          "highLabel": "required for property=range",
+          "referenceValue": "required for property=offset",
+          "measuredValue": "optional numeric override for the primary measured dot; defaults to value",
+          "referenceMeasuredValue": "optional numeric value for the second offset dot",
+          "metricKind": "optional semantic color hint"
+        }
+      },
+      "exactVisualTokens": {
+        "shape": "open_arc_gauge",
+        "sizes": {
+          "S": {
+            "diameter": 72,
+            "strokeWidth": 8,
+            "radius": 31.5,
+            "center": { "x": 36, "y": 36 },
+            "measureDot": { "diameter": 8.21, "strokeWidth": 2 },
+            "iconBox": { "x": 20, "y": 20, "width": 32, "height": 32 },
+            "text": {
+              "current": { "fontSize": 22, "lineHeight": 24.5, "centerX": 36, "centerY": 36, "box": { "x": 18, "y": 23, "width": 35, "height": 25 } },
+              "low": { "fontSize": 15, "lineHeight": 17.5, "box": { "x": 13.05, "y": 54, "width": 19, "height": 18 }, "align": "left" },
+              "high": { "fontSize": 15, "lineHeight": 17.5, "box": { "x": 40.07, "y": 54, "width": 19, "height": 18 }, "align": "right" },
+              "reference": { "fontSize": 15, "lineHeight": 17.5, "box": { "x": 26.54, "y": 54, "width": 18, "height": 18 }, "align": "center" }
+            }
+          },
+          "M": {
+            "diameter": 90,
+            "strokeWidth": 10,
+            "radius": 39.5,
+            "center": { "x": 45, "y": 45 },
+            "measureDot": { "diameter": 10.27, "strokeWidth": 2 },
+            "iconBox": { "x": 26, "y": 26, "width": 38, "height": 38 },
+            "text": {
+              "current": { "fontSize": 32, "lineHeight": 34.5, "centerX": 45, "centerY": 45, "box": { "x": 19, "y": 27, "width": 51, "height": 35 } },
+              "low": { "fontSize": 18, "lineHeight": 20.5, "box": { "x": 16.31, "y": 69, "width": 23, "height": 21 }, "align": "left" },
+              "high": { "fontSize": 18, "lineHeight": 20.5, "box": { "x": 50.34, "y": 69, "width": 23, "height": 21 }, "align": "right" },
+              "reference": { "fontSize": 18, "lineHeight": 20.5, "box": { "x": 34.43, "y": 69, "width": 21, "height": 21 }, "align": "center" }
+            }
+          },
+          "L": {
+            "diameter": 149,
+            "strokeWidth": 15,
+            "radius": 66.5,
+            "center": { "x": 74.5, "y": 74.5 },
+            "measureDot": { "diameter": 17, "strokeWidth": 3 },
+            "iconBox": { "x": 42, "y": 43, "width": 64, "height": 64 },
+            "text": {
+              "current": { "fontSize": 48, "lineHeight": 44.5, "centerX": 74.5, "centerY": 74.5, "box": { "x": 36, "y": 52, "width": 77, "height": 45 } },
+              "low": { "fontSize": 32, "lineHeight": 44.5, "box": { "x": 27, "y": 104, "width": 38, "height": 45 }, "align": "left" },
+              "high": { "fontSize": 32, "lineHeight": 44.5, "box": { "x": 85, "y": 104, "width": 38, "height": 45 }, "align": "right" },
+              "reference": { "fontSize": 32, "lineHeight": 44.5, "box": { "x": 57, "y": 104, "width": 35, "height": 45 }, "align": "center" }
+            }
+          }
+        },
+        "arc": {
+          "track": {
+            "draw": "open_arc",
+            "startAngle": 135,
+            "sweepAngle": 270,
+            "direction": "clockwise",
+            "lineCap": "round",
+            "colorToken": "trackDark",
+            "visibleFor": ["text", "icon", "offset"],
+            "optionalFor": ["range"]
+          },
+          "progress": {
+            "draw": "open_arc",
+            "startAngle": 135,
+            "sweepAngle": 270,
+            "direction": "clockwise",
+            "lineCap": "round",
+            "colorToken": "gradient",
+            "gradientDirection": "along_arc_from_low_to_high"
+          }
+        },
+        "measureDots": {
+          "appliesTo": ["range", "offset"],
+          "sourceFigmaLayerName": "measure",
+          "dynamicPositionRequired": true,
+          "dotCenterFormula": {
+            "normalized": "clamp((measuredValue - min) / (max - min), 0, 1)",
+            "angle": "135 + normalized * 270",
+            "x": "center.x + radius * cos(degToRad(angle))",
+            "y": "center.y + radius * sin(degToRad(angle))"
+          },
+          "edgeMapping": {
+            "normalized0": "left/lower edge of open ring",
+            "normalized0_5": "top center of open ring",
+            "normalized1": "right/lower edge of open ring"
+          },
+          "weatherTemperatureExample": {
+            "low": 55,
+            "high": 68,
+            "current": 68,
+            "normalized": 1,
+            "expected": "The measured dot sits at the right edge of the gauge ring."
+          },
+          "rangeVariant": {
+            "dots": [
+              {
+                "id": "current_measure",
+                "valueSource": "measuredValue || value",
+                "colorSource": "semanticPalette.measuredDot or color interpolated along gradient"
+              }
+            ]
+          },
+          "offsetVariant": {
+            "dots": [
+              {
+                "id": "reference_measure",
+                "valueSource": "referenceMeasuredValue || referenceValue",
+                "colorSource": "semanticPalette.low or referenceAccent"
+              },
+              {
+                "id": "current_measure",
+                "valueSource": "measuredValue || value",
+                "colorSource": "semanticPalette.high or currentAccent"
+              }
+            ]
+          },
+          "style": {
+            "fill": "content-aware accent color",
+            "stroke": "#000000",
+            "strokeWidth": "size.measureDot.strokeWidth"
+          }
+        },
+        "colors": {
+          "defaults": {
+            "rangeGradient": ["#FF6D38", "#FF385E"],
+            "offsetGradient": ["#44D4FF", "#38FF4F", "#FF7139"],
+            "track": "#3D3D3D",
+            "currentText": "#FFFFFF",
+            "lowText": "#FF6E39",
+            "highText": "#FF385E",
+            "referenceText": "#38FF4F"
+          },
+          "contentAware": true
+        }
+      },
+      "preferredWebImplementation": {
+        "container": "position: relative; width: diameter; height: diameter;",
+        "svg": "absolute inset: 0; width: 100%; height: 100%; overflow: visible;",
+        "ring": "Use SVG path arcs with stroke-width from the size token and stroke-linecap='round'.",
+        "gradient": "Use an SVG linearGradient or conic-gradient-derived stroke approximation. The visual intent is a smooth color transition along the open arc.",
+        "dots": "Render each measure dot as an SVG circle whose center is computed from the normalized value and open-arc angle mapping.",
+        "text": "Absolutely position text boxes using the box values, center-align current and reference text, and use sharedTypography."
+      },
+      "exampleProps": {
+        "component": "open_gauge",
+        "variant": { "property": "range", "size": "M" },
+        "data": {
+          "value": "68",
+          "min": 55,
+          "max": 68,
+          "lowLabel": "55",
+          "highLabel": "68",
+          "measuredValue": 68,
+          "metricKind": "weather_temperature"
+        }
+      }
+    }
+  },
+  "validationRules": [
+    {
+      "id": "open-gauge-max-dot-right-edge",
+      "strictness": "must",
+      "rule": "For open_gauge range and offset variants, a measured value equal to max must place the measured dot at normalized=1, which maps to the right/lower edge of the open gauge ring."
+    },
+    {
+      "id": "open-gauge-min-dot-left-edge",
+      "strictness": "must",
+      "rule": "For open_gauge range and offset variants, a measured value equal to min must place the measured dot at normalized=0, which maps to the left/lower edge of the open gauge ring."
+    },
+    {
+      "id": "open-gauge-mid-dot-top",
+      "strictness": "must",
+      "rule": "For open_gauge range and offset variants, a measured value halfway between min and max must place the measured dot at normalized=0.5, which maps to the top center of the open gauge ring."
+    },
+    {
+      "id": "color-choice-preserves-shape",
+      "strictness": "must",
+      "rule": "Content-aware color choices must not change size, stroke width, text position, arc angle, or measured-dot position."
+    }
+  ]
+}

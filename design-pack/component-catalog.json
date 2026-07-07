@@ -1,1 +1,273 @@
-
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Agent-readable catalog for selecting circular watch-face widgets before rendering them on a webpage.",
+  "source": {
+    "figmaFileName": "2026 Projects",
+    "figmaFileKey": "3biDt7StqMPp22ws1FVx3v",
+    "canonicalReference": "Figma components are the visual reference, but webpage generation must use visual-specs.json for SVG/CSS construction."
+  },
+  "globalRules": [
+    {
+      "id": "web-rendering-contract",
+      "strictness": "must",
+      "rule": "When generating webpage UI, choose a component from this catalog and render it using the matching entry in visual-specs.json."
+    },
+    {
+      "id": "fixed-circular-sizes",
+      "strictness": "must",
+      "rule": "Circular widgets must use exactly one declared size token. Do not stretch or scale a gauge to arbitrary dimensions."
+    },
+    {
+      "id": "content-aware-colors",
+      "strictness": "should",
+      "rule": "The agent may choose gauge colors based on the metric content, while preserving the component geometry, typography, contrast, and measured-dot behavior."
+    }
+  ],
+  "components": [
+    {
+      "id": "close_gauge",
+      "displayName": "Close Gauge",
+      "figma": {
+        "componentSetNodeId": "560:871",
+        "url": "https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=560-871",
+        "variantNodes": {
+          "Property=icon, Size=L": "560:870",
+          "Property=text, Size=L": "560:872",
+          "Property=icon, Size=M": "607:404",
+          "Property=text, Size=M": "607:419",
+          "Property=icon, Size=S": "607:432",
+          "Property=text, Size=S": "607:443"
+        }
+      },
+      "type": "circular_widget",
+      "shape": "closed_circular_gauge",
+      "semanticUse": "A compact circular progress widget for one metric with a single current value, such as activity progress, battery, hydration, focus, completion, calories, or any bounded scalar status.",
+      "variantApi": {
+        "component": "close_gauge",
+        "properties": {
+          "property": {
+            "allowedValues": ["icon", "text"],
+            "figmaPropertyName": "Property",
+            "required": true
+          },
+          "size": {
+            "allowedValues": ["S", "M", "L"],
+            "figmaPropertyName": "Size",
+            "required": true
+          }
+        }
+      },
+      "legalSizes": {
+        "S": { "width": 72, "height": 72 },
+        "M": { "width": 90, "height": 90 },
+        "L": { "width": 149, "height": 149 }
+      },
+      "dataProps": {
+        "value": {
+          "type": "number|string",
+          "requiredFor": ["property=text"],
+          "description": "Primary value displayed in the center of the gauge."
+        },
+        "label": {
+          "type": "string",
+          "requiredFor": ["property=text"],
+          "description": "Short secondary label below the value. Keep to one short word when possible."
+        },
+        "icon": {
+          "type": "iconToken|string",
+          "requiredFor": ["property=icon"],
+          "description": "Icon rendered in the center of the gauge."
+        },
+        "progress": {
+          "type": "number",
+          "range": [0, 1],
+          "required": true,
+          "description": "Normalized progress used to draw the value arc."
+        },
+        "metricKind": {
+          "type": "string",
+          "required": false,
+          "description": "Optional semantic hint used by the renderer to choose content-aware colors."
+        }
+      },
+      "selectionGuidance": [
+        "Use when the user needs one glanceable metric rather than a comparison.",
+        "Use property=text when the numeric value is important.",
+        "Use property=icon when the value can be represented by a familiar icon and space is tight.",
+        "Prefer size S or M for secondary widgets and size L for the main supporting widget."
+      ],
+      "webRenderingSpecId": "close_gauge",
+      "exampleProps": [
+        {
+          "component": "close_gauge",
+          "variant": { "property": "text", "size": "M" },
+          "data": {
+            "value": "82",
+            "label": "move",
+            "progress": 0.82,
+            "metricKind": "activity"
+          }
+        },
+        {
+          "component": "close_gauge",
+          "variant": { "property": "icon", "size": "S" },
+          "data": {
+            "icon": "battery",
+            "progress": 0.64,
+            "metricKind": "battery"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open_gauge",
+      "displayName": "Open Gauge",
+      "figma": {
+        "componentSetNodeId": "560:885",
+        "url": "https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=560-885",
+        "variantNodes": {
+          "Property=text, size=L": "565:271",
+          "Property=icon, size=L": "560:886",
+          "Property=range, size=L": "560:892",
+          "Property=offset, size=L": "567:361",
+          "Property=text, size=M": "615:981",
+          "Property=icon, size=M": "615:993",
+          "Property=range, size=M": "615:1006",
+          "Property=offset, size=M": "615:1022",
+          "Property=text, size=S": "615:1057",
+          "Property=icon, size=S": "615:1063",
+          "Property=range, size=S": "615:1069",
+          "Property=offset, size=S": "615:1076"
+        }
+      },
+      "type": "circular_widget",
+      "shape": "open_arc_gauge",
+      "semanticUse": "An open-arc circular widget for metrics that benefit from range, threshold, comparison, or offset context, such as temperature, heart rate zone, UV index, air quality, recovery, pace, or high/low values.",
+      "variantApi": {
+        "component": "open_gauge",
+        "properties": {
+          "property": {
+            "allowedValues": ["text", "icon", "range", "offset"],
+            "figmaPropertyName": "Property",
+            "required": true
+          },
+          "size": {
+            "allowedValues": ["S", "M", "L"],
+            "figmaPropertyName": "size",
+            "required": true
+          }
+        }
+      },
+      "legalSizes": {
+        "S": { "width": 72, "height": 72 },
+        "M": { "width": 90, "height": 90 },
+        "L": { "width": 149, "height": 149 }
+      },
+      "dataProps": {
+        "value": {
+          "type": "number|string",
+          "requiredFor": ["property=text", "property=range", "property=offset"],
+          "description": "Current or primary value displayed in the center."
+        },
+        "label": {
+          "type": "string",
+          "requiredFor": ["property=text"],
+          "description": "Short secondary label for text-only open gauges."
+        },
+        "icon": {
+          "type": "iconToken|string",
+          "requiredFor": ["property=icon"],
+          "description": "Icon rendered in the center."
+        },
+        "min": {
+          "type": "number",
+          "requiredFor": ["property=range", "property=offset"],
+          "description": "Lower bound used to normalize measured-dot position on the open arc."
+        },
+        "max": {
+          "type": "number",
+          "requiredFor": ["property=range", "property=offset"],
+          "description": "Upper bound used to normalize measured-dot position on the open arc."
+        },
+        "lowLabel": {
+          "type": "number|string",
+          "requiredFor": ["property=range"],
+          "description": "Visible low value label. Usually matches min."
+        },
+        "highLabel": {
+          "type": "number|string",
+          "requiredFor": ["property=range"],
+          "description": "Visible high value label. Usually matches max."
+        },
+        "referenceValue": {
+          "type": "number|string",
+          "requiredFor": ["property=offset"],
+          "description": "Secondary comparison value displayed near the bottom of the gauge."
+        },
+        "measuredValue": {
+          "type": "number",
+          "requiredFor": ["property=range", "property=offset"],
+          "description": "Numeric value that determines the measured-dot position. Defaults to value when omitted."
+        },
+        "referenceMeasuredValue": {
+          "type": "number",
+          "requiredFor": ["property=offset"],
+          "description": "Optional numeric comparison value that determines the second measured-dot position."
+        },
+        "metricKind": {
+          "type": "string",
+          "required": false,
+          "description": "Optional semantic hint used by the renderer to choose content-aware colors."
+        }
+      },
+      "selectionGuidance": [
+        "Use property=range for metrics with a meaningful low/high span, such as today's temperature low and high.",
+        "Use property=offset for current-versus-reference comparisons, such as current temperature versus feels-like, recovery versus baseline, or pace versus target.",
+        "Use property=text for a single expressive value when the open arc style better matches the composition.",
+        "Use property=icon only when the icon is immediately recognizable.",
+        "Prefer size M or L for range and offset variants because they contain multiple text values."
+      ],
+      "measuredDotBehavior": {
+        "appliesToProperties": ["range", "offset"],
+        "rule": "Every dot named measure in the Figma component must be rendered dynamically on the webpage. Its position must correspond to the measured numeric value normalized within min and max.",
+        "normalization": "normalized = clamp((measuredValue - min) / (max - min), 0, 1)",
+        "rangeExample": {
+          "metric": "weather temperature today",
+          "min": 55,
+          "max": 68,
+          "measuredValue": 68,
+          "expectedDotPosition": "right edge of the open gauge ring"
+        }
+      },
+      "webRenderingSpecId": "open_gauge",
+      "exampleProps": [
+        {
+          "component": "open_gauge",
+          "variant": { "property": "range", "size": "M" },
+          "data": {
+            "value": "68",
+            "min": 55,
+            "max": 68,
+            "lowLabel": "55",
+            "highLabel": "68",
+            "measuredValue": 68,
+            "metricKind": "weather_temperature"
+          }
+        },
+        {
+          "component": "open_gauge",
+          "variant": { "property": "offset", "size": "L" },
+          "data": {
+            "value": "76",
+            "referenceValue": "72",
+            "min": 60,
+            "max": 90,
+            "measuredValue": 76,
+            "referenceMeasuredValue": 72,
+            "metricKind": "heart_rate"
+          }
+        }
+      ]
+    }
+  ]
+}
