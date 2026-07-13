@@ -249,10 +249,38 @@ time_mode_selection:
 
 ## Widget Classification
 
-The agent should infer widget shape from information density, importance, and expected content.
+The agent should infer semantic content type before it chooses widget shape. Use `widget-content-types.md` and `widget-content-types.json` to identify the content domain, required metadata, optional metadata, and valid rendering strategies. A single semantic content type may render as one widget or as multiple widgets when the metadata is clearer as separate glanceable units.
 
 ```yaml
 widget_classification:
+  semantic_first:
+    reference:
+      - widget-content-types.md
+      - widget-content-types.json
+    steps:
+      - infer_semantic_widget_type_from_user_context
+      - extract_required_and_optional_metadata_for_that_type
+      - decide_whether_metadata_should_render_as_one_widget_or_multiple_widgets
+      - choose_shape_for_each_rendered_widget
+      - map_metadata_to_visual_components
+
+    rules:
+      - id: semantic-type-before-shape
+        strictness: must
+        rule: Determine the semantic widget type before choosing circular or rectangular geometry.
+
+      - id: content-type-can-expand
+        strictness: must
+        rule: One semantic content type may produce more than one rendered widget when separate metrics are more readable or useful.
+
+      - id: render-only-available-metadata
+        strictness: must
+        rule: Render required metadata when available, render optional metadata only when present or explicitly requested, and do not invent absent real-world values.
+
+      - id: preserve-context-specific-fields
+        strictness: should
+        rule: If the user specifically asks for a normally hidden optional field, such as weather wind, include it in the rendered metadata.
+
   circular:
     best_for:
       - single_metric
@@ -279,11 +307,15 @@ widget_classification:
   rules:
     - id: classify-before-layout
       strictness: must
-      rule: After counting widgets, determine whether each widget should be circular or rectangular before choosing final layout geometry.
+      rule: After semantic content extraction, determine how many rendered widgets are needed and whether each rendered widget should be circular or rectangular before choosing final layout geometry.
 
     - id: content-drives-shape
       strictness: should
       rule: Choose widget shape based on content needs, not only visual variety.
+
+    - id: controls-require-rectangle
+      strictness: must
+      rule: Interactive controls such as start, pause, cancel, play, next, previous, or mark complete must render in a rectangular widget unless a component-specific rule explicitly allows otherwise.
 ```
 
 ## Layout Selection Algorithm
@@ -292,9 +324,12 @@ widget_classification:
 layout_selection:
   steps:
     - read_user_context
-    - extract_required_information
-    - count_widgets
-    - classify_each_widget_as_circular_or_rectangular
+    - infer_semantic_widget_types
+    - extract_required_and_optional_metadata_for_each_semantic_type
+    - choose_rendering_strategy_for_each_semantic_type
+    - count_rendered_widgets_after_semantic_expansion
+    - classify_each_rendered_widget_as_circular_or_rectangular
+    - map_semantic_metadata_to_visual_components
     - choose_time_mode
     - choose_circular_size_tokens
     - select_candidate_layout_family

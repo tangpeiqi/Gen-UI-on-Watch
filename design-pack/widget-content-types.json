@@ -1,0 +1,488 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Agent-readable semantic widget content taxonomy for deciding what metadata to render before choosing circular or rectangular watch-face geometry.",
+  "relatedDocuments": [
+    "watch-face-generation-rules.md",
+    "widget-content-types.md",
+    "component-catalog.json"
+  ],
+  "selectionContract": {
+    "steps": [
+      "read_user_context",
+      "infer_semantic_widget_type",
+      "extract_required_metadata",
+      "extract_available_optional_metadata",
+      "choose_rendering_strategy",
+      "expand_into_one_or_more_rendered_widgets",
+      "map_each_rendered_widget_to_circular_or_rectangular_shape",
+      "validate_against_watch_face_generation_rules"
+    ],
+    "rules": [
+      {
+        "id": "semantic-before-shape",
+        "strictness": "must",
+        "rule": "Choose the semantic content type before choosing circular or rectangular shape."
+      },
+      {
+        "id": "one-type-many-widgets",
+        "strictness": "must",
+        "rule": "A single semantic content type may render as multiple widgets when separate metadata fields are clearer as individual glanceable metrics."
+      },
+      {
+        "id": "required-metadata-first",
+        "strictness": "must",
+        "rule": "Required metadata must be prioritized over optional metadata."
+      },
+      {
+        "id": "optional-only-when-available",
+        "strictness": "must",
+        "rule": "Optional metadata should render only when available from context or specifically requested."
+      },
+      {
+        "id": "controls-use-rectangular",
+        "strictness": "must",
+        "rule": "If the rendered widget includes buttons or controls, use a rectangular widget."
+      }
+    ]
+  },
+  "renderingStrategyTypes": {
+    "single_circular": "One circular widget for a single metric, status, progress ring, or short value.",
+    "multi_circular": "Multiple circular widgets from one semantic type, usually one per metric.",
+    "single_rectangular": "One rectangular widget for multi-line text, controls, lists, timelines, or dense summaries.",
+    "mixed": "A combination of circular and rectangular widgets from one semantic type.",
+    "not_recommended": "Avoid this strategy unless the user context strongly requires it."
+  },
+  "contentTypes": [
+    {
+      "id": "workout",
+      "displayName": "Workout",
+      "purpose": "Show active or recent workout progress and effort.",
+      "useWhen": [
+        "user asks about a workout",
+        "context includes exercise, calories, elapsed time, or workout progress"
+      ],
+      "metadata": {
+        "required": {
+          "workout_type": "string",
+          "duration": "duration",
+          "calories_burned": "number"
+        },
+        "optional": {
+          "calorie_goal": "number",
+          "past_week_average": "number",
+          "elapsed_time": "duration",
+          "progress": "number"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "workout_summary_card",
+          "strategy": "single_rectangular",
+          "useWhen": [
+            "calories need comparison to a goal or past week average",
+            "workout type and duration need text labels"
+          ]
+        },
+        {
+          "id": "workout_metric_rings",
+          "strategy": "multi_circular",
+          "useWhen": [
+            "workout_type, duration, and calories_burned can each be represented as compact metrics"
+          ]
+        },
+        {
+          "id": "workout_focus_plus_summary",
+          "strategy": "mixed",
+          "useWhen": [
+            "one metric is primary and the remaining metadata still needs text"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "activity_summary",
+      "displayName": "Activity Summary",
+      "purpose": "Compare sitting, standing, and walking time to recent behavior.",
+      "metadata": {
+        "required": {
+          "sitting_time": "duration",
+          "standing_time": "duration",
+          "walking_time": "duration"
+        },
+        "optional": {
+          "last_three_day_average": "object",
+          "trend": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "activity_three_rings",
+          "strategy": "multi_circular",
+          "useWhen": [
+            "sitting, standing, and walking are equally important"
+          ]
+        },
+        {
+          "id": "activity_comparison_card",
+          "strategy": "single_rectangular",
+          "useWhen": [
+            "averages or trend labels need to be visible"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "upcoming_event",
+      "displayName": "Upcoming Event",
+      "purpose": "Show the next calendar event.",
+      "metadata": {
+        "required": {
+          "time": "datetime_or_time",
+          "event_name": "string"
+        },
+        "optional": {
+          "location": "string",
+          "travel_time": "duration",
+          "calendar_name": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "event_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "event_time_badge_and_card",
+          "strategy": "mixed",
+          "useWhen": [
+            "event time or time until event should be visually emphasized"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "timer",
+      "displayName": "Timer",
+      "purpose": "Show an inferred or active countdown.",
+      "metadata": {
+        "required": {
+          "timer_label": "string",
+          "countdown": "duration"
+        },
+        "optional": {
+          "start_action": "action",
+          "pause_action": "action",
+          "cancel_action": "action",
+          "total_duration": "duration",
+          "remaining_seconds": "number"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "timer_countdown_ring",
+          "strategy": "single_circular",
+          "useWhen": [
+            "no visible controls are shown"
+          ]
+        },
+        {
+          "id": "timer_control_card",
+          "strategy": "single_rectangular",
+          "useWhen": [
+            "start_action, pause_action, or cancel_action is visible"
+          ]
+        }
+      ],
+      "rules": [
+        "Buttons require rectangular rendering."
+      ]
+    },
+    {
+      "id": "heart_rate",
+      "displayName": "Heart Rate",
+      "purpose": "Show the latest heart rate reading and optional activity range.",
+      "metadata": {
+        "required": {
+          "last_reading": "number"
+        },
+        "optional": {
+          "time_since_last_reading": "duration",
+          "activity_high": "number",
+          "activity_low": "number",
+          "activity_type": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "heart_rate_ring",
+          "strategy": "single_circular"
+        },
+        {
+          "id": "heart_rate_range_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "heart_rate_ring_plus_range",
+          "strategy": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "last_message",
+      "displayName": "Last Message",
+      "purpose": "Show the latest message preview.",
+      "metadata": {
+        "required": {
+          "sender": "string",
+          "content": "string"
+        },
+        "optional": {
+          "timestamp": "datetime_or_time",
+          "app": "string",
+          "unread_count": "number"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "message_preview_card",
+          "strategy": "single_rectangular"
+        }
+      ],
+      "notRecommendedStrategies": [
+        {
+          "strategy": "single_circular",
+          "reason": "Text preview needs horizontal space unless reduced to unread count or sender initials."
+        }
+      ]
+    },
+    {
+      "id": "iot_control",
+      "displayName": "IoT Control",
+      "purpose": "Show smart device status and optional setpoint/control state.",
+      "metadata": {
+        "required": {
+          "device_name": "string",
+          "status": "string"
+        },
+        "optional": {
+          "current_value": "number_or_string",
+          "set_value": "number_or_string",
+          "room": "string",
+          "control_action": "action"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "device_status_ring",
+          "strategy": "single_circular",
+          "useWhen": [
+            "status is the only displayed device value"
+          ]
+        },
+        {
+          "id": "device_control_card",
+          "strategy": "single_rectangular",
+          "useWhen": [
+            "current_value, set_value, or control_action is shown"
+          ]
+        },
+        {
+          "id": "device_status_plus_control",
+          "strategy": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "map_navigation",
+      "displayName": "Map Navigation",
+      "purpose": "Show navigation timing and travel conditions.",
+      "metadata": {
+        "required": {
+          "destination": "string",
+          "traffic_condition": "string",
+          "travel_time": "duration"
+        },
+        "optional": {
+          "time_to_leave": "datetime_or_time",
+          "distance": "distance",
+          "next_step": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "navigation_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "travel_time_plus_navigation",
+          "strategy": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "sleep_summary",
+      "displayName": "Sleep Summary",
+      "purpose": "Show sleep quality, score, duration, and optional trend.",
+      "metadata": {
+        "required": {
+          "quality_rating": "string",
+          "score": "number",
+          "hours_asleep": "duration"
+        },
+        "optional": {
+          "trend": "string",
+          "sleep_goal": "duration",
+          "previous_average": "duration"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "sleep_summary_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "sleep_metric_rings",
+          "strategy": "multi_circular"
+        },
+        {
+          "id": "sleep_score_plus_summary",
+          "strategy": "mixed"
+        }
+      ]
+    },
+    {
+      "id": "music_control",
+      "displayName": "Music Control",
+      "purpose": "Show current music and playback controls.",
+      "metadata": {
+        "required": {
+          "song": "string",
+          "play_pause_action": "action"
+        },
+        "optional": {
+          "album": "string",
+          "artist": "string",
+          "next_action": "action",
+          "previous_action": "action",
+          "artwork": "image"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "music_control_card",
+          "strategy": "single_rectangular"
+        }
+      ],
+      "rules": [
+        "Visible playback controls require rectangular rendering."
+      ],
+      "notRecommendedStrategies": [
+        {
+          "strategy": "single_circular",
+          "reason": "Circular rendering is only appropriate when showing play/pause status without song text or controls."
+        }
+      ]
+    },
+    {
+      "id": "reminder",
+      "displayName": "Reminder",
+      "purpose": "Show a reminder and due time.",
+      "metadata": {
+        "required": {
+          "content": "string",
+          "due_datetime": "datetime"
+        },
+        "optional": {
+          "mark_complete_action": "action",
+          "priority": "string",
+          "list_name": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "reminder_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "reminder_due_badge_and_card",
+          "strategy": "mixed",
+          "useWhen": [
+            "due time or urgency should be emphasized separately"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "displayName": "Weather",
+      "purpose": "Show current weather and daily temperature range.",
+      "metadata": {
+        "required": {
+          "condition": "string",
+          "current_temperature": "number",
+          "high_temperature": "number",
+          "low_temperature": "number"
+        },
+        "optional": {
+          "rain_chance": "percent",
+          "wind": "speed",
+          "location": "string"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "weather_temperature_gauge",
+          "strategy": "single_circular"
+        },
+        {
+          "id": "weather_detail_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "weather_metric_rings",
+          "strategy": "multi_circular"
+        },
+        {
+          "id": "weather_gauge_plus_detail",
+          "strategy": "mixed"
+        }
+      ],
+      "rules": [
+        "Show rain_chance when condition includes rain.",
+        "Show wind only if the user specifically asks for wind or context explicitly requests wind."
+      ]
+    },
+    {
+      "id": "checklist",
+      "displayName": "Checklist",
+      "purpose": "Show a scrollable list of checklist items.",
+      "metadata": {
+        "required": {
+          "items": "array"
+        },
+        "optional": {
+          "completed_items": "array",
+          "title": "string",
+          "progress": "number",
+          "due_datetime": "datetime"
+        }
+      },
+      "renderingStrategies": [
+        {
+          "id": "checklist_scroll_card",
+          "strategy": "single_rectangular"
+        },
+        {
+          "id": "checklist_progress_plus_scroll_card",
+          "strategy": "mixed",
+          "useWhen": [
+            "progress should be promoted separately from the list"
+          ]
+        }
+      ],
+      "rules": [
+        "The list container must be rectangular and scrollable."
+      ]
+    }
+  ]
+}
