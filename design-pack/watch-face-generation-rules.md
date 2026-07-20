@@ -249,7 +249,7 @@ time_mode_selection:
 
 ## Widget Classification
 
-The agent should infer semantic content type before it chooses widget shape. Use `widget-content-types.md` and `widget-content-types.json` to identify the content domain, required metadata, optional metadata, and valid rendering strategies. A single semantic content type may render as one widget or as multiple widgets when the metadata is clearer as separate glanceable units.
+The agent should infer semantic content type before it chooses widget shape. Use `widget-content-types.md` and `widget-content-types.json` to identify the content domain, required metadata, optional metadata, and presentation affordances. The watch-face layout rules decide whether each semantic content type renders as one widget or expands into multiple widgets.
 
 ```yaml
 widget_classification:
@@ -260,18 +260,18 @@ widget_classification:
     steps:
       - infer_semantic_widget_type_from_user_context
       - extract_required_and_optional_metadata_for_that_type
-      - decide_whether_metadata_should_render_as_one_widget_or_multiple_widgets
-      - choose_shape_for_each_rendered_widget
-      - map_metadata_to_visual_components
+      - identify_metadata_that_can_be_summarized_or_split
+      - defer_single_multi_or_mixed_strategy_to_layout_selection
+      - map_selected_metadata_to_visual_components_after_strategy_is_chosen
 
     rules:
       - id: semantic-type-before-shape
         strictness: must
         rule: Determine the semantic widget type before choosing circular or rectangular geometry.
 
-      - id: content-type-can-expand
+      - id: content-type-expansion-is-layout-owned
         strictness: must
-        rule: One semantic content type may produce more than one rendered widget when separate metrics are more readable or useful.
+        rule: Use the layout selection rules, not the content type taxonomy alone, to decide whether one semantic content type renders as one widget or expands into multiple widgets.
 
       - id: render-only-available-metadata
         strictness: must
@@ -318,6 +318,108 @@ widget_classification:
       rule: Interactive controls such as start, pause, cancel, play, next, previous, or mark complete must render in a rectangular widget unless a component-specific rule explicitly allows otherwise.
 ```
 
+## Rendering Strategy Selection
+
+Rendering strategy depends on semantic content count, available watch-face space, metadata density, and the maximum number of rendered widgets. The content type taxonomy defines what data can be shown; this section decides how many widgets to render and whether a content type is represented as a single widget, multiple widgets, or a mixed group.
+
+```yaml
+rendering_strategy_selection:
+  limits:
+    max_semantic_content_types: 3
+    max_rendered_widgets: 3
+    every_selected_content_type_needs_at_least_one_widget: true
+
+  strategy_terms:
+    single:
+      definition: One semantic content type renders as one widget.
+      allowed_shapes:
+        - circular
+        - rectangular
+    multi:
+      definition: One semantic content type renders as multiple widgets of the same shape.
+      allowed_shapes:
+        - circular
+        - rectangular
+    mixed:
+      definition: One semantic content type renders as multiple widgets using both circular and rectangular shapes.
+      allowed_shapes:
+        - circular
+        - rectangular
+
+  content_type_count_rules:
+    one_content_type:
+      allowed_total_rendered_widgets: [1, 2, 3]
+      allowed_strategies:
+        - single
+        - multi
+        - mixed
+      guidance:
+        - Use single when the content has one primary value, a compact summary, controls, or text that should stay grouped.
+        - Use multi when separate metadata fields are equally important and more glanceable as individual widgets.
+        - Use mixed when one metric deserves circular emphasis and the remaining details need rectangular space.
+
+    two_content_types:
+      allowed_total_rendered_widgets: [2, 3]
+      allowed_strategy_combinations:
+        - first_content_type: single
+          second_content_type: single
+          total_widgets: 2
+        - first_content_type: single
+          second_content_type: multi_or_mixed
+          total_widgets: 3
+        - first_content_type: multi_or_mixed
+          second_content_type: single
+          total_widgets: 3
+      guidance:
+        - Use two widgets when both content types can be summarized clearly.
+        - Use three widgets only when one content type has metadata that benefits strongly from separation.
+        - Do not expand both content types.
+
+    three_content_types:
+      allowed_total_rendered_widgets: [3]
+      allowed_strategy_combinations:
+        - first_content_type: single
+          second_content_type: single
+          third_content_type: single
+          total_widgets: 3
+      guidance:
+        - Each content type must render as exactly one widget.
+        - Do not use multi or mixed expansion when three semantic content types are selected.
+        - Prefer compact summaries and omit optional metadata unless explicitly requested.
+
+  space_decision_factors:
+    - number_of_semantic_content_types
+    - total_required_metadata_fields
+    - optional_metadata_requested_by_user
+    - controls_or_buttons_present
+    - text_length
+    - whether_values_are_comparable_as_individual_metrics
+    - available_space_after_time_and_date
+    - circular_size_tokens_that_can_fit
+    - rectangular_min_height_constraints
+
+  rules:
+    - id: max-three-content-types
+      strictness: must
+      rule: Select no more than three semantic content types from the combined context.
+
+    - id: max-three-rendered-widgets
+      strictness: must
+      rule: Render no more than three widgets total.
+
+    - id: three-types-force-single
+      strictness: must
+      rule: When three semantic content types are selected, each content type must use one single widget.
+
+    - id: two-types-one-may-expand
+      strictness: must
+      rule: When two semantic content types are selected, render either two single widgets or three widgets where only one content type expands.
+
+    - id: one-type-flexible-expansion
+      strictness: should
+      rule: When one semantic content type is selected, choose single, multi, or mixed based on metadata usefulness and available space.
+```
+
 ## Layout Selection Algorithm
 
 ```yaml
@@ -326,6 +428,7 @@ layout_selection:
     - read_user_context
     - infer_semantic_widget_types
     - extract_required_and_optional_metadata_for_each_semantic_type
+    - assess_content_type_count_metadata_density_and_available_space
     - choose_rendering_strategy_for_each_semantic_type
     - count_rendered_widgets_after_semantic_expansion
     - classify_each_rendered_widget_as_circular_or_rectangular
@@ -446,7 +549,7 @@ rectangular_flexing:
   single_rectangle:
     formula: available_height_after_time_date_gaps
     clamp:
-      min: 80
+      min: 108
       max: remaining_available_space
 
   multiple_rectangles:
@@ -524,5 +627,5 @@ validation:
 ## Agent Instruction Summary
 
 ```text
-Generate watch faces from constraints, not fixed templates. Count the requested widgets, classify each widget as circular or rectangular based on its content, choose the time mode, choose circular size tokens, then select and validate a layout family. Circular widgets must use fixed size tokens. Rectangular widgets flex vertically and use 54px radius with 100% iOS-style corner smoothing. Widgets sit above time and date, and may overlap time by up to 10px when it improves the composition. Split hour and minute text may differ in size and placement, but must share font family, weight, letter spacing, and color treatment. Always validate mask fit, legibility, overlap, widget usefulness, and visual balance before returning a layout.
+Generate watch faces from constraints, not fixed templates. First combine current context with pseudo context, then infer up to three semantic content types. Use widget-content-types.md or widget-content-types.json to extract metadata and identify primary values, splittable metrics, detail fields, controls, and conditional fields. Then choose the rendering strategy from layout constraints: one content type may use single, multi, or mixed rendering; two content types may render as two single widgets or three widgets where only one type expands; three content types must each render as one single widget. Never render more than three widgets total. After strategy selection, classify each rendered widget as circular or rectangular, choose the time mode, choose circular size tokens, then select and validate a layout family. Circular widgets must use fixed size tokens. Rectangular widgets flex vertically and use 54px radius with 100% iOS-style corner smoothing. Widgets sit above time and date, and may overlap time by up to 10px when it improves the composition. Split hour and minute text may differ in size and placement, but must share font family, weight, letter spacing, and color treatment. Always validate mask fit, legibility, overlap, widget usefulness, and visual balance before returning a layout.
 ```

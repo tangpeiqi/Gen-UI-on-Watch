@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "1.0.0",
-  "purpose": "Agent-readable semantic widget content taxonomy for deciding what metadata to render before choosing circular or rectangular watch-face geometry.",
+  "schemaVersion": "1.1.0",
+  "purpose": "Agent-readable semantic widget content taxonomy. Defines metadata and presentation affordances; watch-face-generation-rules.md decides single, multi, or mixed rendering strategy from content count, metadata density, and available space.",
   "relatedDocuments": [
     "watch-face-generation-rules.md",
     "widget-content-types.md",
@@ -8,25 +8,27 @@
   ],
   "selectionContract": {
     "steps": [
-      "read_user_context",
-      "infer_semantic_widget_type",
+      "read_current_context",
+      "combine_with_prepopulated_pseudo_context",
+      "infer_up_to_three_semantic_content_types",
       "extract_required_metadata",
       "extract_available_optional_metadata",
-      "choose_rendering_strategy",
-      "expand_into_one_or_more_rendered_widgets",
-      "map_each_rendered_widget_to_circular_or_rectangular_shape",
-      "validate_against_watch_face_generation_rules"
+      "identify_primary_display_value",
+      "identify_splittable_metric_fields",
+      "identify_detail_fields",
+      "identify_control_fields",
+      "pass_content_metadata_to_watch_face_generation_rules"
     ],
     "rules": [
       {
-        "id": "semantic-before-shape",
+        "id": "semantic-before-layout",
         "strictness": "must",
-        "rule": "Choose the semantic content type before choosing circular or rectangular shape."
+        "rule": "Choose semantic content types before choosing widget count, shape, or layout."
       },
       {
-        "id": "one-type-many-widgets",
+        "id": "max-three-types",
         "strictness": "must",
-        "rule": "A single semantic content type may render as multiple widgets when separate metadata fields are clearer as individual glanceable metrics."
+        "rule": "Select at most three semantic content types from the combined context."
       },
       {
         "id": "required-metadata-first",
@@ -39,18 +41,18 @@
         "rule": "Optional metadata should render only when available from context or specifically requested."
       },
       {
-        "id": "controls-use-rectangular",
+        "id": "strategy-owned-by-layout",
         "strictness": "must",
-        "rule": "If the rendered widget includes buttons or controls, use a rectangular widget."
+        "rule": "Final single, multi, or mixed rendering strategy is decided by watch-face-generation-rules.md."
       }
     ]
   },
-  "renderingStrategyTypes": {
-    "single_circular": "One circular widget for a single metric, status, progress ring, or short value.",
-    "multi_circular": "Multiple circular widgets from one semantic type, usually one per metric.",
-    "single_rectangular": "One rectangular widget for multi-line text, controls, lists, timelines, or dense summaries.",
-    "mixed": "A combination of circular and rectangular widgets from one semantic type.",
-    "not_recommended": "Avoid this strategy unless the user context strongly requires it."
+  "metadataRoleTypes": {
+    "primary": "The strongest single value or text group for a one-widget summary.",
+    "splittable_metrics": "Fields that can become separate compact widgets when layout budget allows.",
+    "detail_fields": "Fields that usually need rectangular text space.",
+    "control_fields": "Interactive actions; these require rectangular rendering when visible.",
+    "conditional_fields": "Fields that render only under specific context conditions."
   },
   "contentTypes": [
     {
@@ -74,30 +76,19 @@
           "progress": "number"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "workout_summary_card",
-          "strategy": "single_rectangular",
-          "useWhen": [
-            "calories need comparison to a goal or past week average",
-            "workout type and duration need text labels"
-          ]
-        },
-        {
-          "id": "workout_metric_rings",
-          "strategy": "multi_circular",
-          "useWhen": [
-            "workout_type, duration, and calories_burned can each be represented as compact metrics"
-          ]
-        },
-        {
-          "id": "workout_focus_plus_summary",
-          "strategy": "mixed",
-          "useWhen": [
-            "one metric is primary and the remaining metadata still needs text"
-          ]
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "workout_summary",
+        "splittableMetrics": [
+          "duration",
+          "calories_burned",
+          "progress"
+        ],
+        "detailFields": [
+          "workout_type",
+          "calorie_goal",
+          "past_week_average"
+        ]
+      }
     },
     {
       "id": "activity_summary",
@@ -114,22 +105,18 @@
           "trend": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "activity_three_rings",
-          "strategy": "multi_circular",
-          "useWhen": [
-            "sitting, standing, and walking are equally important"
-          ]
-        },
-        {
-          "id": "activity_comparison_card",
-          "strategy": "single_rectangular",
-          "useWhen": [
-            "averages or trend labels need to be visible"
-          ]
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "activity_summary",
+        "splittableMetrics": [
+          "sitting_time",
+          "standing_time",
+          "walking_time"
+        ],
+        "detailFields": [
+          "last_three_day_average",
+          "trend"
+        ]
+      }
     },
     {
       "id": "upcoming_event",
@@ -146,19 +133,18 @@
           "calendar_name": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "event_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "event_time_badge_and_card",
-          "strategy": "mixed",
-          "useWhen": [
-            "event time or time until event should be visually emphasized"
-          ]
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "event_name_with_time",
+        "splittableMetrics": [
+          "time",
+          "travel_time"
+        ],
+        "detailFields": [
+          "event_name",
+          "location",
+          "calendar_name"
+        ]
+      }
     },
     {
       "id": "timer",
@@ -177,24 +163,23 @@
           "remaining_seconds": "number"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "timer_countdown_ring",
-          "strategy": "single_circular",
-          "useWhen": [
-            "no visible controls are shown"
-          ]
-        },
-        {
-          "id": "timer_control_card",
-          "strategy": "single_rectangular",
-          "useWhen": [
-            "start_action, pause_action, or cancel_action is visible"
-          ]
-        }
-      ],
+      "presentationAffordances": {
+        "primary": "countdown",
+        "splittableMetrics": [
+          "countdown",
+          "progress"
+        ],
+        "detailFields": [
+          "timer_label"
+        ],
+        "controlFields": [
+          "start_action",
+          "pause_action",
+          "cancel_action"
+        ]
+      },
       "rules": [
-        "Buttons require rectangular rendering."
+        "Visible controls require rectangular rendering."
       ]
     },
     {
@@ -212,20 +197,18 @@
           "activity_type": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "heart_rate_ring",
-          "strategy": "single_circular"
-        },
-        {
-          "id": "heart_rate_range_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "heart_rate_ring_plus_range",
-          "strategy": "mixed"
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "last_reading",
+        "splittableMetrics": [
+          "last_reading",
+          "activity_high",
+          "activity_low"
+        ],
+        "detailFields": [
+          "time_since_last_reading",
+          "activity_type"
+        ]
+      }
     },
     {
       "id": "last_message",
@@ -242,23 +225,26 @@
           "unread_count": "number"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "message_preview_card",
-          "strategy": "single_rectangular"
-        }
-      ],
-      "notRecommendedStrategies": [
-        {
-          "strategy": "single_circular",
-          "reason": "Text preview needs horizontal space unless reduced to unread count or sender initials."
-        }
+      "presentationAffordances": {
+        "primary": "sender_and_content",
+        "splittableMetrics": [
+          "unread_count"
+        ],
+        "detailFields": [
+          "sender",
+          "content",
+          "timestamp",
+          "app"
+        ]
+      },
+      "rules": [
+        "Message previews need rectangular text space unless reduced to unread count."
       ]
     },
     {
       "id": "iot_control",
       "displayName": "IoT Control",
-      "purpose": "Show smart device status and optional setpoint/control state.",
+      "purpose": "Show smart device status and optional setpoint or control state.",
       "metadata": {
         "required": {
           "device_name": "string",
@@ -271,25 +257,23 @@
           "control_action": "action"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "device_status_ring",
-          "strategy": "single_circular",
-          "useWhen": [
-            "status is the only displayed device value"
-          ]
-        },
-        {
-          "id": "device_control_card",
-          "strategy": "single_rectangular",
-          "useWhen": [
-            "current_value, set_value, or control_action is shown"
-          ]
-        },
-        {
-          "id": "device_status_plus_control",
-          "strategy": "mixed"
-        }
+      "presentationAffordances": {
+        "primary": "device_status",
+        "splittableMetrics": [
+          "status",
+          "current_value",
+          "set_value"
+        ],
+        "detailFields": [
+          "device_name",
+          "room"
+        ],
+        "controlFields": [
+          "control_action"
+        ]
+      },
+      "rules": [
+        "Visible controls require rectangular rendering."
       ]
     },
     {
@@ -308,16 +292,19 @@
           "next_step": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "navigation_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "travel_time_plus_navigation",
-          "strategy": "mixed"
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "destination_and_travel_time",
+        "splittableMetrics": [
+          "travel_time",
+          "time_to_leave",
+          "distance"
+        ],
+        "detailFields": [
+          "destination",
+          "traffic_condition",
+          "next_step"
+        ]
+      }
     },
     {
       "id": "sleep_summary",
@@ -335,20 +322,19 @@
           "previous_average": "duration"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "sleep_summary_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "sleep_metric_rings",
-          "strategy": "multi_circular"
-        },
-        {
-          "id": "sleep_score_plus_summary",
-          "strategy": "mixed"
-        }
-      ]
+      "presentationAffordances": {
+        "primary": "sleep_score_or_summary",
+        "splittableMetrics": [
+          "quality_rating",
+          "score",
+          "hours_asleep"
+        ],
+        "detailFields": [
+          "trend",
+          "sleep_goal",
+          "previous_average"
+        ]
+      }
     },
     {
       "id": "music_control",
@@ -367,20 +353,25 @@
           "artwork": "image"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "music_control_card",
-          "strategy": "single_rectangular"
-        }
-      ],
+      "presentationAffordances": {
+        "primary": "song_and_playback_state",
+        "splittableMetrics": [
+          "playback_state"
+        ],
+        "detailFields": [
+          "song",
+          "album",
+          "artist",
+          "artwork"
+        ],
+        "controlFields": [
+          "play_pause_action",
+          "next_action",
+          "previous_action"
+        ]
+      },
       "rules": [
         "Visible playback controls require rectangular rendering."
-      ],
-      "notRecommendedStrategies": [
-        {
-          "strategy": "single_circular",
-          "reason": "Circular rendering is only appropriate when showing play/pause status without song text or controls."
-        }
       ]
     },
     {
@@ -398,18 +389,22 @@
           "list_name": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "reminder_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "reminder_due_badge_and_card",
-          "strategy": "mixed",
-          "useWhen": [
-            "due time or urgency should be emphasized separately"
-          ]
-        }
+      "presentationAffordances": {
+        "primary": "content_and_due_time",
+        "splittableMetrics": [
+          "due_datetime",
+          "priority"
+        ],
+        "detailFields": [
+          "content",
+          "list_name"
+        ],
+        "controlFields": [
+          "mark_complete_action"
+        ]
+      },
+      "rules": [
+        "Visible mark complete controls require rectangular rendering."
       ]
     },
     {
@@ -429,28 +424,23 @@
           "location": "string"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "weather_temperature_gauge",
-          "strategy": "single_circular"
-        },
-        {
-          "id": "weather_detail_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "weather_metric_rings",
-          "strategy": "multi_circular"
-        },
-        {
-          "id": "weather_gauge_plus_detail",
-          "strategy": "mixed"
+      "presentationAffordances": {
+        "primary": "current_temperature_and_condition",
+        "splittableMetrics": [
+          "current_temperature",
+          "high_temperature",
+          "low_temperature",
+          "rain_chance"
+        ],
+        "detailFields": [
+          "condition",
+          "location"
+        ],
+        "conditionalFields": {
+          "rain_chance": "Show when condition includes rain.",
+          "wind": "Show only when specifically requested from context input."
         }
-      ],
-      "rules": [
-        "Show rain_chance when condition includes rain.",
-        "Show wind only if the user specifically asks for wind or context explicitly requests wind."
-      ]
+      }
     },
     {
       "id": "checklist",
@@ -467,21 +457,20 @@
           "due_datetime": "datetime"
         }
       },
-      "renderingStrategies": [
-        {
-          "id": "checklist_scroll_card",
-          "strategy": "single_rectangular"
-        },
-        {
-          "id": "checklist_progress_plus_scroll_card",
-          "strategy": "mixed",
-          "useWhen": [
-            "progress should be promoted separately from the list"
-          ]
-        }
-      ],
+      "presentationAffordances": {
+        "primary": "checklist_items",
+        "splittableMetrics": [
+          "progress",
+          "due_datetime"
+        ],
+        "detailFields": [
+          "title",
+          "items",
+          "completed_items"
+        ]
+      },
       "rules": [
-        "The list container must be rectangular and scrollable."
+        "The checklist list itself must be rectangular and scrollable."
       ]
     }
   ]

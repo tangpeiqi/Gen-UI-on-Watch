@@ -10,8 +10,30 @@ Use the JSON files to decide which component and variant an agent should choose.
 ## Components
 
 ```tsx
-import { CloseGauge, OpenGauge } from "./react-components";
+import { CloseGauge, OpenGauge, gaugeVariantGuidance } from "./react-components";
 ```
+
+## Variant Guidance
+
+Variant selection guidance lives in `gaugeVariantGuidance` so an agent can inspect when to use each variant before rendering a component.
+
+```tsx
+const guidance = gaugeVariantGuidance.open_gauge.variants.range;
+
+console.log(guidance.useWhen);
+console.log(guidance.avoidWhen);
+```
+
+Use it as the decision layer:
+
+- `close_gauge`: use when the value can only go one direction, either increase from 0 to 1 or 0 to 100, or decrease from a set number down to 0 as a countdown.
+- `open_gauge`: use when the value can start at any point within a set range, and can go both direction, up and down, as long as it is within the range.
+- `close_gauge.text`: one readable value with normalized progress.
+- `close_gauge.icon`: secondary recognizable metric with no exact value needed.
+- `open_gauge.text`: one readable value with a lighter open-arc visual.
+- `open_gauge.icon`: secondary recognizable metric that should match open-arc rhythm.
+- `open_gauge.range`: current value relative to meaningful min/max bounds.
+- `open_gauge.offset`: current value compared with a target, baseline, previous value, or reference.
 
 ## Close Gauge
 

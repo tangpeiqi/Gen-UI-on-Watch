@@ -68,6 +68,14 @@ export type OpenGaugeProps = GaugeBaseProps & {
   referenceMeasuredValue?: number;
 };
 
+export type GaugeVariantGuidance = {
+  useWhen: string[];
+  avoidWhen?: string[];
+  preferOver?: string[];
+  dataRequirements?: string[];
+  examples?: string[];
+};
+
 type TextBox = {
   fontSize: number;
   lineHeight: number;
@@ -594,4 +602,176 @@ function MeasuredDot({
 export const gaugeSpecs = {
   closeSizes,
   openSizes,
+};
+
+export const gaugeVariantGuidance = {
+  close_gauge: {
+    useWhen: [
+      "Use close_gauge when the value can only go one direction, either increase from 0 to 1 or 0 to 100, or decrease from a set number down to 0, aka a countdown.",
+    ],
+    selectionPriority: [
+      "Use text when we need unit of measurement.",
+      "Use icon when the metric is secondary and recognizable without a number.",
+    ],
+    variants: {
+      text: {
+        useWhen: [
+          "The metric has one important readable value.",
+          "What the value refers to is obvious with the unit of measurement, and we don't need any icons as context, ",
+        ],
+        avoidWhen: [
+          "The metric is not important and the user only needs to know a rough estimate",
+          "The value is too long to remain legible inside the selected circular size.",
+        ],
+        preferOver: [
+          "Prefer over icon when exact value recognition matters.",
+          "Prefer over open_gauge.text when the the value can only go on direction",
+        ],
+        dataRequirements: [
+          "Requires value, label, and progress.",
+          "Progress must be normalized from 0 to 1 before rendering.",
+        ],
+        examples: [
+          "Activity progress with value 82 and label move.",
+          "Battery percentage with value 64 and label batt.",
+        ],
+      },
+      icon: {
+        useWhen: [
+          "The metric is secondary and user needs only a rough estimate.",
+          "The metric can be understood from a familiar icon alone.",
+        ],
+        avoidWhen: [
+          "The user needs an exact value.",
+          "The icon would be ambiguous without a text label.",
+        ],
+        preferOver: [
+          "Prefer over text when the icon is enough to communicate the context and the exact value is not important.",
+          "Prefer over open_gauge.icon when the value can only go one direction",
+        ],
+        dataRequirements: [
+          "Requires icon and progress.",
+          "Progress must be normalized from 0 to 1 before rendering.",
+        ],
+        examples: [
+          "Small battery icon gauge.",
+          "Secondary mindfulness or hydration icon gauge.",
+        ],
+      },
+    },
+  },
+  open_gauge: {
+    useWhen: [
+      "Use open_gauge when the value can start at any point within a set range, and can go both direction, up and down, as long as it is within the range.",
+    ],
+    selectionPriority: [
+      "Use text when one value is enough and we need the text to tell us the metadata of the metric.",
+      "Use icon when one value is enough and the icon can communicate the metadata of the metric ",
+      "Use range when min/max context is essential.",
+      "Use offset when comparing against a reference, target, baseline, or previous value.",
+    ],
+    variants: {
+      text: {
+        useWhen: [
+          "The metric has one readable value and we need the text to tell us the metadata of the metric.",
+          "The value should be visible, but range or comparison labels would be unnecessary.",
+        ],
+        avoidWhen: [
+          "Range or offset context is available and meaningful.",
+        ],
+        preferOver: [
+          "Prefer over range and offset when extra numbers are not available, not necessary or would add clutter.",
+          "Prefer over icon when the the letter count can fit or an icon alone is not enough to communicate the meaning of the metadata.",
+        ],
+        dataRequirements: [
+          "Requires value and optional label.",
+        ],
+        examples: [
+          "Current UV index when no scale labels are shown.",
+          "Current AQI value.",
+        ],
+      },
+      icon: {
+        useWhen: [
+          "The metadata of what the metric means can be recognized by icon alone.",
+          "The value should be visible, but range or comparison labels would be unnecessary.",
+        ],
+        avoidWhen: [
+          "The icon is not self-explanatory.",
+          "Range or offset context is available and meaningful.",
+        ],
+        preferOver: [
+          "Prefer over range and offset when extra numbers are not available, not necessary or would add clutter.",
+          "Prefer over text when the metadata of the metrics has too many letter count to fit or an icon alone is enough to communicate the meaning of the metadata.",
+        ],
+        dataRequirements: [
+          "Requires value icon.",
+        ],
+        examples: [
+          "Small weather condition icon with the current temperature gauge.",
+          "Small sleep icon with the sleep score from last night.",
+        ],
+      },
+      range: {
+        useWhen: [
+          "The metric has meaningful lower and upper bounds.",
+          "The current value should be understood relative to a range.",
+          "There is another widget on the watch face from the same content type and users will know what the numbers mean when looking at all the widgets together.",
+        ],
+        avoidWhen: [
+          "There is no meaningful min and max.",
+          "The endpoint labels would be decorative rather than informative.",
+          "It is the only widget from that content type so users won’t know what the numbers mean.",
+        ],
+        preferOver: [
+          "Prefer over text or icon when min/max context changes how the user understands the current value.",
+          "Prefer over offset when the endpoints are bounds rather than a reference or baseline.",
+        ],
+        dataRequirements: [
+          "Requires value, min, max, lowLabel, highLabel, and measuredValue.",
+          "The measured dot must use normalized = clamp((measuredValue - min) / (max - min), 0, 1).",
+          "If measuredValue equals max, the dot must sit on the right/lower edge of the open gauge ring. Vice versa for min.",
+        ],
+        examples: [
+          "Weather temperature with low 55, high 68, current 68 when there is another widget showing weather condition.",
+        ],
+      },
+      offset: {
+        useWhen: [
+          "The metric compares the current value against a target, baseline, previous value, or reference.",
+          "The secondary value explains whether the current value is ahead, behind, high, low, or changed.",
+          "Two measured positions on the same arc would make the comparison easier to understand.",
+        ],
+        avoidWhen: [
+          "The secondary value would be arbitrary or confusing.",
+          "The metric is better explained as low/current/high bounds.",
+          "Only one scalar value matters.",
+        ],
+        preferOver: [
+          "Prefer over range when the second number is a reference rather than a bound.",
+          "Prefer over text or icon when comparison is the main point of the widget.",
+        ],
+        dataRequirements: [
+          "Requires value, referenceValue, and optional min and max value.",
+          "Each measured dot must be positioned from its own normalized value within min and max.",
+        ],
+        examples: [
+          "Current heart rate compared with resting heart rate.",
+          "Current pace compared with target pace.",
+          "Current temperature in the house compared with set temperature for thermostat.",
+        ],
+      },
+    },
+  },
+} satisfies {
+  close_gauge: {
+    useWhen: string[];
+    selectionPriority: string[];
+    variants: Record<"text" | "icon", GaugeVariantGuidance>;
+  };
+  open_gauge: {
+    useWhen: string[];
+    selectionPriority: string[];
+    variants: Record<"text" | "icon" | "range" | "offset", GaugeVariantGuidance>;
+  };
 };

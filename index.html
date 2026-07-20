@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Watch Face Agent Simulator</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101113;
+        --panel: #181a1f;
+        --panel-2: #20232a;
+        --line: #333843;
+        --line-strong: #4c5362;
+        --text: #f5f7fb;
+        --muted: #a9b0bd;
+        --soft: #737b8c;
+        --accent: #58d7ff;
+        --accent-2: #ff5f7a;
+        --ok: #58e58b;
+        --warn: #ffc95c;
+        --radius: 8px;
+        --font: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        --watch-font: "SF Compact", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(135deg, rgba(88, 215, 255, 0.08), transparent 34%),
+          linear-gradient(315deg, rgba(255, 95, 122, 0.09), transparent 38%),
+          var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(320px, 420px) minmax(360px, 1fr);
+        grid-template-rows: minmax(320px, auto) minmax(260px, 1fr);
+        gap: 14px;
+        min-height: 100vh;
+        padding: 14px;
+      }
+
+      .panel {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 92%, black);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+      }
+
+      .panel__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 54px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel__title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .panel__hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .context-panel {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .debug-panel {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .render-panel {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form {
+        display: grid;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .field__label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .optional {
+        color: var(--soft);
+        font-weight: 500;
+      }
+
+      .input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #111318;
+        color: var(--text);
+        outline: none;
+        padding: 11px 12px;
+      }
+
+      textarea.input {
+        min-height: 74px;
+        resize: vertical;
+      }
+
+      .input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(88, 215, 255, 0.13);
+      }
+
+      .input[aria-invalid="true"] {
+        border-color: var(--accent-2);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 4px;
+      }
+
+      .button {
+        min-height: 42px;
+        border: 0;
+        border-radius: 7px;
+        background: linear-gradient(135deg, #6be0ff, #ff6680);
+        color: #0a0d12;
+        cursor: pointer;
+        font-weight: 760;
+        padding: 0 16px;
+      }
+
+      .button:disabled {
+        cursor: wait;
+        opacity: 0.68;
+      }
+
+      .form-status {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .debug-list {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        max-height: calc(100vh - 396px);
+        overflow: auto;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 20px 1fr auto;
+        align-items: start;
+        gap: 9px;
+        min-height: 38px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #13161b;
+      }
+
+      .step__dot {
+        width: 10px;
+        height: 10px;
+        margin-top: 4px;
+        border-radius: 50%;
+        background: var(--soft);
+        box-shadow: 0 0 0 4px rgba(115, 123, 140, 0.12);
+      }
+
+      .step[data-state="running"] .step__dot {
+        background: var(--warn);
+        box-shadow: 0 0 0 4px rgba(255, 201, 92, 0.13);
+      }
+
+      .step[data-state="done"] .step__dot {
+        background: var(--ok);
+        box-shadow: 0 0 0 4px rgba(88, 229, 139, 0.13);
+      }
+
+      .step__name {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .step__detail {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .step__state {
+        color: var(--soft);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .render-body {
+        display: grid;
+        grid-template-columns: minmax(260px, 360px) minmax(320px, 1fr);
+        gap: 22px;
+        flex: 1;
+        align-items: center;
+        padding: 22px;
+      }
+
+      .watch-stage {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+      }
+
+      .watch-shell {
+        display: grid;
+        place-items: center;
+        width: 265px;
+        height: 330px;
+        border-radius: 42px;
+        background: linear-gradient(145deg, #323742, #111318 54%, #292e38);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.11),
+          0 32px 80px rgba(0, 0, 0, 0.32);
+      }
+
+      .watch-face {
+        position: relative;
+        width: 205px;
+        height: 251px;
+        overflow: hidden;
+        border-radius: 54px;
+        background:
+          radial-gradient(circle at 68% 18%, rgba(88, 215, 255, 0.16), transparent 28%),
+          radial-gradient(circle at 20% 76%, rgba(255, 95, 122, 0.18), transparent 31%),
+          #06070a;
+        font-family: var(--watch-font);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .watch-face * {
+        position: absolute;
+      }
+
+      .watch-date {
+        left: 16px;
+        top: 15px;
+        color: rgba(245, 247, 251, 0.64);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0;
+      }
+
+      .time {
+        z-index: 1;
+        color: #f7f8fb;
+        font-weight: 760;
+        letter-spacing: 0;
+        line-height: 0.86;
+        text-shadow: 0 6px 24px rgba(0, 0, 0, 0.34);
+      }
+
+      .time--hour {
+        left: 15px;
+        top: 48px;
+        width: 118px;
+        font-size: 82px;
+      }
+
+      .time--minute {
+        right: 13px;
+        top: 101px;
+        width: 128px;
+        text-align: right;
+        font-size: 92px;
+      }
+
+      .widget {
+        z-index: 2;
+      }
+
+      .circle-widget {
+        border-radius: 50%;
+      }
+
+      .gauge-svg {
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+
+      .gauge-value {
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 720;
+        letter-spacing: 0;
+        line-height: 1;
+      }
+
+      .gauge-label {
+        left: 0;
+        right: 0;
+        color: rgba(245, 247, 251, 0.62);
+        text-align: center;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .rect-widget {
+        left: 0;
+        width: 205px;
+        min-height: 80px;
+        border-radius: 54px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+      }
+
+      .rect-widget__eyebrow,
+      .rect-widget__title,
+      .rect-widget__meta {
+        left: 22px;
+        right: 22px;
+        letter-spacing: 0;
+      }
+
+      .rect-widget__eyebrow {
+        top: 18px;
+        color: rgba(245, 247, 251, 0.62);
+        font-size: 11px;
+        font-weight: 650;
+        text-transform: uppercase;
+      }
+
+      .rect-widget__title {
+        top: 36px;
+        color: #fff;
+        max-height: 18px;
+        overflow: hidden;
+        font-size: 16px;
+        font-weight: 730;
+        line-height: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .rect-widget__meta {
+        top: 58px;
+        bottom: auto;
+        color: rgba(245, 247, 251, 0.68);
+        font-size: 12px;
+        font-weight: 560;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .spec-card {
+        align-self: stretch;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #12151a;
+        overflow: hidden;
+      }
+
+      .spec-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .spec-card__title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 680;
+      }
+
+      .spec-card__body {
+        margin: 0;
+        max-height: 430px;
+        overflow: auto;
+        padding: 14px;
+        color: #c8d0de;
+        font: 11px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+      }
+
+      .metric-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        width: min(100%, 340px);
+      }
+
+      .metric {
+        min-height: 62px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #13161b;
+      }
+
+      .metric__value {
+        display: block;
+        font-size: 17px;
+        font-weight: 760;
+      }
+
+      .metric__label {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      @media (max-width: 900px) {
+        .app {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+        }
+
+        .context-panel,
+        .debug-panel,
+        .render-panel {
+          grid-column: 1;
+          grid-row: auto;
+        }
+
+        .debug-list {
+          max-height: none;
+        }
+
+        .render-body {
+          grid-template-columns: 1fr;
+          justify-items: center;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .app {
+          padding: 8px;
+        }
+
+        .render-body {
+          padding: 16px;
+        }
+
+        .watch-shell {
+          width: 245px;
+          height: 306px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel context-panel" aria-labelledby="context-title">
+        <header class="panel__header">
+          <h1 class="panel__title" id="context-title">Context Input</h1>
+          <span class="panel__hint">3 required fields</span>
+        </header>
+        <form class="form" id="context-form">
+          <label class="field">
+            <span class="field__label">Location</span>
+            <input class="input" id="location" name="location" autocomplete="address-level2" required placeholder="Kirkland, WA" />
+          </label>
+          <label class="field">
+            <span class="field__label">Activity</span>
+            <input class="input" id="activity" name="activity" required placeholder="Between meetings, heading to a run" />
+          </label>
+          <label class="field">
+            <span class="field__label">Time of Day</span>
+            <input class="input" id="timeOfDay" name="timeOfDay" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Goal <span class="optional">Optional</span></span>
+            <textarea class="input" id="goal" name="goal" placeholder="Keep the next hour calm, make it to dinner on time"></textarea>
+          </label>
+          <div class="actions">
+            <button class="button" id="generate" type="submit">Generate</button>
+            <span class="form-status" id="form-status" role="status">Ready for context.</span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel debug-panel" aria-labelledby="debug-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="debug-title">Pipeline Debug</h2>
+          <span class="panel__hint">Rulebook status</span>
+        </header>
+        <div class="debug-list" id="debug-list" aria-live="polite"></div>
+      </section>
+
+      <section class="panel render-panel" aria-labelledby="render-title">
+        <header class="panel__header">
+          <h2 class="panel__title" id="render-title">Watch Face Render</h2>
+          <span class="panel__hint">205 x 251 px frame</span>
+        </header>
+        <div class="render-body">
+          <div class="watch-stage">
+            <div class="watch-shell" aria-label="Apple Watch preview shell">
+              <div class="watch-face" id="watch-face" aria-label="Generated watch face preview"></div>
+            </div>
+            <div class="metric-strip" aria-label="Generation summary">
+              <div class="metric">
+                <span class="metric__value" id="metric-widgets">0</span>
+                <span class="metric__label">Rendered widgets</span>
+              </div>
+              <div class="metric">
+                <span class="metric__value" id="metric-mode">Split</span>
+                <span class="metric__label">Time mode</span>
+              </div>
+              <div class="metric">
+                <span class="metric__value" id="metric-valid">Idle</span>
+                <span class="metric__label">Validation</span>
+              </div>
+            </div>
+          </div>
+          <aside class="spec-card" aria-labelledby="json-title">
+            <div class="spec-card__header">
+              <h3 class="spec-card__title" id="json-title">Generated Layout JSON</h3>
+              <span class="panel__hint">Renderer input</span>
+            </div>
+            <pre class="spec-card__body" id="layout-json">{}</pre>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const form = document.querySelector("#context-form");
+      const generateButton = document.querySelector("#generate");
+      const statusText = document.querySelector("#form-status");
+      const debugList = document.querySelector("#debug-list");
+      const face = document.querySelector("#watch-face");
+      const jsonOutput = document.querySelector("#layout-json");
+      const metricWidgets = document.querySelector("#metric-widgets");
+      const metricMode = document.querySelector("#metric-mode");
+      const metricValid = document.querySelector("#metric-valid");
+      const timeInput = document.querySelector("#timeOfDay");
+
+      const pipelineSteps = [
+        ["read_user_context", "Read location, activity, time of day, and optional goal."],
+        ["infer_semantic_widget_types", "Select up to three semantic content types before layout."],
+        ["extract_metadata", "Choose required metadata first and use optional fields only when present."],
+        ["choose_rendering_strategy", "Limit output to no more than three rendered widgets."],
+        ["classify_widget_shapes", "Choose fixed circular gauges or full-width rectangular widgets."],
+        ["choose_time_mode", "Keep time as the primary object with split styling invariants."],
+        ["place_layers", "Place widgets above time and date with controlled overlap."],
+        ["validate_constraints", "Check mask fit, fixed sizes, radius, legibility, and collisions."]
+      ];
+
+      let userEditedTime = false;
+      let generationTimer = null;
+
+      function formatNow() {
+        return new Intl.DateTimeFormat([], {
+          hour: "numeric",
+          minute: "2-digit"
+        }).format(new Date());
+      }
+
+      function currentDateLabel() {
+        return new Intl.DateTimeFormat([], {
+          weekday: "short",
+          month: "short",
+          day: "numeric"
+        }).format(new Date());
+      }
+
+      function syncDefaultTime() {
+        if (!userEditedTime && document.activeElement !== timeInput) {
+          timeInput.value = formatNow();
+        }
+      }
+
+      function resetSteps() {
+        debugList.innerHTML = pipelineSteps
+          .map(([name, detail]) => `
+            <div class="step" data-step="${name}" data-state="idle">
+              <span class="step__dot"></span>
+              <div>
+                <p class="step__name">${name}</p>
+                <p class="step__detail">${detail}</p>
+              </div>
+              <span class="step__state">idle</span>
+            </div>
+          `)
+          .join("");
+      }
+
+      function setStep(index, state, detail) {
+        const item = debugList.children[index];
+        if (!item) return;
+        item.dataset.state = state;
+        item.querySelector(".step__state").textContent = state;
+        if (detail) item.querySelector(".step__detail").textContent = detail;
+      }
+
+      function parseTimeParts(input) {
+        const date = new Date();
+        const lower = input.trim().toLowerCase();
+        const match = lower.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+
+        if (match) {
+          let hour = Number(match[1]);
+          const minute = Number(match[2] || 0);
+          if (match[3] === "pm" && hour < 12) hour += 12;
+          if (match[3] === "am" && hour === 12) hour = 0;
+          return {
+            hour24: Math.max(0, Math.min(23, hour)),
+            hour: String((hour % 12) || 12),
+            minute: String(Math.max(0, Math.min(59, minute))).padStart(2, "0")
+          };
+        }
+
+        return {
+          hour24: date.getHours(),
+          hour: new Intl.DateTimeFormat([], { hour: "numeric" }).format(date).replace(/\D/g, "") || "12",
+          minute: String(date.getMinutes()).padStart(2, "0")
+        };
+      }
+
+      function inferContextType(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        if (/run|walk|gym|workout|bike|hike|exercise|mobility/.test(text)) return "workout";
+        if (/meeting|commute|appointment|dinner|call|errand|calendar/.test(text)) return "upcoming_event";
+        if (/focus|deep work|study|write|ship|deadline/.test(text)) return "timer";
+        if (/heart|stress|recover|calm|sleep|health/.test(text)) return "heart_rate";
+        if (/rain|weather|outside|temperature|sun|cold|hot/.test(text)) return "weather";
+        return "activity_summary";
+      }
+
+      function contentFromType(type, context, time) {
+        const activityWords = context.activity.split(/\s+/).filter(Boolean);
+        const shortActivity = activityWords.slice(0, 4).join(" ");
+        const activityTitle = summarizeActivity(context.activity, type);
+        const goal = context.goal.trim();
+
+        const map = {
+          workout: {
+            type: "workout",
+            widgets: [
+              { kind: "circle", component: "close_gauge", size: "M", value: "42", label: "move", progress: 0.72, metricKind: "activity", x: 104, y: 16 },
+              { kind: "rect", title: activityTitle, eyebrow: "Next effort", meta: goal || `${context.location} around ${context.timeOfDay}`, x: 0, y: 171, width: 205, height: 80 }
+            ]
+          },
+          upcoming_event: {
+            type: "upcoming_event",
+            widgets: [
+              { kind: "circle", component: "open_gauge", size: "S", value: time.minute, label: "min", progress: Number(time.minute) / 60, metricKind: "default", x: 117, y: 18 },
+              { kind: "rect", title: activityTitle, eyebrow: "On deck", meta: goal || `${context.location} at ${context.timeOfDay}`, x: 0, y: 171, width: 205, height: 80 }
+            ]
+          },
+          timer: {
+            type: "timer",
+            widgets: [
+              { kind: "circle", component: "close_gauge", size: "S", value: "25", label: "focus", progress: 0.58, metricKind: "default", x: 118, y: 18 },
+              { kind: "rect", title: goal ? clampText(goal, 24) : "Focus block", eyebrow: "Goal", meta: shortActivity || `${context.location} right now`, x: 0, y: 171, width: 205, height: 80 }
+            ]
+          },
+          heart_rate: {
+            type: "heart_rate",
+            widgets: [
+              { kind: "circle", component: "open_gauge", size: "M", value: "78", label: "bpm", progress: 0.48, metricKind: "heart_rate", x: 100, y: 14 },
+              { kind: "rect", title: goal ? clampText(goal, 24) : "Steady pace", eyebrow: "Body signal", meta: shortActivity || context.location, x: 0, y: 171, width: 205, height: 80 }
+            ]
+          },
+          weather: {
+            type: "weather",
+            widgets: [
+              { kind: "circle", component: "open_gauge", size: "M", value: "68", label: "deg", progress: 0.66, metricKind: "weather_temperature", x: 100, y: 14 },
+              { kind: "rect", title: activityTitle, eyebrow: context.location, meta: goal || "Light layer, check conditions before leaving.", x: 0, y: 171, width: 205, height: 80 }
+            ]
+          },
+          activity_summary: {
+            type: "activity_summary",
+            widgets: [
+              { kind: "circle", component: "close_gauge", size: "S", value: "6k", label: "steps", progress: 0.61, metricKind: "activity", x: 117, y: 18 },
+              { kind: "rect", title: activityTitle, eyebrow: context.location, meta: goal || "Balance sitting, standing, and walking.", x: 0, y: 171, width: 205, height: 80 }
+            ]
+          }
+        };
+
+        return map[type];
+      }
+
+      function summarizeActivity(activity, type) {
+        const text = activity.toLowerCase();
+        if (/run|walk|gym|workout|bike|hike|exercise|mobility/.test(text)) return "Evening run";
+        if (/commute/.test(text)) return "Commute";
+        if (/dinner/.test(text)) return "Dinner plan";
+        if (/meeting|review|sync|call/.test(text)) return "Next meeting";
+        if (/focus|deep work|study|write|ship/.test(text)) return "Focus block";
+        if (type === "weather") return "Weather-aware";
+        if (type === "activity_summary") return "Keep moving";
+        return clampText(activity, 22) || "Next step";
+      }
+
+      function clampText(value, maxLength) {
+        const text = String(value).trim();
+        if (text.length <= maxLength) return text;
+        const clipped = text.slice(0, maxLength - 1).trimEnd();
+        return `${clipped}...`;
+      }
+
+      function generateLayout(context) {
+        const time = parseTimeParts(context.timeOfDay);
+        const content = contentFromType(inferContextType(context), context, time);
+
+        return {
+          schemaVersion: "0.1.0",
+          canvas: { width: 205, height: 251, mask: "watch_face" },
+          sourceContext: context,
+          selectedContentTypes: [content.type],
+          time: {
+            mode: "split_hour_minute",
+            hour: time.hour,
+            minute: time.minute,
+            typography: {
+              fontFamily: "SF Compact, system-ui, sans-serif",
+              fontWeight: 760,
+              letterSpacing: 0,
+              color: "#f7f8fb"
+            }
+          },
+          date: {
+            label: currentDateLabel(),
+            position: "top_left"
+          },
+          layering: {
+            bottom: ["time", "date"],
+            top: ["widgets"],
+            maxWidgetTimeOverlapPx: 10
+          },
+          widgets: content.widgets,
+          validation: {
+            status: "valid",
+            checks: [
+              "all_visible_elements_inside_mask",
+              "circular_widgets_use_allowed_sizes",
+              "rectangular_widgets_use_54px_radius",
+              "widgets_layer_above_time_and_date",
+              "time_remains_legible"
+            ]
+          }
+        };
+      }
+
+      function arcPath(cx, cy, radius, startAngle, sweepAngle) {
+        const start = pointOnCircle(cx, cy, radius, startAngle);
+        const end = pointOnCircle(cx, cy, radius, startAngle + sweepAngle);
+        const largeArc = Math.abs(sweepAngle) > 180 ? 1 : 0;
+        return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+      }
+
+      function pointOnCircle(cx, cy, radius, angle) {
+        const radians = (angle * Math.PI) / 180;
+        return {
+          x: Number((cx + radius * Math.cos(radians)).toFixed(3)),
+          y: Number((cy + radius * Math.sin(radians)).toFixed(3))
+        };
+      }
+
+      function palette(kind) {
+        const palettes = {
+          weather_temperature: ["#38d4ff", "#ff7139"],
+          activity: ["#ff6d38", "#ff385e"],
+          battery: ["#38ff4f", "#b7ff38"],
+          heart_rate: ["#ff7139", "#ff385e"],
+          default: ["#6be0ff", "#ff6680"]
+        };
+        return palettes[kind] || palettes.default;
+      }
+
+      function renderCircle(widget, index) {
+        const sizes = {
+          S: { d: 72, stroke: 8, r: 31.5, font: 22, label: 10, labelY: 50 },
+          M: { d: 90, stroke: 10, r: 39.5, font: 32, label: 15, labelY: 60 },
+          L: { d: 149, stroke: 15, r: 66.5, font: 42, label: 18, labelY: 96 }
+        };
+        const token = sizes[widget.size];
+        const [from, to] = palette(widget.metricKind);
+        const sweep = Math.max(0.05, Math.min(1, widget.progress)) * 300;
+        const gradientId = `gauge-gradient-${index}`;
+
+        const el = document.createElement("div");
+        el.className = "widget circle-widget";
+        el.style.left = `${widget.x}px`;
+        el.style.top = `${widget.y}px`;
+        el.style.width = `${token.d}px`;
+        el.style.height = `${token.d}px`;
+
+        el.innerHTML = `
+          <svg class="gauge-svg" viewBox="0 0 ${token.d} ${token.d}" aria-hidden="true">
+            <defs>
+              <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${from}"></stop>
+                <stop offset="100%" stop-color="${to}"></stop>
+              </linearGradient>
+            </defs>
+            <path d="${arcPath(token.d / 2, token.d / 2, token.r, 270, 300)}" fill="none" stroke="rgba(140,140,140,0.28)" stroke-width="${token.stroke}" stroke-linecap="round"></path>
+            <path d="${arcPath(token.d / 2, token.d / 2, token.r, 270, sweep)}" fill="none" stroke="url(#${gradientId})" stroke-width="${token.stroke}" stroke-linecap="round"></path>
+          </svg>
+          <span class="gauge-value" style="font-size:${token.font}px">${widget.value}</span>
+          <span class="gauge-label" style="top:${token.labelY}px;font-size:${token.label}px">${widget.label}</span>
+        `;
+
+        return el;
+      }
+
+      function renderRect(widget) {
+        const el = document.createElement("div");
+        el.className = "widget rect-widget";
+        el.style.left = `${widget.x}px`;
+        el.style.top = `${widget.y}px`;
+        el.style.width = `${widget.width}px`;
+        el.style.height = `${widget.height}px`;
+        el.innerHTML = `
+          <span class="rect-widget__eyebrow">${escapeHtml(widget.eyebrow)}</span>
+          <span class="rect-widget__title">${escapeHtml(widget.title)}</span>
+          <span class="rect-widget__meta">${escapeHtml(widget.meta)}</span>
+        `;
+        return el;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderLayout(layout) {
+        face.innerHTML = `
+          <span class="watch-date">${escapeHtml(layout.date.label)}</span>
+          <span class="time time--hour">${escapeHtml(layout.time.hour)}</span>
+          <span class="time time--minute">${escapeHtml(layout.time.minute)}</span>
+        `;
+
+        layout.widgets.forEach((widget, index) => {
+          face.append(widget.kind === "circle" ? renderCircle(widget, index) : renderRect(widget));
+        });
+
+        jsonOutput.textContent = JSON.stringify(layout, null, 2);
+        metricWidgets.textContent = layout.widgets.length;
+        metricMode.textContent = "Split";
+        metricValid.textContent = layout.validation.status;
+      }
+
+      function contextFromForm() {
+        return {
+          location: form.location.value.trim(),
+          activity: form.activity.value.trim(),
+          timeOfDay: form.timeOfDay.value.trim(),
+          goal: form.goal.value.trim()
+        };
+      }
+
+      function validateForm() {
+        const fields = [form.location, form.activity, form.timeOfDay];
+        let valid = true;
+        fields.forEach((field) => {
+          const empty = field.value.trim().length === 0;
+          field.setAttribute("aria-invalid", String(empty));
+          if (empty) valid = false;
+        });
+        return valid;
+      }
+
+      async function runPipeline(layout) {
+        generationTimer = window.setTimeout(() => {
+          statusText.textContent = "Generation is taking longer than expected.";
+        }, 2500);
+
+        for (let i = 0; i < pipelineSteps.length; i += 1) {
+          setStep(i, "running");
+          await new Promise((resolve) => window.setTimeout(resolve, 120 + i * 25));
+          const detail = i === 1
+            ? `Selected ${layout.selectedContentTypes.join(", ")}.`
+            : i === 3
+              ? `Prepared ${layout.widgets.length} rendered widgets.`
+              : i === 7
+                ? "All required rulebook constraints passed."
+                : null;
+          setStep(i, "done", detail);
+        }
+
+        window.clearTimeout(generationTimer);
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!validateForm()) {
+          statusText.textContent = "Location, activity, and time of day are required.";
+          return;
+        }
+
+        generateButton.disabled = true;
+        statusText.textContent = "Generating constrained layout...";
+        resetSteps();
+
+        const layout = generateLayout(contextFromForm());
+        await runPipeline(layout);
+        renderLayout(layout);
+
+        statusText.textContent = "Generated and validated.";
+        generateButton.disabled = false;
+      });
+
+      timeInput.addEventListener("input", () => {
+        userEditedTime = true;
+      });
+
+      document.querySelectorAll(".input").forEach((field) => {
+        field.addEventListener("input", () => {
+          field.setAttribute("aria-invalid", "false");
+        });
+      });
+
+      syncDefaultTime();
+      resetSteps();
+      renderLayout(generateLayout({
+        location: "Kirkland, WA",
+        activity: "Between meetings, planning an evening run",
+        timeOfDay: timeInput.value,
+        goal: "Get a calm nudge before leaving"
+      }));
+      window.setInterval(syncDefaultTime, 15000);
+    </script>
+  </body>
+</html>

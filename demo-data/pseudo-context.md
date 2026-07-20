@@ -25,6 +25,15 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Optional evening run if rain stays light
 - Video call with family later tonight
 
+### Active Timer Context
+- Timer label: Tea steeping timer
+- Countdown: 3 min 40 sec remaining
+- Total duration: 5 min
+- Remaining seconds: 220
+- Timer inferred from context: The persona started tea during a short break before the 3:00 PM one-on-one
+- Available actions: pause, cancel
+- Watch-friendly summary: Tea timer has less than 4 minutes left
+
 ### Calendar Events
 #### Today
 - 8:30 AM: Commute to office — Location: Kirkland to Bellevue
@@ -37,6 +46,15 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - 6:15 PM: Grocery pickup — Location: PCC Community Markets, Bellevue
 - 7:15 PM: Easy run or indoor mobility session — Location: Kirkland waterfront or home living room
 - 8:30 PM: Family video call — Location: Home, Kirkland
+
+### Navigation Context
+- Destination: PCC Community Markets, Bellevue
+- Traffic condition: Moderate traffic on NE 8th St, light congestion near Bellevue Way
+- Travel time: 12 min from Bellevue office
+- Time to leave: 6:00 PM to arrive by the 6:15 PM grocery pickup window
+- Distance: 2.6 miles
+- Next step: Head west toward Bellevue Way, then continue to PCC pickup parking
+- Watch-friendly summary: Leave around 6:00 PM; traffic is manageable but slower than usual near downtown Bellevue
 
 #### Tomorrow
 - 7:45 AM: School drop-off favor for neighbor — Location: Peter Kirk Elementary, Kirkland
@@ -52,6 +70,14 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - 9:15 PM: Finance check-in and bill review — Location: Home, Kirkland
 
 ### Heart Rate
+#### Latest Reading
+- Last reading: 76 bpm
+- Time since last reading: 6 min ago
+- Activity type: seated work
+- High within same activity type today: 84 bpm
+- Low within same activity type today: 68 bpm
+- Watch-friendly summary: Heart rate is normal for seated work after lunch
+
 #### Ranges From The Last 3 Hours
 - Last hour, runtime time offset 0 to -1 hr: 72-78 bpm, seated work after lunch
 - Previous hour, runtime time offset -1 to -2 hr: 82-112 bpm, brisk walk, lunch, and return to office
@@ -77,6 +103,17 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 
 ### Activity
 - Average active calories burned per day from last week: 621 calories
+
+### Workout Context
+- Workout type: Easy run
+- Duration: 28 min planned
+- Calories burned: 0 calories so far
+- Calorie goal: 300 calories
+- Past week average workout calories: 288 calories
+- Elapsed time: Not started
+- Progress: 0%
+- Scheduled time: today, 7:15 PM
+- Watch-friendly summary: Evening easy run is planned but not started; weather may push it to indoor mobility
 
 #### Today, runtime date offset 0
 - Observed activities:
@@ -158,6 +195,9 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Watch-friendly summary: Best day this week for an outdoor workout
 
 ### Grocery Checklist
+- Checklist title: Grocery pickup list
+- Checklist progress: 0 of 10 completed
+- Checklist due date and time: today, 6:15 PM
 - Greek yogurt
 - Blueberries
 - Bananas
@@ -170,7 +210,7 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Trail mix
 
 ### Reminders
-- Review notes before one-on-one — Reminder service time: today, afternoon — Due: today, 2:45 PM
+- Review notes before one-on-one — Reminder service time: today, afternoon — Due: today, 2:45 PM — Mark complete action: available
 - Pick up groceries after work — Reminder service time: today, evening — Due: today, 6:15 PM
 - Reply to family group chat — Reminder service time: today, evening — Due: today, 8:00 PM
 - Prep lunch for tomorrow — Reminder service time: today, 9 PM — Due: today, 10:00 PM
@@ -183,6 +223,17 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Plan weekend trail route — Reminder service time: four days later, evening — Due: four days later, 9 PM
 
 ### Music Playlist
+#### Now Playing
+- Song: Good Days
+- Album: SOS
+- Artist: SZA
+- Playback state: paused
+- Play/pause action: play
+- Next action: next track
+- Previous action: previous track
+- Watch-friendly summary: Good Days is paused and ready to resume
+
+#### Queue
 - "Cranes in the Sky" — Album: A Seat at the Table — Artist: Solange
 - "Get You" — Album: Freudian — Artist: Daniel Caesar featuring Kali Uchis
 - "Come Through and Chill" — Album: War & Leisure — Artist: Miguel featuring J. Cole and Salaam Remi
@@ -202,10 +253,13 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 
 ### IoT Context
 - Thermostat:
+  - Device name: Home thermostat
+  - Status: heating toward set temperature
   - Location: Home, Kirkland
   - Current temperature: 68°F
   - Set temperature: 70°F
   - Mode: Heat
   - Fan: Auto
   - Home status: Away during workday
+  - Control action: adjust set temperature
   - Watch-friendly summary: Home is slightly cool; warming to 70°F before evening return
