@@ -54,7 +54,7 @@
 
       .masthead h1 {
         margin: 0;
-        font-size: clamp(40px, 3.7vw, 64px);
+        font-size: 64px;
         font-weight: 700;
         line-height: 1.05;
         letter-spacing: 0;
@@ -352,7 +352,19 @@
         }
 
         .left-panels {
-          grid-template-rows: auto auto;
+          display: contents;
+        }
+
+        .context-panel {
+          order: 1;
+        }
+
+        .preview-panel {
+          order: 2;
+        }
+
+        .debug-panel {
+          order: 3;
         }
 
         .debug-panel {
@@ -376,6 +388,7 @@
         }
 
         .masthead h1 {
+          font-size: 32px;
           white-space: normal;
         }
 
