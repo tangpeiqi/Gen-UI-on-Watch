@@ -4,7 +4,8 @@
   "relatedDocuments": [
     "watch-face-generation-rules.md",
     "widget-content-types.md",
-    "component-catalog.json"
+    "Circular Widget Guidelines/circular-widget-catalog.json",
+    "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
   ],
   "selectionContract": {
     "steps": [
@@ -178,8 +179,18 @@
           "cancel_action"
         ]
       },
+      "renderingConstraints": {
+        "allowedShapes": [
+          "circular",
+          "rectangular"
+        ],
+        "circularComponent": "close_gauge",
+        "rectangularTemplate": "rectangular_layout_templates.timer_rectangular",
+        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+      },
       "rules": [
-        "Visible controls require rectangular rendering."
+        "Visible controls require rectangular rendering.",
+        "Timer may render as a Close Gauge circular widget, or as a rectangular widget using rectangular_layout_templates.timer_rectangular."
       ]
     },
     {
@@ -370,8 +381,16 @@
           "previous_action"
         ]
       },
+      "renderingConstraints": {
+        "allowedShapes": [
+          "rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.music_control",
+        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+      },
       "rules": [
-        "Visible playback controls require rectangular rendering."
+        "Visible playback controls require rectangular rendering.",
+        "Must use rectangular_layout_templates.music_control when rendered."
       ]
     },
     {
@@ -403,8 +422,16 @@
           "mark_complete_action"
         ]
       },
+      "renderingConstraints": {
+        "allowedShapes": [
+          "rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.reminder",
+        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+      },
       "rules": [
-        "Visible mark complete controls require rectangular rendering."
+        "Visible mark complete controls require rectangular rendering.",
+        "Must use rectangular_layout_templates.reminder when rendered."
       ]
     },
     {
@@ -469,8 +496,18 @@
           "completed_items"
         ]
       },
+      "renderingConstraints": {
+        "allowedShapes": [
+          "full_watch_face_rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.checklist_full_face",
+        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json",
+        "mustBeOnlyWidget": true
+      },
       "rules": [
-        "The checklist list itself must be rectangular and scrollable."
+        "The checklist list itself must be rectangular and scrollable.",
+        "Must use rectangular_layout_templates.checklist_full_face.",
+        "Must be the only widget on the watch face."
       ]
     }
   ]

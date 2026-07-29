@@ -33,8 +33,9 @@
     }
   },
   "colorPolicy": {
-    "agentMayChooseColors": true,
-    "rule": "The agent may choose progress, gradient, measured-dot, and text accent colors based on the content, while preserving geometry and contrast.",
+    "agentMayChooseColors": false,
+    "rule": "Circular widget colors are resolved by watch-face-generation-rules.md before rendering. Components consume widget_accent_color or the component-specific two-color open gauge rule; they do not invent independent colors.",
+    "sourceOfTruth": "watch-face-generation-rules.md widget_accent_color",
     "minimumContrast": {
       "primaryTextOnBlack": "4.5:1",
       "secondaryTextOnBlack": "3:1",
@@ -48,34 +49,32 @@
       "secondaryText": "rgba(242, 244, 252, 0.6)",
       "dotOutline": "#000000"
     },
-    "semanticPalettes": {
-      "default": {
-        "progress": "#FF385E",
-        "gradient": ["#FF6D38", "#FF385E"],
-        "low": "#FF6E39",
-        "high": "#FF385E",
-        "measuredDot": "#FF564A"
+    "closeGauge": {
+      "accentColorCount": 1,
+      "accentColorSource": "widget_accent_color",
+      "rules": [
+        "Apply widget_accent_color to the text, icon, number, and value arc.",
+        "The base ring always uses fixedDefaults.trackGray.",
+        "Do not use gradients in close_gauge."
+      ]
+    },
+    "openGauge": {
+      "accentColorCount": "1_or_2",
+      "colorSource": "watch-face-generation-rules.md",
+      "oneColorMode": {
+        "color": "widget_accent_color",
+        "rules": [
+          "The open ring, measure, text, number, and icon use widget_accent_color."
+        ]
       },
-      "weather_temperature": {
-        "gradient": ["#38D4FF", "#38FF4F", "#FF7139"],
-        "low": "#38D4FF",
-        "high": "#FF7139",
-        "measuredDot": "interpolateAlongGradient"
-      },
-      "activity": {
-        "progress": "#FF385E",
-        "gradient": ["#FF6D38", "#FF385E"],
-        "measuredDot": "#FF385E"
-      },
-      "battery": {
-        "progress": "#38FF4F",
-        "gradient": ["#38FF4F", "#B7FF38"],
-        "measuredDot": "#38FF4F"
-      },
-      "heart_rate": {
-        "progress": "#FF385E",
-        "gradient": ["#FF7139", "#FF385E"],
-        "measuredDot": "#FF385E"
+      "twoColorMode": {
+        "colors": ["start_color", "end_color"],
+        "rules": [
+          "The open ring uses start_color to end_color as a gradient.",
+          "For open_gauge.text and open_gauge.icon, the measure, text, number, and icon use the interpolated color between start_color and end_color based on normalized measure position.",
+          "For open_gauge.range, the low number uses start_color and the high number uses end_color.",
+          "For open_gauge.offset, assign the two colors as set and offset colors. Set text and measure use set_color; offset text and measure use offset_color. The value arc uses the gradient from set_color to offset_color."
+        ]
       }
     }
   },
@@ -164,12 +163,14 @@
         },
         "colors": {
           "defaults": {
-            "progress": "#FF385E",
+            "progress": "widget_accent_color",
             "track": "rgba(140, 140, 140, 0.28)",
-            "valueText": "#FFFFFF",
-            "labelText": "rgba(242, 244, 252, 0.6)"
+            "valueText": "widget_accent_color",
+            "labelText": "widget_accent_color",
+            "icon": "widget_accent_color"
           },
-          "contentAware": true
+          "contentAware": false,
+          "sourceOfTruth": "watch-face-generation-rules.md widget_accent_color"
         }
       },
       "preferredWebImplementation": {
@@ -313,7 +314,7 @@
               {
                 "id": "current_measure",
                 "valueSource": "measuredValue || value",
-                "colorSource": "semanticPalette.measuredDot or color interpolated along gradient"
+                "colorSource": "color interpolated between start_color and end_color by normalized measured value; widget_accent_color when one-color mode is used"
               }
             ]
           },
@@ -322,32 +323,35 @@
               {
                 "id": "reference_measure",
                 "valueSource": "referenceMeasuredValue || referenceValue",
-                "colorSource": "semanticPalette.low or referenceAccent"
+                "colorSource": "set_color"
               },
               {
                 "id": "current_measure",
                 "valueSource": "measuredValue || value",
-                "colorSource": "semanticPalette.high or currentAccent"
+                "colorSource": "offset_color"
               }
             ]
           },
           "style": {
-            "fill": "content-aware accent color",
+            "fill": "rulebook-resolved accent color",
             "stroke": "#000000",
             "strokeWidth": "size.measureDot.strokeWidth"
           }
         },
         "colors": {
           "defaults": {
-            "rangeGradient": ["#FF6D38", "#FF385E"],
-            "offsetGradient": ["#44D4FF", "#38FF4F", "#FF7139"],
+            "singleAccent": "widget_accent_color",
+            "rangeGradient": ["start_color", "end_color"],
+            "offsetGradient": ["set_color", "offset_color"],
             "track": "#3D3D3D",
-            "currentText": "#FFFFFF",
-            "lowText": "#FF6E39",
-            "highText": "#FF385E",
-            "referenceText": "#38FF4F"
+            "textIconInterpolatedColor": "interpolate(start_color, end_color, normalized_measure_position)",
+            "lowText": "start_color",
+            "highText": "end_color",
+            "setText": "set_color",
+            "offsetText": "offset_color"
           },
-          "contentAware": true
+          "contentAware": false,
+          "sourceOfTruth": "watch-face-generation-rules.md"
         }
       },
       "preferredWebImplementation": {
@@ -392,7 +396,7 @@
     {
       "id": "color-choice-preserves-shape",
       "strictness": "must",
-      "rule": "Content-aware color choices must not change size, stroke width, text position, arc angle, or measured-dot position."
+      "rule": "Rulebook-resolved color choices must not change size, stroke width, text position, arc angle, or measured-dot position."
     }
   ]
 }

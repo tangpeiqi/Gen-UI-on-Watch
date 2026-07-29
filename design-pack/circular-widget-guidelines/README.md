@@ -2,16 +2,17 @@
 
 These components implement the webpage rendering contract described in:
 
-- `../component-catalog.json`
-- `../visual-specs.json`
+- `./circular-widget-catalog.json`
+- `./circular-widget-visual-specs.json`
 
 Use the JSON files to decide which component and variant an agent should choose. Use these React components to render the chosen widget consistently in a webpage.
 
 ## Components
 
 ```tsx
-import { CloseGauge, OpenGauge, gaugeVariantGuidance } from "./react-components";
+import { CloseGauge, OpenGauge, gaugeColorGuidance, gaugeVariantGuidance } from "./CircularGauges";
 ```
+
 
 ## Variant Guidance
 
@@ -94,9 +95,40 @@ For this weather example, `measuredValue` equals `max`, so the dot is rendered a
 />
 ```
 
-## Color Overrides
+## Color Contract
 
-Agents may pick colors based on content. Pass `colors` when the semantic palette is not enough:
+Circular gauge colors are decided by `watch-face-generation-rules.md`.
+
+`CloseGauge` can only have one accent color. Use the resolved `widget_accent_color` for the value arc, text, number, and icon. The base ring always uses the translucent light grey track.
+
+```tsx
+<CloseGauge
+  property="text"
+  size="M"
+  value="82"
+  label="move"
+  progress={0.82}
+  colors={{ widgetAccentColor }}
+/>
+```
+
+`OpenGauge` can use one accent color or two colors.
+
+If it uses one accent color, pass the resolved `widget_accent_color`:
+
+```tsx
+<OpenGauge
+  property="text"
+  size="M"
+  value="8"
+  min={0}
+  max={11}
+  measuredValue={8}
+  colors={{ widgetAccentColor }}
+/>
+```
+
+If it uses two colors, pass them as `gradientColors`. The open ring uses those colors as its gradient.
 
 ```tsx
 <OpenGauge
@@ -109,8 +141,19 @@ Agents may pick colors based on content. Pass `colors` when the semantic palette
   highLabel="11"
   measuredValue={8}
   colors={{
-    gradient: ["#38D4FF", "#FFEA38", "#FF7139"],
-    measuredDot: "#FFEA38"
+    gradientColors: ["#38D4FF", "#FF7139"]
   }}
 />
+```
+
+Variant-specific color rules:
+
+- `open_gauge.text` and `open_gauge.icon`: text, number, icon, and measure use the color between the gradient start and end based on normalized measure position.
+- `open_gauge.range`: low uses the start color; high uses the end color; the measured dot follows the normalized position on the gradient.
+- `open_gauge.offset`: the two colors become set and offset colors. Set text/measure use the set color; offset text/measure use the offset color; the value arc uses the gradient from set to offset.
+
+Agents can inspect the same rules programmatically:
+
+```tsx
+console.log(gaugeColorGuidance.open_gauge.variantRules?.offset);
 ```

@@ -10,6 +10,10 @@ export type MetricKind =
   | string;
 
 export type ColorOverrides = {
+  widgetAccentColor?: string;
+  gradientColors?: string[];
+  setColor?: string;
+  offsetColor?: string;
   progress?: string;
   gradient?: string[];
   track?: string;
@@ -35,6 +39,9 @@ type ResolvedColors = {
   trackGray: string;
   trackDark: string;
   track?: string;
+  widgetAccentColor: string;
+  setColor: string;
+  offsetColor: string;
   valueText: string;
   labelText: string;
   lowText: string;
@@ -74,6 +81,12 @@ export type GaugeVariantGuidance = {
   preferOver?: string[];
   dataRequirements?: string[];
   examples?: string[];
+};
+
+export type GaugeColorGuidance = {
+  source: string;
+  rules: string[];
+  variantRules?: Record<string, string[]>;
 };
 
 type TextBox = {
@@ -202,19 +215,29 @@ const palettes: Record<string, Required<Pick<ColorOverrides, "progress" | "gradi
 
 function resolveColors(metricKind: MetricKind = "default", overrides: ColorOverrides = {}): ResolvedColors {
   const palette = palettes[metricKind] || palettes.default;
+  const widgetAccentColor = overrides.widgetAccentColor ?? overrides.progress ?? palette.progress;
+  const gradient =
+    overrides.gradientColors ??
+    overrides.gradient ??
+    (overrides.widgetAccentColor ? [widgetAccentColor] : palette.gradient ?? [widgetAccentColor]);
+  const setColor = overrides.setColor ?? gradient[0] ?? widgetAccentColor;
+  const offsetColor = overrides.offsetColor ?? gradient[gradient.length - 1] ?? widgetAccentColor;
 
   return {
-    progress: overrides.progress ?? palette.progress,
-    gradient: overrides.gradient ?? palette.gradient,
+    progress: widgetAccentColor,
+    gradient,
     measuredDot: overrides.measuredDot ?? palette.measuredDot,
     trackGray: "rgba(140, 140, 140, 0.28)",
     trackDark: "#3D3D3D",
     track: overrides.track,
-    valueText: overrides.valueText ?? "#FFFFFF",
-    labelText: overrides.labelText ?? "rgba(242, 244, 252, 0.6)",
-    lowText: overrides.lowText ?? palette.lowText ?? "#FF6E39",
-    highText: overrides.highText ?? palette.highText ?? "#FF385E",
-    referenceText: overrides.referenceText ?? palette.referenceText ?? "#38FF4F",
+    widgetAccentColor,
+    setColor,
+    offsetColor,
+    valueText: overrides.valueText ?? widgetAccentColor,
+    labelText: overrides.labelText ?? widgetAccentColor,
+    lowText: overrides.lowText ?? setColor,
+    highText: overrides.highText ?? offsetColor,
+    referenceText: overrides.referenceText ?? setColor,
     dotOutline: overrides.dotOutline ?? "#000000",
   };
 }
@@ -346,6 +369,13 @@ function textBoxStyle(box: TextBox, color: string): CSSProperties {
 }
 
 function iconBoxStyle(box: { x: number; y: number; width: number; height: number }): CSSProperties {
+  return iconBoxStyleWithColor(box, "#FFFFFF");
+}
+
+function iconBoxStyleWithColor(
+  box: { x: number; y: number; width: number; height: number },
+  color: string,
+): CSSProperties {
   return {
     position: "absolute",
     left: box.x,
@@ -354,13 +384,16 @@ function iconBoxStyle(box: { x: number; y: number; width: number; height: number
     height: box.height,
     display: "grid",
     placeItems: "center",
-    color: "#FFFFFF",
+    color,
   };
 }
 
 function gradientStops(colors: string[]) {
   if (colors.length === 1) {
-    return [{ color: colors[0], offset: "0%" }];
+    return [
+      { color: colors[0], offset: "0%" },
+      { color: colors[0], offset: "100%" },
+    ];
   }
 
   return colors.map((color, index) => ({
@@ -447,11 +480,11 @@ export function CloseGauge({
       </svg>
 
       {property === "icon" ? (
-        <div style={iconBoxStyle(spec.iconBox)}>{icon}</div>
+        <div style={iconBoxStyleWithColor(spec.iconBox, colors.widgetAccentColor)}>{icon}</div>
       ) : (
         <>
-          <div style={textBoxStyle(spec.text.value, colors.valueText)}>{value}</div>
-          <div style={textBoxStyle(spec.text.label, colors.labelText)}>{label}</div>
+          <div style={textBoxStyle(spec.text.value, colors.widgetAccentColor)}>{value}</div>
+          <div style={textBoxStyle(spec.text.label, colors.widgetAccentColor)}>{label}</div>
         </>
       )}
     </GaugeFrame>
@@ -488,10 +521,15 @@ export function OpenGauge({
       : asNumber(referenceValue);
   const currentDotNormalized =
     typeof currentDotValue === "number" ? normalizeMeasuredValue(currentDotValue, min, max) : 0.5;
+  const interpolatedAccent = colorAlongGradient(gradientColors, currentDotNormalized);
   const currentDotFill =
-    colors.measuredDot === "interpolateAlongGradient"
-      ? colorAlongGradient(gradientColors, currentDotNormalized)
-      : colors.measuredDot || palettes.default.measuredDot;
+    property === "range" && !colorOverrides?.measuredDot
+      ? interpolatedAccent
+      : colors.measuredDot === "interpolateAlongGradient"
+      ? interpolatedAccent
+      : property === "offset"
+        ? colors.offsetColor
+        : colors.measuredDot || interpolatedAccent;
   const dotRadius = spec.measureDot.diameter / 2;
   const showDots = property === "range" || property === "offset";
   const showTrack = property !== "range";
@@ -535,7 +573,7 @@ export function OpenGauge({
             point={measureDotPoint(referenceDotValue, min, max, size)}
             radius={dotRadius}
             strokeWidth={spec.measureDot.strokeWidth}
-            fill={colors.referenceText}
+            fill={colors.setColor}
             stroke={colors.dotOutline}
           />
         )}
@@ -550,11 +588,11 @@ export function OpenGauge({
         )}
       </svg>
 
-      {property === "icon" && <div style={iconBoxStyle(spec.iconBox)}>{icon}</div>}
+      {property === "icon" && <div style={iconBoxStyleWithColor(spec.iconBox, interpolatedAccent)}>{icon}</div>}
       {property === "text" && (
         <>
-          <div style={textBoxStyle(spec.text.current, colors.valueText)}>{value}</div>
-          <div style={textBoxStyle(spec.text.reference, colors.labelText)}>{label}</div>
+          <div style={textBoxStyle(spec.text.current, interpolatedAccent)}>{value}</div>
+          <div style={textBoxStyle(spec.text.reference, interpolatedAccent)}>{label}</div>
         </>
       )}
       {property === "range" && (
@@ -566,8 +604,8 @@ export function OpenGauge({
       )}
       {property === "offset" && (
         <>
-          <div style={textBoxStyle(spec.text.current, colors.highText)}>{value}</div>
-          <div style={textBoxStyle(spec.text.reference, colors.referenceText)}>{referenceValue}</div>
+          <div style={textBoxStyle(spec.text.current, colors.offsetColor)}>{value}</div>
+          <div style={textBoxStyle(spec.text.reference, colors.setColor)}>{referenceValue}</div>
         </>
       )}
     </GaugeFrame>
@@ -603,6 +641,47 @@ export const gaugeSpecs = {
   closeSizes,
   openSizes,
 };
+
+export const gaugeColorGuidance = {
+  close_gauge: {
+    source: "watch-face-generation-rules.md widget_accent_color",
+    rules: [
+      "Close Gauge can only have one accent color.",
+      "The single accent color must be the widget_accent_color resolved by watch-face-generation-rules.md.",
+      "Apply widget_accent_color to the value arc, text, number, and icon.",
+      "The base ring must always use the translucent light grey track color.",
+    ],
+  },
+  open_gauge: {
+    source: "watch-face-generation-rules.md widget_accent_color and optional two-color circular gauge rule",
+    rules: [
+      "Open Gauge can use one accent color or two colors, decided by watch-face-generation-rules.md.",
+      "If one accent color is used, it must be widget_accent_color.",
+      "If two colors are used, the open ring must use those colors as a gradient from start to end.",
+    ],
+    variantRules: {
+      text: [
+        "The measure, text, number, and icon color must be the color between the start and end of the gradient based on the measure position normalized from start to end.",
+        "When only one accent color is used, the measure, text, number, and icon all use widget_accent_color.",
+      ],
+      icon: [
+        "The measure, text, number, and icon color must be the color between the start and end of the gradient based on the measure position normalized from start to end.",
+        "When only one accent color is used, the measure, text, number, and icon all use widget_accent_color.",
+      ],
+      range: [
+        "The low number must use the start color of the gradient.",
+        "The high number must use the end color of the gradient.",
+        "The measured dot should use the color between the start and end of the gradient based on the measured value position normalized from start to end.",
+      ],
+      offset: [
+        "The two colors are assigned as set and offset colors.",
+        "The text and measure representing the set number must use the set color.",
+        "The text and measure representing the offset number must use the offset color.",
+        "The value arc must use the gradient from the set color to the offset color.",
+      ],
+    },
+  },
+} satisfies Record<"close_gauge" | "open_gauge", GaugeColorGuidance>;
 
 export const gaugeVariantGuidance = {
   close_gauge: {

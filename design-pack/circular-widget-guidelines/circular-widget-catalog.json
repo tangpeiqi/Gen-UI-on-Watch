@@ -4,13 +4,17 @@
   "source": {
     "figmaFileName": "2026 Projects",
     "figmaFileKey": "3biDt7StqMPp22ws1FVx3v",
-    "canonicalReference": "Figma components are the visual reference, but webpage generation must use visual-specs.json for SVG/CSS construction."
+    "canonicalReference": "Figma components are the visual reference, but webpage generation must use circular-widget-visual-specs.json for SVG/CSS construction."
+  },
+  "renderer": {
+    "path": "CircularGauges.tsx",
+    "exports": ["CloseGauge", "OpenGauge"]
   },
   "globalRules": [
     {
       "id": "web-rendering-contract",
       "strictness": "must",
-      "rule": "When generating webpage UI, choose a component from this catalog and render it using the matching entry in visual-specs.json."
+      "rule": "When generating webpage UI, choose a component from this catalog and render it using the matching entry in circular-widget-visual-specs.json."
     },
     {
       "id": "fixed-circular-sizes",
@@ -18,15 +22,19 @@
       "rule": "Circular widgets must use exactly one declared size token. Do not stretch or scale a gauge to arbitrary dimensions."
     },
     {
-      "id": "content-aware-colors",
-      "strictness": "should",
-      "rule": "The agent may choose gauge colors based on the metric content, while preserving the component geometry, typography, contrast, and measured-dot behavior."
+      "id": "watch-rule-owned-colors",
+      "strictness": "must",
+      "rule": "Circular gauge colors must be resolved by watch-face-generation-rules.md. Close Gauge consumes one widget_accent_color. Open Gauge consumes either one widget_accent_color or two rule-selected colors for its component-specific gradient behavior."
     }
   ],
   "components": [
     {
       "id": "close_gauge",
       "displayName": "Close Gauge",
+      "renderer": {
+        "path": "CircularGauges.tsx",
+        "component": "CloseGauge"
+      },
       "figma": {
         "componentSetNodeId": "560:871",
         "url": "https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=560-871",
@@ -87,7 +95,7 @@
         "metricKind": {
           "type": "string",
           "required": false,
-          "description": "Optional semantic hint used by the renderer to choose content-aware colors."
+          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color from watch-face-generation-rules.md."
         }
       },
       "selectionGuidance": [
@@ -122,6 +130,10 @@
     {
       "id": "open_gauge",
       "displayName": "Open Gauge",
+      "renderer": {
+        "path": "CircularGauges.tsx",
+        "component": "OpenGauge"
+      },
       "figma": {
         "componentSetNodeId": "560:885",
         "url": "https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=560-885",
@@ -217,7 +229,7 @@
         "metricKind": {
           "type": "string",
           "required": false,
-          "description": "Optional semantic hint used by the renderer to choose content-aware colors."
+          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color or the two-color open gauge rule from watch-face-generation-rules.md."
         }
       },
       "selectionGuidance": [

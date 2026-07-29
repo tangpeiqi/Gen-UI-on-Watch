@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Exact webpage rendering specs for strict rectangular watch-face templates.",
+  "coordinateSystem": {
+    "unit": "pt",
+    "origin": "top-left",
+    "webMapping": "1pt maps to 1 CSS px in the web simulator."
+  },
+  "webImplementation": {
+    "preferred": "react_components_with_css_layout",
+    "requirements": [
+      "Render only approved templates from rectangular-widget-catalog.json.",
+      "Use React components in RectangularWidgets.tsx for webpage UI.",
+      "Do not rasterize Figma frames for final webpage UI.",
+      "Do not rearrange strict template regions.",
+      "Use widget_accent_color resolved by watch-face-generation-rules.md for accent-bearing parts.",
+      "Clip child content to the rectangular widget bounds."
+    ]
+  },
+  "sharedTokens": {
+    "widget": {
+      "width": 205,
+      "background": "#000000",
+      "cornerRadius": 54,
+      "cornerSmoothing": 0.6,
+      "cornerSmoothingPercent": 60,
+      "cornerSmoothingIntent": "iOS continuous corner treatment",
+      "clipContent": true,
+      "defaultInnerPadding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+      "progressBarEdgePaddingException": {
+        "topProgressBarTopPadding": 0,
+        "bottomProgressBarBottomPadding": 0
+      }
+    },
+    "typography": {
+      "fontFamily": "SF Compact, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+      "letterSpacing": 0,
+      "body": { "fontSize": 19, "lineHeight": 21.5, "fontWeight": 400 },
+      "bodyEmphasis": { "fontSize": 19, "lineHeight": 21.5, "fontWeight": 600 },
+      "numbers": { "fontSize": 40, "lineHeight": 42.5, "fontWeight": 400 }
+    },
+    "colors": {
+      "primaryText": "#FFFFFF",
+      "secondaryText": "rgba(242, 244, 252, 0.6)",
+      "mutedSurface": "rgba(242, 244, 252, 0.1)",
+      "radioUnselectedStroke": "#9BA0AA",
+      "radioSelected": "#F2F4FC",
+      "progressBase": "rgba(242, 244, 252, 0.1)",
+      "progressValue": "widget_accent_color",
+      "materialSymbolIcon": "widget_accent_color"
+    },
+    "controls": {
+      "buttonBox": { "width": 48, "height": 48 },
+      "radioBox": { "width": 24, "height": 24 },
+      "radioOuter": { "diameter": 16, "strokeWidth": 2 },
+      "radioInner": { "diameter": 10 }
+    },
+    "progressBar": {
+      "width": 173,
+      "height": 12,
+      "baseColor": "rgba(242, 244, 252, 0.1)",
+      "valueColor": "widget_accent_color",
+      "valueWidthBehavior": "progress * width"
+    }
+  },
+  "templates": {
+    "music_control": {
+      "widget": {
+        "width": 205,
+        "height": 140,
+        "layout": "vertical",
+        "padding": { "top": 16, "right": 16, "bottom": 0, "left": 16 },
+        "gap": 10,
+        "cornerRadius": 54,
+        "cornerSmoothing": 0.6,
+        "clipContent": true
+      },
+      "regions": {
+        "textGroup": {
+          "width": 173,
+          "height": 44,
+          "layout": "vertical",
+          "gap": 0,
+          "children": [
+            { "slot": "song", "unit": "bodyEmphasis", "height": 22, "color": "primaryText" },
+            { "slot": "artistOrAlbum", "unit": "secondary", "height": 22, "color": "secondaryText" }
+          ]
+        },
+        "controls": {
+          "width": 173,
+          "height": 48,
+          "layout": "horizontal",
+          "distribution": "space-between",
+          "buttons": ["previous", "playPause", "next"]
+        },
+        "progress": {
+          "position": "bottom",
+          "width": 173,
+          "height": 12,
+          "verticalGapFromEdge": 0,
+          "attachedEdgeInnerPadding": 0
+        }
+      }
+    },
+    "reminder": {
+      "widget": {
+        "width": 205,
+        "height": 127,
+        "layout": "vertical",
+        "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+        "gap": 8,
+        "cornerRadius": 54,
+        "cornerSmoothing": 0.6,
+        "clipContent": true
+      },
+      "regions": {
+        "metadataRow": {
+          "width": 173,
+          "height": 22,
+          "leftReservedSpace": 32,
+          "textUnit": "secondary"
+        },
+        "taskRow": {
+          "width": 173,
+          "layout": "horizontal",
+          "gap": 8,
+          "children": ["radioButton", "bodyEmphasis"]
+        }
+      }
+    },
+    "timer_rectangular": {
+      "widget": {
+        "width": 205,
+        "height": 139,
+        "layout": "vertical",
+        "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+        "gap": 16,
+        "cornerRadius": 54,
+        "cornerSmoothing": 0.6,
+        "clipContent": true
+      },
+      "regions": {
+        "countdown": {
+          "unit": "numbers",
+          "format": "timer_duration"
+        },
+        "controls": {
+          "width": 173,
+          "height": 48,
+          "layout": "horizontal",
+          "distribution": "space-between",
+          "buttons": ["reset", "startPause", "cancel"]
+        }
+      }
+    },
+    "checklist_full_face": {
+      "widget": {
+        "width": 205,
+        "height": 251,
+        "layout": "absolute",
+        "occupiesEntireWatchFace": true,
+        "cornerRadius": "watch_mask"
+      },
+      "regions": {
+        "date": { "x": 16, "y": 16, "unit": "body" },
+        "currentTime": { "x": 139, "y": 16, "unit": "body", "align": "right" },
+        "title": { "x": 16, "y": 42, "unit": "bodyEmphasis" },
+        "list": {
+          "x": 6,
+          "y": 71,
+          "width": 193,
+          "layout": "vertical",
+          "gap": 2,
+          "visibleItemCount": 4,
+          "item": {
+            "width": 193,
+            "height": 56,
+            "cornerRadius": 8,
+            "fill": "mutedSurface",
+            "padding": { "left": 8, "right": 8 },
+            "gap": 4,
+            "children": ["radioButton", "body"]
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "rejectIf": [
+      "music_control rendered without music_control template",
+      "reminder rendered without reminder template",
+      "rectangular timer rendered without timer_rectangular template",
+      "checklist rendered with any other widget on the face",
+      "checklist rendered outside checklist_full_face template",
+      "required control slot omitted",
+      "regular rectangular widget missing 16px inner padding",
+      "edge progress bar has vertical padding from attached edge",
+      "rectangular widget allows child content to bleed outside bounds"
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Agent-readable catalog for selecting strict rectangular watch-face widget templates before rendering them on a webpage.",
+  "relatedDocuments": [
+    "rectangular-widget-composition-guidelines.md",
+    "rectangular-widget-visual-specs.json",
+    "RectangularWidgets.tsx",
+    "../watch-face-generation-rules.md",
+    "../widget-content-types.md",
+    "../widget-content-types.json"
+  ],
+  "renderer": {
+    "path": "RectangularWidgets.tsx",
+    "exports": [
+      "MusicControlWidget",
+      "ReminderWidget",
+      "TimerRectangularWidget",
+      "ChecklistFace"
+    ]
+  },
+  "globalRules": [
+    {
+      "id": "rectangular-full-width-corner-contract",
+      "strictness": "must",
+      "rule": "Regular rectangular widgets must be 205pt wide, use 54pt corner radius, and use 60% corner smoothing. Height may vary by template or layout need."
+    },
+    {
+      "id": "rectangular-padding-and-clipping-contract",
+      "strictness": "must",
+      "rule": "Regular rectangular widgets must use 16px inner padding on all sides and clip child content to the widget bounds. If a progress bar is attached to the top or bottom edge, that attached edge's inner padding must be 0px."
+    },
+    {
+      "id": "render-approved-templates-only",
+      "strictness": "must",
+      "rule": "When a listed content type renders as a rectangular widget, choose the required template from this catalog and render it using rectangular-widget-visual-specs.json."
+    },
+    {
+      "id": "strict-templates-preserve-structure",
+      "strictness": "must",
+      "rule": "Substitute content, control state, icon choices, progress values, and widget_accent_color only. Do not rearrange required regions or control slots."
+    },
+    {
+      "id": "accent-owned-by-watch-rules",
+      "strictness": "must",
+      "rule": "widget_accent_color is resolved by watch-face-generation-rules.md and consumed by rectangular templates."
+    }
+  ],
+  "templates": [
+    {
+      "id": "music_control",
+      "displayName": "Music Control",
+      "contentType": "music_control",
+      "component": "MusicControlWidget",
+      "renderer": {
+        "path": "RectangularWidgets.tsx",
+        "component": "MusicControlWidget"
+      },
+      "shape": "rectangular_widget",
+      "strict": true,
+      "legalSize": { "width": 205, "height": 140 },
+      "requiredData": {
+        "song": "string",
+        "playPauseAction": "action"
+      },
+      "optionalData": {
+        "artist": "string",
+        "album": "string",
+        "previousAction": "action",
+        "nextAction": "action",
+        "progress": "number from 0 to 1",
+        "playbackState": "playing|paused"
+      },
+      "rules": [
+        "Music Control must use this template when rendered.",
+        "Preserve previous, play/pause, and next control slots.",
+        "Preserve bottom edge progress bar with no bottom padding."
+      ],
+      "visualSpecId": "music_control"
+    },
+    {
+      "id": "reminder",
+      "displayName": "Reminder",
+      "contentType": "reminder",
+      "component": "ReminderWidget",
+      "renderer": {
+        "path": "RectangularWidgets.tsx",
+        "component": "ReminderWidget"
+      },
+      "shape": "rectangular_widget",
+      "strict": true,
+      "legalSize": { "width": 205, "height": 127 },
+      "requiredData": {
+        "content": "string",
+        "dueDatetime": "datetime"
+      },
+      "optionalData": {
+        "label": "string",
+        "completed": "boolean",
+        "priority": "string",
+        "listName": "string",
+        "markCompleteAction": "action"
+      },
+      "rules": [
+        "Reminder must use this template when rendered.",
+        "Place the radio button on the left of the reminder content.",
+        "Render the main reminder content as Body Emphasis."
+      ],
+      "visualSpecId": "reminder"
+    },
+    {
+      "id": "timer_rectangular",
+      "displayName": "Timer Rectangular",
+      "contentType": "timer",
+      "component": "TimerRectangularWidget",
+      "renderer": {
+        "path": "RectangularWidgets.tsx",
+        "component": "TimerRectangularWidget"
+      },
+      "shape": "rectangular_widget",
+      "strict": true,
+      "legalSize": { "width": 205, "height": 139 },
+      "alternativeAllowedComponent": "close_gauge",
+      "alternativeComponentCatalog": "../Circular Widget Guidelines/circular-widget-catalog.json",
+      "requiredData": {
+        "countdown": "duration"
+      },
+      "optionalData": {
+        "timerLabel": "string",
+        "running": "boolean",
+        "resetAction": "action",
+        "startPauseAction": "action",
+        "cancelAction": "action"
+      },
+      "rules": [
+        "Timer may render as Close Gauge or this rectangular template.",
+        "If Timer renders as rectangular, it must use this template.",
+        "Preserve reset, start/pause, and cancel control slots."
+      ],
+      "visualSpecId": "timer_rectangular"
+    },
+    {
+      "id": "checklist_full_face",
+      "displayName": "Checklist Full Face",
+      "contentType": "checklist",
+      "component": "ChecklistFace",
+      "renderer": {
+        "path": "RectangularWidgets.tsx",
+        "component": "ChecklistFace"
+      },
+      "shape": "full_watch_face_rectangular",
+      "strict": true,
+      "legalSize": { "width": 205, "height": 251 },
+      "mustBeOnlyWidget": true,
+      "requiredData": {
+        "items": "array"
+      },
+      "optionalData": {
+        "completedItems": "array",
+        "title": "string",
+        "dateLabel": "string",
+        "timeLabel": "string",
+        "progress": "number from 0 to 1",
+        "dueDatetime": "datetime"
+      },
+      "rules": [
+        "Checklist must use this full-face template.",
+        "Checklist must be the only widget on the watch face.",
+        "Render checklist items as rows with radio buttons on the left and Body text on the right."
+      ],
+      "visualSpecId": "checklist_full_face"
+    }
+  ]
+}

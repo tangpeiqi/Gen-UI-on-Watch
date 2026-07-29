@@ -165,6 +165,7 @@ content_types:
         - cancel_action
     rules:
       - Visible controls require rectangular rendering.
+      - Timer may render as a Close Gauge circular widget from `Circular Widget Guidelines/circular-widget-catalog.json`, or as a rectangular widget using `rectangular_layout_templates.timer_rectangular` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
 
   heart_rate:
     purpose: Show the latest heart rate reading and optional activity range.
@@ -304,6 +305,7 @@ content_types:
         - previous_action
     rules:
       - Visible playback controls require rectangular rendering.
+      - Must use `rectangular_layout_templates.music_control` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json` when rendered.
 
   reminder:
     purpose: Show a reminder and due time.
@@ -327,6 +329,7 @@ content_types:
         - mark_complete_action
     rules:
       - Visible mark complete controls require rectangular rendering.
+      - Must use `rectangular_layout_templates.reminder` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json` when rendered.
 
   weather:
     purpose: Show current weather and daily temperature range.
@@ -375,4 +378,6 @@ content_types:
         - completed_items
     rules:
       - The checklist list itself must be rectangular and scrollable.
+      - Must use `rectangular_layout_templates.checklist_full_face` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
+      - Must be the only widget on the watch face.
 ```
