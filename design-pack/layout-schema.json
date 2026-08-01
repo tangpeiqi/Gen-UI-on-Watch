@@ -1,0 +1,1021 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gen-ui-on-watch.local/design-pack/layout-schema.json",
+  "title": "Gen UI Watch Face Layout",
+  "description": "Strict layout contract for generated Apple Watch face UI. The model returns this JSON only; renderers own all HTML, CSS, SVG, and component implementation details.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "targetContainer",
+    "metadata",
+    "canvas",
+    "colorSystem",
+    "time",
+    "date",
+    "widgets",
+    "layers"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "targetContainer": {
+      "const": "Gen Watch Face"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "canvas": {
+      "$ref": "#/$defs/canvas"
+    },
+    "colorSystem": {
+      "$ref": "#/$defs/colorSystem"
+    },
+    "time": {
+      "$ref": "#/$defs/time"
+    },
+    "date": {
+      "$ref": "#/$defs/date"
+    },
+    "widgets": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/circularWidget"
+          },
+          {
+            "$ref": "#/$defs/rectangularWidget"
+          }
+        ]
+      }
+    },
+    "layers": {
+      "$ref": "#/$defs/layers"
+    }
+  },
+  "$defs": {
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "workout",
+        "activity_summary",
+        "upcoming_event",
+        "timer",
+        "heart_rate",
+        "last_message",
+        "iot_control",
+        "map_navigation",
+        "sleep_summary",
+        "music_control",
+        "reminder",
+        "weather",
+        "checklist"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipelinePhase",
+        "provider",
+        "model",
+        "promptVersion",
+        "schemaVersion",
+        "selectedContentTypes",
+        "retryCount",
+        "fallbackUsed",
+        "contextSource",
+        "generationStepProvenance"
+      ],
+      "properties": {
+        "pipelinePhase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "promptVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "selectedContentTypes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/contentType"
+          }
+        },
+        "retryCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fallbackUsed": {
+          "type": "boolean"
+        },
+        "fallbackId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fallbackReason": {
+          "type": "string",
+          "enum": [
+            "no_ai_provider",
+            "api_failure",
+            "timeout",
+            "invalid_output",
+            "budget_exhausted"
+          ]
+        },
+        "contextSource": {
+          "type": "string",
+          "enum": [
+            "live_context",
+            "live_context_plus_pseudo_context",
+            "live_context_plus_mock_pseudo_context"
+          ]
+        },
+        "generationStepProvenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "read-live-context",
+              "load-pseudo-context",
+              "select-content-types",
+              "choose-widgets",
+              "choose-fallback-layout",
+              "populate-widgets",
+              "generate-layout-json",
+              "validate",
+              "render"
+            ]
+          }
+        }
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "borderRadius",
+        "coordinateSystem"
+      ],
+      "properties": {
+        "width": {
+          "const": 205
+        },
+        "height": {
+          "const": 251
+        },
+        "borderRadius": {
+          "const": 54
+        },
+        "coordinateSystem": {
+          "const": "fixed"
+        }
+      }
+    },
+    "colorSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accentColor",
+        "sourceRule"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "mono_tone",
+            "multicolor"
+          ]
+        },
+        "accentColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{6})$"
+        },
+        "sourceRule": {
+          "type": "string",
+          "enum": [
+            "one-content-type-prefers-mono-tone",
+            "two-content-types-prefers-multicolor",
+            "three-content-types-flexible-color-mode",
+            "user-context-explicit-color-mode"
+          ]
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 205
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 251
+        }
+      }
+    },
+    "textStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "letterSpacing",
+        "color",
+        "treatment"
+      ],
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fontSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000
+        },
+        "letterSpacing": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+        },
+        "treatment": {
+          "type": "string",
+          "enum": [
+            "fill",
+            "outline_stroke"
+          ]
+        }
+      }
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "value",
+        "layer",
+        "frame",
+        "style"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "single_line",
+            "split_hour_minute",
+            "segmented_digits"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "const": "bottom"
+        },
+        "frame": {
+          "$ref": "#/$defs/frame"
+        },
+        "style": {
+          "$ref": "#/$defs/textStyle"
+        }
+      }
+    },
+    "date": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "priority",
+        "layer",
+        "frame",
+        "style"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "const": "secondary"
+        },
+        "layer": {
+          "const": "bottom"
+        },
+        "frame": {
+          "$ref": "#/$defs/frame"
+        },
+        "style": {
+          "$ref": "#/$defs/textStyle"
+        }
+      }
+    },
+    "widgetFrame": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/frame"
+        }
+      ]
+    },
+    "circularWidget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "contentType",
+        "shape",
+        "component",
+        "variant",
+        "data",
+        "frame",
+        "layer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "contentType": {
+          "$ref": "#/$defs/contentType"
+        },
+        "shape": {
+          "const": "circular"
+        },
+        "component": {
+          "type": "string",
+          "enum": [
+            "close_gauge",
+            "open_gauge"
+          ]
+        },
+        "variant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "property",
+            "size"
+          ],
+          "properties": {
+            "property": {
+              "type": "string",
+              "enum": [
+                "text",
+                "icon",
+                "range",
+                "offset"
+              ]
+            },
+            "size": {
+              "type": "string",
+              "enum": [
+                "S",
+                "M",
+                "L"
+              ]
+            }
+          }
+        },
+        "data": {
+          "$ref": "#/$defs/widgetData"
+        },
+        "frame": {
+          "$ref": "#/$defs/widgetFrame"
+        },
+        "layer": {
+          "const": "top"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "component": {
+                "const": "close_gauge"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "variant": {
+                "properties": {
+                  "property": {
+                    "enum": [
+                      "text",
+                      "icon"
+                    ]
+                  }
+                }
+              },
+              "data": {
+                "required": [
+                  "progress"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "variant": {
+                "properties": {
+                  "property": {
+                    "const": "text"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "required": [
+                  "value",
+                  "label"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "variant": {
+                "properties": {
+                  "property": {
+                    "const": "icon"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "required": [
+                  "icon"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "variant": {
+                "properties": {
+                  "property": {
+                    "enum": [
+                      "range",
+                      "offset"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "required": [
+                  "value",
+                  "min",
+                  "max"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "rectangularWidget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "contentType",
+        "shape",
+        "template",
+        "data",
+        "frame",
+        "layer",
+        "cornerRadius",
+        "verticalAlignment"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "contentType": {
+          "$ref": "#/$defs/contentType"
+        },
+        "shape": {
+          "const": "rectangular"
+        },
+        "template": {
+          "type": "string",
+          "enum": [
+            "music_control",
+            "reminder",
+            "timer_rectangular",
+            "checklist_full_face",
+            "generated_rectangular_widget"
+          ]
+        },
+        "data": {
+          "$ref": "#/$defs/widgetData"
+        },
+        "composition": {
+          "$ref": "#/$defs/generatedRectangularComposition"
+        },
+        "frame": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "x": {
+              "const": 0
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "const": 205
+            },
+            "height": {
+              "type": "number",
+              "minimum": 80,
+              "maximum": 251
+            }
+          }
+        },
+        "layer": {
+          "const": "top"
+        },
+        "cornerRadius": {
+          "const": 54
+        },
+        "verticalAlignment": {
+          "type": "string",
+          "enum": [
+            "top",
+            "bottom"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "reminder"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "contentType"
+            ],
+            "properties": {
+              "contentType": {
+                "const": "reminder"
+              },
+              "data": {
+                "required": [
+                  "content",
+                  "dueDatetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "timer_rectangular"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "contentType"
+            ],
+            "properties": {
+              "contentType": {
+                "const": "timer"
+              },
+              "data": {
+                "required": [
+                  "countdown"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "music_control"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "contentType"
+            ],
+            "properties": {
+              "contentType": {
+                "const": "music_control"
+              },
+              "data": {
+                "required": [
+                  "song",
+                  "playPauseAction"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "checklist_full_face"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "contentType"
+            ],
+            "properties": {
+              "contentType": {
+                "const": "checklist"
+              },
+              "data": {
+                "required": [
+                  "items"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "template": {
+                "const": "generated_rectangular_widget"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "composition"
+            ],
+            "not": {
+              "properties": {
+                "contentType": {
+                  "enum": [
+                    "music_control",
+                    "reminder",
+                    "timer",
+                    "checklist"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "generatedRectangularComposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "padding",
+        "gap",
+        "blocks"
+      ],
+      "properties": {
+        "layout": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "padding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ],
+          "properties": {
+            "top": {
+              "type": "number",
+              "enum": [
+                0,
+                16
+              ]
+            },
+            "right": {
+              "const": 16
+            },
+            "bottom": {
+              "type": "number",
+              "enum": [
+                0,
+                16
+              ]
+            },
+            "left": {
+              "const": 16
+            }
+          }
+        },
+        "gap": {
+          "type": "number",
+          "enum": [
+            0,
+            4,
+            8,
+            10,
+            16
+          ]
+        },
+        "verticalAlignment": {
+          "type": "string",
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ]
+        },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/generatedRectangularBlock"
+          }
+        }
+      }
+    },
+    "generatedRectangularBlock": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "inline_small_icon_text",
+            "big_icon_text_group",
+            "number_text_lockup",
+            "edge_progress_bar"
+          ]
+        }
+      }
+    },
+    "widgetData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string",
+          "enum": [
+            "activity_mobility",
+            "activity_sitting",
+            "activity_standing",
+            "activity_walking",
+            "calendar",
+            "checklist",
+            "commute",
+            "heart_rate",
+            "location",
+            "map_navigation",
+            "message",
+            "music",
+            "sleep",
+            "thermometer",
+            "timer",
+            "time",
+            "weather_cloudy",
+            "weather_partly_cloudy",
+            "weather_rain",
+            "weather_rainy",
+            "weather_snowy",
+            "weather_umbrella",
+            "weather_sunny",
+            "weather_windy",
+            "workout_running",
+            "workout_strength",
+            "workout_trail_run"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "metricKind": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "lowLabel": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "highLabel": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "referenceValue": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "measuredValue": {
+          "type": "number"
+        },
+        "content": {
+          "type": "string"
+        },
+        "dueDatetime": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "listName": {
+          "type": "string"
+        },
+        "countdown": {
+          "type": "string"
+        },
+        "timerLabel": {
+          "type": "string"
+        },
+        "running": {
+          "type": "boolean"
+        },
+        "song": {
+          "type": "string"
+        },
+        "artist": {
+          "type": "string"
+        },
+        "album": {
+          "type": "string"
+        },
+        "playbackState": {
+          "type": "string",
+          "enum": [
+            "playing",
+            "paused"
+          ]
+        },
+        "playPauseAction": {
+          "type": "string"
+        },
+        "previousAction": {
+          "type": "string"
+        },
+        "nextAction": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "completedItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "type": "string"
+        },
+        "dateLabel": {
+          "type": "string"
+        },
+        "timeLabel": {
+          "type": "string"
+        }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bottom",
+        "top"
+      ],
+      "properties": {
+        "bottom": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "time",
+              "date"
+            ]
+          }
+        },
+        "top": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        }
+      }
+    }
+  }
+}

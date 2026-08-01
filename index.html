@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GenUI on watch face</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" />
     <style>
       :root {
         --page: #f5f2eb;
@@ -166,6 +167,45 @@
         line-height: 1.2;
       }
 
+      .copy-debug-button {
+        align-self: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        padding: 8px 10px;
+        font-size: 13px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .copy-debug-button:focus-visible,
+      .generate-button:focus-visible,
+      .sample-layout-button:focus-visible,
+      .debug-tab:focus-visible {
+        outline: 2px solid #000;
+        outline-offset: 2px;
+      }
+
+      .context-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .sample-layout-button {
+        align-self: flex-start;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        padding: 12px;
+        font-size: 16px;
+        line-height: 1.2;
+      }
+
       .debug-panel {
         display: flex;
         flex-direction: column;
@@ -290,51 +330,219 @@
         box-shadow: 0 0 0 2px #000;
       }
 
-      .static-face {
+      .watch-face-render {
         position: relative;
         width: 100%;
         height: 100%;
-        background:
-          radial-gradient(circle at 69% 20%, rgba(217, 76, 0, 0.18), transparent 29%),
-          radial-gradient(circle at 18% 79%, rgba(255, 214, 99, 0.14), transparent 31%),
-          #000;
+        background: #000;
         color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+        font-family: "SF Compact", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
       }
 
-      .static-face-date {
+      .watch-el {
         position: absolute;
+        min-width: 0;
+      }
+
+      .watch-date {
         left: 18px;
         top: 18px;
         color: rgba(255, 255, 255, 0.62);
         font-size: 12px;
         font-weight: 600;
+        line-height: 18px;
       }
 
-      .static-face-time {
-        position: absolute;
-        left: 18px;
-        bottom: 32px;
+      .watch-time {
         font-size: 64px;
         font-weight: 760;
         line-height: 0.9;
         letter-spacing: 0;
       }
 
-      .static-face-chip {
+      .watch-widget {
         position: absolute;
-        right: 15px;
-        top: 21px;
+        color: #fff;
+      }
+
+      .circular-widget {
+        font-family: "SF Compact", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+
+      .circular-widget svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+
+      .gauge-text {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        text-align: center;
+        white-space: nowrap;
+        letter-spacing: 0;
+      }
+
+      .gauge-value,
+      .gauge-label {
+        font-weight: 457;
+      }
+
+      .gauge-label {
+        text-transform: lowercase;
+      }
+
+      .gauge-icon {
         display: grid;
         place-items: center;
-        width: 72px;
-        height: 72px;
-        border: 8px solid #d94c00;
-        border-left-color: rgba(255, 255, 255, 0.16);
-        border-radius: 999px;
+      }
+
+      .rect-widget {
+        overflow: hidden;
+        width: 205px;
+        border-radius: 54px;
+        background: #000;
         color: #fff;
-        font-size: 17px;
-        font-weight: 700;
+        font-family: "SF Compact", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+
+      .rect-inner {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 16px;
+      }
+
+      .rect-primary {
+        overflow: hidden;
+        font-size: 19px;
+        font-weight: 600;
+        line-height: 21.5px;
+        letter-spacing: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rect-secondary {
+        overflow: hidden;
+        color: rgba(242, 244, 252, 0.6);
+        font-size: 19px;
+        font-weight: 400;
+        line-height: 21.5px;
+        letter-spacing: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rect-radio-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .rect-radio {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        border: 0;
+        border-radius: 999px;
+      }
+
+      .rect-radio-ring {
+        display: grid;
+        place-items: center;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #9ba0aa;
+        border-radius: 999px;
+      }
+
+      .rect-radio-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #f2f4fc;
+      }
+
+      .rect-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .rect-control {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .rect-progress {
+        width: 173px;
+        height: 12px;
+        overflow: hidden;
+        border-radius: 0;
+        background: rgba(242, 244, 252, 0.1);
+      }
+
+      .rect-progress-value {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--widget-accent, #d94c00);
+      }
+
+      .rect-number {
+        font-size: 40px;
+        font-weight: 400;
+        line-height: 42.5px;
+      }
+
+      .checklist-list {
+        position: absolute;
+        left: 6px;
+        top: 71px;
+        display: grid;
+        gap: 2px;
+        width: 193px;
+      }
+
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 193px;
+        height: 56px;
+        padding: 0 8px;
+        border-radius: 8px;
+        background: rgba(242, 244, 252, 0.1);
+      }
+
+      .watch-symbol {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Material Symbols Rounded";
+        font-weight: 400;
+        font-style: normal;
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+        line-height: 1;
+        user-select: none;
       }
 
       @media (max-width: 1080px) {
@@ -413,6 +621,10 @@
           padding: 0 16px 16px;
         }
 
+        .copy-debug-button {
+          align-self: flex-start;
+        }
+
         .debug-tabs {
           width: 100%;
           margin-left: 0;
@@ -465,12 +677,16 @@
               </div>
             </form>
 
-            <button class="generate-button" id="generate-button" type="button">Generate</button>
+            <div class="context-actions">
+              <button class="generate-button" id="generate-button" type="submit" form="context-form">Generate</button>
+              <button class="sample-layout-button" id="sample-layout-button" type="button">Load Sample Layout</button>
+            </div>
           </section>
 
           <section class="panel debug-panel" data-node-id="650:2306" data-name="Debug" aria-labelledby="debug-title">
             <header class="debug-header" data-node-id="712:544" data-name="Header">
               <h2 class="panel-title" id="debug-title">Debug</h2>
+              <button class="copy-debug-button" id="copy-debug-button" type="button">Copy Debug Bundle</button>
               <div class="debug-tabs" data-node-id="712:543" data-name="Toggle View" role="tablist" aria-label="Debug view">
                 <button class="debug-tab" id="logs-tab" type="button" role="tab" aria-selected="true" aria-controls="logs-panel">Logs</button>
                 <button class="debug-tab" id="json-tab" type="button" role="tab" aria-selected="false" aria-controls="json-panel">Generated Layout JSON</button>
@@ -494,11 +710,6 @@
           <div class="watch-preview" aria-label="Watch preview">
             <img class="watch-image" src="assets/watch-bezel.png" alt="" width="300" height="470" />
             <div class="gen-watch-face" data-node-id="650:2307" data-name="Gen Watch Face" aria-label="Gen Watch Face container">
-              <div class="static-face">
-                <span class="static-face-date" id="face-date">Tue 28</span>
-                <span class="static-face-chip">42</span>
-                <span class="static-face-time" id="face-time">4:31</span>
-              </div>
             </div>
           </div>
           <p class="preview-credit">from Peiqi Tang, 2026</p>
@@ -511,10 +722,112 @@
       const form = document.querySelector("#context-form");
       const logs = document.querySelector("#logs");
       const layoutJson = document.querySelector("#layout-json");
-      const faceTime = document.querySelector("#face-time");
-      const faceDate = document.querySelector("#face-date");
+      const genWatchFace = document.querySelector(".gen-watch-face");
+      const copyDebugButton = document.querySelector("#copy-debug-button");
+      const sampleLayoutButton = document.querySelector("#sample-layout-button");
       const tabButtons = [...document.querySelectorAll(".debug-tab")];
       const tabPanels = [...document.querySelectorAll("[role='tabpanel']")];
+      let latestDebugBundle = "";
+      let nextSampleLayoutIndex = 0;
+
+      const MATERIAL_SYMBOLS = {
+        activity_mobility: "self_improvement",
+        activity_sitting: "chair",
+        activity_standing: "accessibility_new",
+        activity_walking: "directions_walk",
+        calendar: "calendar_month",
+        checklist: "checklist",
+        commute: "directions_car",
+        heart_rate: "favorite",
+        location: "location_on",
+        map_navigation: "near_me",
+        message: "chat_bubble",
+        music: "music_note",
+        sleep: "bedtime",
+        thermometer: "thermometer",
+        time: "alarm",
+        timer: "timer",
+        weather_cloudy: "cloud",
+        weather_partly_cloudy: "partly_cloudy_day",
+        weather_rain: "rainy",
+        weather_rainy: "rainy",
+        weather_snowy: "weather_snowy",
+        weather_umbrella: "umbrella",
+        weather_sunny: "clear_day",
+        weather_windy: "air",
+        workout_running: "directions_run",
+        workout_strength: "fitness_center",
+        workout_trail_run: "hiking"
+      };
+
+      const ACCENT_BY_CONTENT_TYPE = {
+        weather: "#63D6FF",
+        upcoming_event: "#7DD3FC",
+        workout: "#FF7A1A",
+        timer: "#FFD54A",
+        heart_rate: "#FF4D6D",
+        iot_control: "#8CE99A",
+        music_control: "#B892FF",
+        reminder: "#F2F4FC",
+        checklist: "#F2F4FC"
+      };
+
+      const CIRCULAR_SIZE_TOKENS = {
+        S: {
+          diameter: 72,
+          strokeWidth: 8,
+          radius: 31.5,
+          center: { x: 36, y: 36 },
+          iconBox: { x: 20, y: 20, width: 32, height: 32 },
+          closeText: {
+            value: { fontSize: 22, box: { x: 9.6, y: 24.8, width: 52.8, height: 22.4 } },
+            label: { fontSize: 10, box: { x: 16, y: 47.2, width: 40, height: 9.6 } }
+          },
+          openText: {
+            current: { fontSize: 22, box: { x: 18, y: 23, width: 35, height: 25 } },
+            low: { fontSize: 15, box: { x: 13.05, y: 54, width: 19, height: 18 }, align: "left" },
+            high: { fontSize: 15, box: { x: 40.07, y: 54, width: 19, height: 18 }, align: "right" },
+            reference: { fontSize: 15, box: { x: 26.54, y: 54, width: 18, height: 18 }, align: "center" }
+          },
+          measureDot: { diameter: 8.21, strokeWidth: 2 }
+        },
+        M: {
+          diameter: 90,
+          strokeWidth: 10,
+          radius: 39.5,
+          center: { x: 45, y: 45 },
+          iconBox: { x: 26, y: 26, width: 38, height: 38 },
+          closeText: {
+            value: { fontSize: 32, box: { x: 12, y: 31, width: 66, height: 28 } },
+            label: { fontSize: 15, box: { x: 20, y: 59, width: 50, height: 12 } }
+          },
+          openText: {
+            current: { fontSize: 32, box: { x: 19, y: 27, width: 51, height: 35 } },
+            low: { fontSize: 18, box: { x: 16.31, y: 69, width: 23, height: 21 }, align: "left" },
+            high: { fontSize: 18, box: { x: 50.34, y: 69, width: 23, height: 21 }, align: "right" },
+            reference: { fontSize: 18, box: { x: 34.43, y: 69, width: 21, height: 21 }, align: "center" }
+          },
+          measureDot: { diameter: 10.27, strokeWidth: 2 }
+        },
+        L: {
+          diameter: 149,
+          strokeWidth: 15,
+          radius: 66.5,
+          center: { x: 74.5, y: 74.5 },
+          iconBox: { x: 42, y: 43, width: 64, height: 64 },
+          closeText: {
+            value: { fontSize: 42, box: { x: 41, y: 52, width: 67, height: 45 } },
+            label: { fontSize: 18, box: { x: 57, y: 97, width: 35, height: 21 } }
+          },
+          openText: {
+            current: { fontSize: 48, box: { x: 36, y: 52, width: 77, height: 45 } },
+            low: { fontSize: 32, box: { x: 27, y: 104, width: 38, height: 45 }, align: "left" },
+            high: { fontSize: 32, box: { x: 85, y: 104, width: 38, height: 45 }, align: "right" },
+            reference: { fontSize: 32, box: { x: 57, y: 104, width: 35, height: 45 }, align: "center" }
+          },
+          measureDot: { diameter: 17, strokeWidth: 3 }
+        }
+      };
 
       function currentTimeLabel() {
         return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date());
@@ -522,7 +835,7 @@
 
       function currentDateLabel() {
         const now = new Date();
-        const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(now);
+        const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(now);
         return `${weekday} ${now.getDate()}`;
       }
 
@@ -541,34 +854,1710 @@
         };
       }
 
-      function refreshStaticOutput(reason) {
-        const context = readContext();
-        const layout = {
-          status: "static-front-end-placeholder",
+      function inferSelectedContentTypes(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        const selected = [];
+
+        if (/(checklist|shopping list|task list|packing list)/.test(text)) {
+          return ["checklist"];
+        }
+
+        if (/(music|song|playlist|audio|podcast|playback)/.test(text)) {
+          selected.push("music_control");
+        }
+
+        if (/(timer|countdown|pause|cancel|start timer|reset timer)/.test(text)) {
+          selected.push("timer");
+        }
+
+        if (/(remind|reminder|todo|to-do|complete task|mark complete)/.test(text)) {
+          selected.push("reminder");
+        }
+
+        if (/(run|running|walk|workout|gym|exercise|mobility)/.test(text)) {
+          selected.push("workout");
+        }
+
+        if (/(dinner|meeting|appointment|pickup|commute|on time|schedule|call)/.test(text)) {
+          selected.push("upcoming_event");
+        }
+
+        if (/(rain|weather|outside|outdoors|waterfront)/.test(text)) {
+          selected.push("weather");
+        }
+
+        if (selected.length === 0) {
+          selected.push("upcoming_event");
+        }
+
+        if (!selected.includes("weather") && selected.length < 3) {
+          selected.push("weather");
+        }
+
+        return selected.slice(0, 3);
+      }
+
+      function shouldUseTimerRectangle(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        return /(pause|cancel|start|control|action|reset|buttons|full timer)/.test(text);
+      }
+
+      function deferredWidgetDecision(contentType) {
+        const rectangularOnlyTypes = new Set([
+          "activity_summary",
+          "upcoming_event",
+          "last_message",
+          "map_navigation",
+          "sleep_summary"
+        ]);
+
+        if (rectangularOnlyTypes.has(contentType)) {
+          return `${contentType} -> deferred because this content type is rectangular-only and generated rectangular composition support starts in a later phase`;
+        }
+
+        return `${contentType} -> no approved widget mapping in the Phase 6 local mock`;
+      }
+
+      function omittedByCompositionDecision(contentType) {
+        return `${contentType} -> omitted because a rectangular-present composition may render at most two widgets total`;
+      }
+
+      function fallbackReasonFromContext(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        if (/(api failure|api error|server error|network failure)/.test(text)) return "api_failure";
+        if (/(timeout|timed out|too slow)/.test(text)) return "timeout";
+        if (/(invalid output|bad json|schema fail|validation fail)/.test(text)) return "invalid_output";
+        if (/(budget|cost|quota|exhausted)/.test(text)) return "budget_exhausted";
+        return "no_ai_provider";
+      }
+
+      function fallbackReasonLabel(reason) {
+        return {
+          no_ai_provider: "No AI provider is active in Phase 7, so deterministic fallback layout is used.",
+          api_failure: "API failure simulated from context; deterministic fallback layout is used.",
+          timeout: "Timeout simulated from context; deterministic fallback layout is used.",
+          invalid_output: "Invalid output simulated from context; deterministic fallback layout is used.",
+          budget_exhausted: "Budget exhausted simulated from context; deterministic fallback layout is used."
+        }[reason] || "Deterministic fallback layout is used.";
+      }
+
+      function eventTitleFromContext(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        if (/dinner/.test(text)) return "Dinner at 7:30";
+        if (/meeting/.test(text)) return "Next meeting";
+        if (/commute|leave|on time/.test(text)) return "Leave on time";
+        return "Next event";
+      }
+
+      function activityLabelFromContext(context) {
+        const text = `${context.activity} ${context.goal}`.toLowerCase();
+        if (/walk/.test(text)) return "walk";
+        if (/gym|strength|lift/.test(text)) return "lift";
+        if (/hike|trail/.test(text)) return "hike";
+        return "run";
+      }
+
+      function makeWorkoutWidget(context, frame, size = "S") {
+        return {
+          id: "fallback-workout",
+          contentType: "workout",
+          shape: "circular",
+          component: "close_gauge",
+          variant: { property: "text", size },
+          data: {
+            value: "42",
+            label: activityLabelFromContext(context),
+            progress: 0.42,
+            metricKind: "workout"
+          },
+          frame,
+          layer: "top",
+          decision: `fallback workout -> close_gauge ${size} because activity progress is a reliable compact fallback metric`
+        };
+      }
+
+      function makeWeatherWidget(frame, size = "S") {
+        return {
+          id: "fallback-weather",
+          contentType: "weather",
+          shape: "circular",
+          component: "open_gauge",
+          variant: { property: "icon", size },
+          data: {
+            icon: "weather_umbrella",
+            value: "62%",
+            progress: 0.62,
+            metricKind: "precipitation_probability"
+          },
+          frame,
+          layer: "top",
+          decision: `fallback weather -> open_gauge ${size} because precipitation chance is numeric and useful without AI`
+        };
+      }
+
+      function makeTimerWidget(frame, size = "S") {
+        return {
+          id: "fallback-timer",
+          contentType: "timer",
+          shape: "circular",
+          component: "close_gauge",
+          variant: { property: "text", size },
+          data: {
+            value: "3:40",
+            label: "tea",
+            progress: 0.27,
+            metricKind: "timer"
+          },
+          frame,
+          layer: "top",
+          decision: `fallback timer -> close_gauge ${size} because countdown is a safe deterministic fallback`
+        };
+      }
+
+      function makeHeartRateWidget(frame, size = "S") {
+        return {
+          id: "fallback-heart",
+          contentType: "heart_rate",
+          shape: "circular",
+          component: "close_gauge",
+          variant: { property: "text", size },
+          data: {
+            value: "92",
+            label: "bpm",
+            progress: 0.46,
+            metricKind: "heart_rate"
+          },
+          frame,
+          layer: "top",
+          decision: `fallback heart_rate -> close_gauge ${size} because heart rate is a compact numeric status`
+        };
+      }
+
+      function makeEventRectangle(context, y = 124, height = 127) {
+        return {
+          id: "fallback-event",
+          contentType: "upcoming_event",
+          shape: "rectangular",
+          template: "generated_rectangular_widget",
+          data: {
+            icon: "calendar",
+            value: "12",
+            label: "min",
+            metricKind: "upcoming_event"
+          },
+          composition: {
+            layout: "vertical",
+            padding: { top: 16, right: 16, bottom: 16, left: 16 },
+            gap: 8,
+            verticalAlignment: "center",
+            blocks: [
+              {
+                type: "inline_small_icon_text",
+                icon: "calendar",
+                textUnit: "secondary",
+                text: eventTitleFromContext(context)
+              },
+              {
+                type: "number_text_lockup",
+                value: "12",
+                unitLabel: "min",
+                secondaryText: "to leave"
+              }
+            ]
+          },
+          frame: { x: 0, y, width: 205, height },
+          layer: "top",
+          cornerRadius: 54,
+          verticalAlignment: y === 0 ? "top" : "bottom",
+          decision: "fallback upcoming_event -> generated_rectangular_widget because event timing needs readable text"
+        };
+      }
+
+      function chooseFallbackId(selectedContentTypes) {
+        const circularTypes = selectedContentTypes.filter((type) => ["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
+        const hasRectangularType = selectedContentTypes.some((type) => !["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
+        if (selectedContentTypes.includes("checklist")) return "one-rectangular-widget";
+        if (hasRectangularType && circularTypes.length > 0) return "mixed-circular-and-rectangular-layout";
+        if (hasRectangularType) return "one-rectangular-widget";
+        if (circularTypes.length >= 3) return "three-compact-widgets";
+        if (circularTypes.length >= 2) return "two-circular-widgets-with-compact-time";
+        return "one-circular-widget-with-large-time";
+      }
+
+      function buildFallbackWidgets(fallbackId, context) {
+        if (fallbackId === "one-circular-widget-with-large-time") {
+          return [makeWeatherWidget({ x: 118, y: 20, width: 72, height: 72 }, "S")];
+        }
+        if (fallbackId === "two-circular-widgets-with-compact-time") {
+          return [
+            makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
+            makeWeatherWidget({ x: 18, y: 88, width: 72, height: 72 }, "S")
+          ];
+        }
+        if (fallbackId === "one-rectangular-widget") {
+          return [makeEventRectangle(context)];
+        }
+        if (fallbackId === "three-compact-widgets") {
+          return [
+            makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
+            makeWeatherWidget({ x: 18, y: 88, width: 72, height: 72 }, "S"),
+            makeTimerWidget({ x: 118, y: 88, width: 72, height: 72 }, "S")
+          ];
+        }
+        return [
+          makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
+          makeEventRectangle(context)
+        ];
+      }
+
+      function chooseWidgets(selectedContentTypes, context) {
+        if (selectedContentTypes.includes("checklist")) {
+          return {
+            widgets: [
+              {
+                id: "widget-checklist",
+                contentType: "checklist",
+                shape: "rectangular",
+                template: "checklist_full_face",
+                data: {
+                  items: ["Keys", "Wallet", "Umbrella"],
+                  completedCount: 1,
+                  label: "leaving"
+                },
+                frame: {
+                  x: 0,
+                  y: 0,
+                  width: 205,
+                  height: 251
+                },
+                layer: "top",
+                cornerRadius: 54,
+                verticalAlignment: "top",
+                decision: "checklist -> checklist_full_face because checklist is a strict full-face template and must be the only widget"
+              }
+            ],
+            omittedContentTypes: selectedContentTypes.filter((type) => type !== "checklist")
+          };
+        }
+
+        const timerWidget = shouldUseTimerRectangle(context)
+          ? {
+              id: "widget-timer",
+              contentType: "timer",
+              shape: "rectangular",
+              template: "timer_rectangular",
+              data: {
+                countdown: "3:40",
+                timerLabel: "tea",
+                running: true
+              },
+              frame: {
+                x: 0,
+                y: 112,
+                width: 205,
+                height: 139
+              },
+              layer: "top",
+              cornerRadius: 54,
+              verticalAlignment: "bottom",
+              decision: "timer -> timer_rectangular because rectangular timer rendering must use the strict timer template"
+            }
+          : {
+              id: "widget-timer",
+              contentType: "timer",
+              shape: "circular",
+              component: "close_gauge",
+              variant: { property: "text", size: "S" },
+              data: {
+                value: "3:40",
+                label: "tea",
+                progress: 0.27,
+                metricKind: "timer"
+              },
+              frame: {
+                x: 118,
+                y: 20,
+                width: 72,
+                height: 72
+              },
+              layer: "top",
+              decision: "timer -> close_gauge size S because compact countdowns may use circular rendering when controls are not needed"
+            };
+
+        const widgetByType = {
+          music_control: {
+            id: "widget-music",
+            contentType: "music_control",
+            shape: "rectangular",
+            template: "music_control",
+            data: {
+              song: "Evening Focus",
+              artist: "Local Mix",
+              playPauseAction: "pause"
+            },
+            frame: {
+              x: 0,
+              y: 111,
+              width: 205,
+              height: 140
+            },
+            layer: "top",
+            cornerRadius: 54,
+            verticalAlignment: "bottom",
+            decision: "music_control -> music_control because playback controls require the strict rectangular template"
+          },
+          reminder: {
+            id: "widget-reminder",
+            contentType: "reminder",
+            shape: "rectangular",
+            template: "reminder",
+            data: {
+              content: "Bring umbrella",
+              dueDatetime: "before leaving",
+              label: "next"
+            },
+            frame: {
+              x: 0,
+              y: 124,
+              width: 205,
+              height: 127
+            },
+            layer: "top",
+            cornerRadius: 54,
+            verticalAlignment: "bottom",
+            decision: "reminder -> reminder because reminder is a strict rectangular template content type"
+          },
+          timer: timerWidget,
+          workout: {
+            id: "widget-workout",
+            contentType: "workout",
+            shape: "circular",
+            component: "close_gauge",
+            variant: { property: "text", size: "S" },
+            data: {
+              value: "42",
+              label: "run",
+              progress: 0.42,
+              metricKind: "workout"
+            },
+            frame: {
+              x: 118,
+              y: 20,
+              width: 72,
+              height: 72
+            },
+            layer: "top",
+            decision: "workout -> close_gauge size S because progress is glanceable as one compact metric"
+          },
+          upcoming_event: {
+            id: "widget-event",
+            contentType: "upcoming_event",
+            shape: "rectangular",
+            template: "generated_rectangular_widget",
+            data: {
+              icon: "calendar",
+              value: "12",
+              label: "min",
+              metricKind: "upcoming_event"
+            },
+            composition: {
+              layout: "vertical",
+              padding: {
+                top: 16,
+                right: 16,
+                bottom: 16,
+                left: 16
+              },
+              gap: 8,
+              verticalAlignment: "center",
+              blocks: [
+                {
+                  type: "inline_small_icon_text",
+                  icon: "calendar",
+                  textUnit: "secondary",
+                  text: "Dinner at 7:30"
+                },
+                {
+                  type: "number_text_lockup",
+                  value: "12",
+                  unitLabel: "min",
+                  secondaryText: "to leave"
+                }
+              ]
+            },
+            frame: {
+              x: 0,
+              y: 124,
+              width: 205,
+              height: 127
+            },
+            layer: "top",
+            cornerRadius: 54,
+            verticalAlignment: "bottom",
+            decision: "upcoming_event -> generated_rectangular_widget because event timing is rectangular-only but can use approved generated composition blocks"
+          },
+          weather: {
+            id: "widget-weather",
+            contentType: "weather",
+            shape: "circular",
+            component: "open_gauge",
+            variant: { property: "icon", size: "S" },
+            data: {
+              icon: "weather_umbrella",
+              value: "62%",
+              progress: 0.62,
+              metricKind: "precipitation_probability"
+            },
+            frame: {
+              x: 18,
+              y: 88,
+              width: 72,
+              height: 72
+            },
+            layer: "top",
+            decision: "weather -> open_gauge size S because precipitation chance has a numeric percentage for the arc"
+          }
+        };
+
+        const mappedWidgets = selectedContentTypes.map((type) => widgetByType[type]).filter(Boolean);
+        const hasRectangularWidget = mappedWidgets.some((widget) => widget.shape === "rectangular");
+
+        if (!hasRectangularWidget) {
+          const widgets = mappedWidgets.slice(0, 3);
+          return {
+            widgets,
+            omittedContentTypes: mappedWidgets.slice(3).map((widget) => widget.contentType)
+          };
+        }
+
+        const widgets = mappedWidgets.slice(0, 2);
+        return {
+          widgets,
+          omittedContentTypes: mappedWidgets.slice(2).map((widget) => widget.contentType)
+        };
+      }
+
+      function resolveColorSystem(widgets, selectedContentTypes) {
+        const renderedContentTypes = [...new Set(widgets.map((widget) => widget.contentType))];
+        const semanticCount = renderedContentTypes.length || new Set(selectedContentTypes).size;
+        const primaryContentType = renderedContentTypes[0] || selectedContentTypes[0];
+        const accentColor = ACCENT_BY_CONTENT_TYPE[primaryContentType] || "#D94C00";
+
+        if (semanticCount === 1) {
+          return {
+            mode: "mono_tone",
+            accentColor,
+            sourceRule: "one-content-type-prefers-mono-tone"
+          };
+        }
+
+        if (semanticCount === 2) {
+          return {
+            mode: "multicolor",
+            accentColor,
+            sourceRule: "two-content-types-prefers-multicolor"
+          };
+        }
+
+        return {
+          mode: "multicolor",
+          accentColor,
+          sourceRule: "three-content-types-flexible-color-mode"
+        };
+      }
+
+      function resolveTimeDatePlacement(widgets) {
+        const bottomRectangle = widgets.find((widget) => widget.shape === "rectangular" && widget.verticalAlignment === "bottom");
+        const topCircular = widgets.find((widget) => widget.shape === "circular" && widget.frame.y <= 32);
+
+        if (bottomRectangle && topCircular) {
+          return {
+            timeFrame: {
+              x: 18,
+              y: 84,
+              width: 130,
+              height: 40
+            },
+            dateFrame: {
+              x: 18,
+              y: 62,
+              width: 90,
+              height: 18
+            },
+            timeFontSize: 44,
+            dateFontSize: 12
+          };
+        }
+
+        if (bottomRectangle) {
+          return {
+            timeFrame: {
+              x: 18,
+              y: 28,
+              width: 150,
+              height: 58
+            },
+            dateFrame: {
+              x: 18,
+              y: 94,
+              width: 90,
+              height: 18
+            },
+            timeFontSize: 64,
+            dateFontSize: 12
+          };
+        }
+
+        return {
+          timeFrame: {
+            x: 18,
+            y: 169,
+            width: 150,
+            height: 58
+          },
+            dateFrame: {
+              x: 18,
+              y: 18,
+              width: 90,
+              height: 18
+            },
+            timeFontSize: 64,
+            dateFontSize: 12
+        };
+      }
+
+      function buildMockLayout(context, selectedContentTypes, widgets, options = {}) {
+        const colorSystem = resolveColorSystem(widgets, selectedContentTypes);
+        const timeAndDateColor = colorSystem.mode === "mono_tone" ? colorSystem.accentColor : "#FFFFFF";
+        const placement = resolveTimeDatePlacement(widgets);
+        return {
+          schemaVersion: "1.0.0",
           targetContainer: "Gen Watch Face",
+          metadata: {
+            pipelinePhase: options.pipelinePhase || "phase-7-deterministic-fallbacks",
+            provider: "local-mock",
+            model: "none",
+            promptVersion: options.promptVersion || "watch-face-phase-7-fallback",
+            schemaVersion: "1.0.0",
+            selectedContentTypes,
+            retryCount: 0,
+            fallbackUsed: Boolean(options.fallbackUsed),
+            ...(options.fallbackId ? { fallbackId: options.fallbackId } : {}),
+            ...(options.fallbackReason ? { fallbackReason: options.fallbackReason } : {}),
+            contextSource: "live_context_plus_mock_pseudo_context",
+            generationStepProvenance: [
+              "read-live-context",
+              "load-pseudo-context",
+              "select-content-types",
+              "choose-widgets",
+              ...(options.fallbackUsed ? ["choose-fallback-layout"] : []),
+              "populate-widgets",
+              "generate-layout-json"
+            ]
+          },
           canvas: {
             width: 205,
             height: 251,
-            borderRadius: 54
+            borderRadius: 54,
+            coordinateSystem: "fixed"
           },
-          context
+          colorSystem,
+          time: {
+            mode: "single_line",
+            value: timeForFace(context.timeOfDay),
+            layer: "bottom",
+            frame: placement.timeFrame,
+            style: {
+              fontFamily: "SF Pro Display",
+              fontSize: placement.timeFontSize,
+              fontWeight: 760,
+              letterSpacing: 0,
+              color: timeAndDateColor,
+              treatment: "fill"
+            }
+          },
+          date: {
+            value: currentDateLabel(),
+            priority: "secondary",
+            layer: "bottom",
+            frame: placement.dateFrame,
+            style: {
+              fontFamily: "SF Pro Text",
+              fontSize: placement.dateFontSize,
+              fontWeight: 600,
+              letterSpacing: 0,
+              color: timeAndDateColor,
+              treatment: "fill"
+            }
+          },
+          widgets: widgets.map(({ decision, ...widget }) => widget),
+          layers: {
+            bottom: ["time", "date"],
+            top: widgets.map((widget) => widget.id)
+          }
         };
+      }
 
-        layoutJson.textContent = JSON.stringify(layout, null, 2);
-        logs.textContent = [
-          "[front-end] Static simulator loaded.",
-          `[front-end] ${reason}`,
-          "[front-end] Preview panel contains only the watch image and Gen Watch Face container."
+      function makeValidationError(stage, code, path, message) {
+        return { severity: "error", stage, code, path, message };
+      }
+
+      function estimateTextWidth(text, fontSize) {
+        return String(text).length * fontSize * 0.58;
+      }
+
+      function validateLocalLayout(layout) {
+        const errors = [];
+        const warnings = [];
+
+        if (layout.schemaVersion !== "1.0.0") {
+          errors.push(makeValidationError("schema", "invalid_schema_version", "schemaVersion", "schemaVersion must be 1.0.0"));
+        }
+        if (layout.targetContainer !== "Gen Watch Face") {
+          errors.push(makeValidationError("schema", "invalid_target_container", "targetContainer", "targetContainer must be Gen Watch Face"));
+        }
+        if (!["mono_tone", "multicolor"].includes(layout.colorSystem?.mode)) {
+          errors.push(makeValidationError("schema", "invalid_color_system_mode", "colorSystem.mode", "colorSystem.mode must be mono_tone or multicolor"));
+        }
+        if (!/^#[0-9a-fA-F]{6}$/.test(layout.colorSystem?.accentColor || "")) {
+          errors.push(makeValidationError("schema", "invalid_color_system_accent", "colorSystem.accentColor", "colorSystem.accentColor must be a 6-digit hex color"));
+        }
+        if (!Array.isArray(layout.widgets)) {
+          errors.push(makeValidationError("schema", "widgets_not_array", "widgets", "widgets must be an array"));
+        } else if (layout.widgets.length > 3) {
+          errors.push(makeValidationError("schema", "too_many_widgets", "widgets", "widgets must contain at most 3 items"));
+        }
+        if (layout.metadata?.fallbackUsed) {
+          if (typeof layout.metadata.fallbackId !== "string" || layout.metadata.fallbackId.length === 0) {
+            errors.push(makeValidationError("schema", "missing_fallback_id", "metadata.fallbackId", "metadata.fallbackId is required when fallbackUsed is true"));
+          }
+          if (!["no_ai_provider", "api_failure", "timeout", "invalid_output", "budget_exhausted"].includes(layout.metadata.fallbackReason)) {
+            errors.push(makeValidationError("schema", "invalid_fallback_reason", "metadata.fallbackReason", "metadata.fallbackReason is invalid"));
+          }
+        }
+
+        for (const [path, textObject] of [["time", layout.time], ["date", layout.date]]) {
+          if (!textObject?.frame || !textObject?.style) {
+            errors.push(makeValidationError("schema", "missing_text_contract", path, `${path} must include frame and style`));
+            continue;
+          }
+          if (textObject.frame.x < 0 || textObject.frame.y < 0 || textObject.frame.x + textObject.frame.width > 205 || textObject.frame.y + textObject.frame.height > 251) {
+            errors.push(makeValidationError("rule", "frame_outside_canvas", `${path}.frame`, `${path} must fit inside the 205 x 251 canvas`));
+          }
+          if (estimateTextWidth(textObject.value, textObject.style.fontSize) > textObject.frame.width + 2) {
+            errors.push(makeValidationError("rule", "text_overflow", `${path}.value`, `${path}.value is estimated to overflow its declared frame`));
+          }
+        }
+
+        if (layout.date?.style?.fontSize > layout.time?.style?.fontSize * 0.45) {
+          errors.push(makeValidationError("rule", "date_not_secondary", "date.style.fontSize", "date must remain visually secondary to time"));
+        }
+
+        if (Array.isArray(layout.widgets)) {
+          const rectangularWidgetCount = layout.widgets.filter((widget) => widget.shape === "rectangular").length;
+          const hasChecklistWidget = layout.widgets.some((widget) => widget.contentType === "checklist");
+          if (hasChecklistWidget && layout.widgets.length !== 1) {
+            errors.push(makeValidationError("rule", "checklist_must_be_only_widget", "widgets", "checklist layouts must contain exactly one widget"));
+          } else if (rectangularWidgetCount > 0 && layout.widgets.length > 2) {
+            errors.push(makeValidationError("rule", "rectangular_present_widget_cap", "widgets", "rectangular-present layouts must contain at most two widgets"));
+          }
+
+          for (const [index, widget] of layout.widgets.entries()) {
+            const path = `widgets[${index}]`;
+            if (widget.frame?.x < 0 || widget.frame?.y < 0 || widget.frame?.x + widget.frame?.width > 205 || widget.frame?.y + widget.frame?.height > 251) {
+              errors.push(makeValidationError("rule", "frame_outside_canvas", `${path}.frame`, `${path}.frame must fit inside the 205 x 251 canvas`));
+            }
+            if (widget.shape === "circular" && !["close_gauge", "open_gauge"].includes(widget.component)) {
+              errors.push(makeValidationError("schema", "unknown_circular_component", `${path}.component`, `${path}.component is invalid`));
+            }
+            if (widget.shape === "circular" && !["S", "M", "L"].includes(widget.variant?.size)) {
+              errors.push(makeValidationError("schema", "invalid_circular_size", `${path}.variant.size`, `${path}.variant.size is invalid`));
+            }
+            if (widget.shape === "rectangular") {
+              if (!["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"].includes(widget.template)) {
+                errors.push(makeValidationError("schema", "unknown_rectangular_template", `${path}.template`, `${path}.template is invalid`));
+              }
+              if (widget.frame?.x !== 0 || widget.frame?.width !== 205) {
+                errors.push(makeValidationError("rule", "rectangular_full_width", `${path}.frame`, `${path}.frame must be x=0 and width=205`));
+              }
+              if (widget.frame?.height < 80 || widget.frame?.height > 251) {
+                errors.push(makeValidationError("rule", "rectangular_height_range", `${path}.frame.height`, `${path}.frame.height must be between 80 and 251`));
+              }
+            }
+          }
+
+          for (const [path, textObject] of [["time", layout.time], ["date", layout.date]]) {
+            if (!textObject?.frame) continue;
+            for (const widget of layout.widgets) {
+              const overlapDepth = rectOverlapDepth(textObject.frame, widget.frame);
+              if (overlapDepth > 10) {
+                errors.push(makeValidationError("rule", "widget_text_overlap_exceeds_limit", `${path}.frame`, `${path} overlaps ${widget.id} by ${Math.round(overlapDepth)}px`));
+              }
+            }
+          }
+        }
+
+        return {
+          ok: errors.length === 0,
+          stage: errors.some((item) => item.stage === "schema") ? "schema" : errors.length > 0 ? "rule" : "accepted",
+          summary: errors.length === 0 ? "layout accepted by Phase 6 local validation" : `${errors.length} validation error${errors.length === 1 ? "" : "s"}`,
+          errors,
+          warnings
+        };
+      }
+
+      function buildPipelineRun(reason) {
+        const startedAt = performance.now();
+        const context = readContext();
+        const pseudoContextSummary = [
+          "Fictional busy active user based in Kirkland, WA.",
+          "Past context includes schedule, weather-aware planning, workouts, errands, commute, and evening routines."
+        ];
+        const selectedContentTypes = inferSelectedContentTypes(context);
+        const fallbackReason = fallbackReasonFromContext(context);
+        const fallbackId = chooseFallbackId(selectedContentTypes);
+        const widgets = buildFallbackWidgets(fallbackId, context);
+        const layout = buildMockLayout(context, selectedContentTypes, widgets, {
+          fallbackUsed: true,
+          fallbackId,
+          fallbackReason
+        });
+        const elapsedMs = Math.round(performance.now() - startedAt);
+        const widgetDecisions = widgets.map((widget) => widget.decision);
+        const renderedContentTypes = new Set(widgets.map((widget) => widget.contentType));
+        for (const contentType of selectedContentTypes) {
+          if (!renderedContentTypes.has(contentType)) {
+            const omittedByComposition = selectedContentTypes.some((type) => widgets.some((widget) => widget.contentType === type && widget.shape === "rectangular"));
+            widgetDecisions.push(omittedByComposition ? omittedByCompositionDecision(contentType) : deferredWidgetDecision(contentType));
+          }
+        }
+        const validation = validateLocalLayout(layout);
+        const model = {
+          provider: layout.metadata.provider,
+          model: layout.metadata.model,
+          promptVersion: layout.metadata.promptVersion,
+          schemaVersion: layout.metadata.schemaVersion,
+          latencyMs: elapsedMs,
+          estimatedCost: "n/a"
+        };
+        const pipelineSteps = [
+          { id: "read-live-context", status: "complete", detail: `time=${context.timeOfDay}; location=${context.location}; activity=${context.activity}; goal=${context.goal || "none"}` },
+          { id: "load-pseudo-context", status: "mocked", detail: pseudoContextSummary.join(" ") },
+          { id: "select-content-types", status: "complete", detail: selectedContentTypes.join(", ") },
+          { id: "choose-fallback-layout", status: "complete", detail: `${fallbackId}; ${fallbackReasonLabel(fallbackReason)}` },
+          { id: "choose-widgets", status: "complete", detail: widgetDecisions.join(" | ") },
+          { id: "populate-widgets", status: "complete", detail: "Fallback widget data and semantic icon tokens populated from live context plus pseudo-context summary." },
+          { id: "generate-layout-json", status: "complete", detail: "Generated schema-shaped Phase 7 fallback layout JSON as the final render contract." },
+          { id: "validate", status: validation.ok ? "accepted" : "failed", detail: validation.summary },
+          { id: "render", status: validation.ok ? "pending" : "blocked", detail: validation.ok ? "Awaiting accepted layout render." : "Render blocked because local validation failed." }
+        ];
+
+        return {
+          generationId: `phase-7-${Date.now()}`,
+          reason,
+          context,
+          pseudoContextSummary,
+          selectedContentTypes,
+          widgetDecisions,
+          layout,
+          validation,
+          model,
+          pipelineSteps
+        };
+      }
+
+      function buildRunFromApiResponse(result, context, reason) {
+        return {
+          generationId: `phase-8-${Date.now()}`,
+          reason,
+          context,
+          pseudoContextSummary: result.pseudoContextSummary || ["Loaded by backend endpoint."],
+          selectedContentTypes: result.selectedContentTypes || result.layout?.metadata?.selectedContentTypes || [],
+          widgetDecisions: result.widgetDecisions || [],
+          layout: result.layout,
+          validation: result.validation,
+          model: result.model || {
+            provider: result.layout?.metadata?.provider || "local-backend",
+            model: "none",
+            promptVersion: result.layout?.metadata?.promptVersion || "watch-face-phase-8-backend-fallback",
+            schemaVersion: result.layout?.schemaVersion || "1.0.0",
+            latencyMs: 0,
+            estimatedCost: "n/a"
+          },
+          pipelineSteps: result.logs || []
+        };
+      }
+
+      async function requestBackendGeneration(context) {
+        const response = await fetch("/api/generate-watch-ui", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            context,
+            currentTime: new Date().toISOString(),
+            currentDate: new Date().toLocaleDateString("en-US"),
+            preferences: {}
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          const summary = result.validation?.summary || `backend returned ${response.status}`;
+          throw new Error(summary);
+        }
+        return result;
+      }
+
+      function buildSampleRun(layout, index) {
+        const context = readContext();
+        const pseudoContextSummary = [
+          "Loaded from design-pack/sample-layouts.json.",
+          "This bypasses content inference and exercises the deterministic Phase 6 validator and renderer."
+        ];
+        const widgetDecisions = layout.widgets.map((widget) => {
+          if (widget.shape === "circular") {
+            return `${widget.contentType} -> ${widget.component} ${widget.variant.property} ${widget.variant.size} from hand-authored sample ${index + 1}`;
+          }
+          return `${widget.contentType} -> ${widget.template} from hand-authored sample ${index + 1}`;
+        });
+        const validation = validateLocalLayout(layout);
+        const model = {
+          provider: "local-sample",
+          model: "none",
+          promptVersion: layout.metadata?.promptVersion || "watch-face-sample-v1",
+          schemaVersion: layout.schemaVersion,
+          latencyMs: 0,
+          estimatedCost: "n/a"
+        };
+        return {
+          generationId: `phase-6-sample-${Date.now()}`,
+          reason: `Loaded hand-authored sample layout ${index + 1}.`,
+          context,
+          pseudoContextSummary,
+          selectedContentTypes: layout.metadata?.selectedContentTypes || [],
+          widgetDecisions,
+          layout,
+          validation,
+          model,
+          pipelineSteps: [
+            { id: "load-sample-layouts", status: "complete", detail: "Fetched design-pack/sample-layouts.json as a static asset." },
+            { id: "select-sample-layout", status: "complete", detail: `Selected sample layout ${index + 1}.` },
+            { id: "generate-layout-json", status: "complete", detail: "Used hand-authored sample JSON as the final render contract." },
+            { id: "validate", status: validation.ok ? "accepted" : "failed", detail: validation.summary },
+            { id: "render", status: validation.ok ? "pending" : "blocked", detail: validation.ok ? "Awaiting accepted sample render." : "Render blocked because local validation failed." }
+          ]
+        };
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function polarToCartesian(center, radius, angleDegrees) {
+        const radians = (angleDegrees * Math.PI) / 180;
+        return {
+          x: center.x + radius * Math.cos(radians),
+          y: center.y + radius * Math.sin(radians)
+        };
+      }
+
+      function describeArc(center, radius, startAngle, sweepAngle) {
+        const endAngle = startAngle + sweepAngle;
+        const start = polarToCartesian(center, radius, startAngle);
+        const end = polarToCartesian(center, radius, endAngle);
+        const largeArcFlag = Math.abs(sweepAngle) > 180 ? 1 : 0;
+        return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+      }
+
+      function createSvgElement(name, attributes = {}) {
+        const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+        for (const [key, value] of Object.entries(attributes)) {
+          element.setAttribute(key, String(value));
+        }
+        return element;
+      }
+
+      function createElement(name, className, text) {
+        const element = document.createElement(name);
+        if (className) {
+          element.className = className;
+        }
+        if (text !== undefined) {
+          element.textContent = String(text);
+        }
+        return element;
+      }
+
+      function applyFrame(element, frame) {
+        element.style.left = `${frame.x}px`;
+        element.style.top = `${frame.y}px`;
+        element.style.width = `${frame.width}px`;
+        element.style.height = `${frame.height}px`;
+      }
+
+      function applyTextBox(element, token, color) {
+        element.style.left = `${token.box.x}px`;
+        element.style.top = `${token.box.y}px`;
+        element.style.width = `${token.box.width}px`;
+        element.style.height = `${token.box.height}px`;
+        element.style.fontSize = `${token.fontSize}px`;
+        element.style.lineHeight = `${token.box.height}px`;
+        element.style.color = color;
+        if (token.align) {
+          element.style.justifyContent = token.align === "left" ? "flex-start" : token.align === "right" ? "flex-end" : "center";
+        }
+      }
+
+      function accentFor(widget, colorSystem) {
+        if (colorSystem?.mode === "mono_tone" && colorSystem.accentColor) {
+          return colorSystem.accentColor;
+        }
+        return ACCENT_BY_CONTENT_TYPE[widget.contentType] || "#D94C00";
+      }
+
+      function hexToRgb(hex) {
+        const normalized = hex.replace("#", "");
+        const value = Number.parseInt(normalized.length === 3 ? normalized.split("").map((char) => char + char).join("") : normalized, 16);
+        return {
+          r: (value >> 16) & 255,
+          g: (value >> 8) & 255,
+          b: value & 255
+        };
+      }
+
+      function rgbToHex({ r, g, b }) {
+        return `#${[r, g, b].map((value) => Math.round(clamp(value, 0, 255)).toString(16).padStart(2, "0")).join("")}`;
+      }
+
+      function mixHex(start, end, amount) {
+        const a = hexToRgb(start);
+        const b = hexToRgb(end);
+        return rgbToHex({
+          r: a.r + (b.r - a.r) * amount,
+          g: a.g + (b.g - a.g) * amount,
+          b: a.b + (b.b - a.b) * amount
+        });
+      }
+
+      function shiftColor(hex, amount) {
+        return mixHex(hex, amount >= 0 ? "#FFFFFF" : "#000000", Math.abs(amount));
+      }
+
+      function colorsForWidget(widget, colorSystem) {
+        const accent = accentFor(widget, colorSystem);
+        if (widget.component === "open_gauge" && colorSystem?.mode === "multicolor") {
+          return {
+            accent,
+            start: shiftColor(accent, 0.24),
+            end: shiftColor(accent, -0.16),
+            set: shiftColor(accent, 0.18),
+            offset: shiftColor(accent, -0.12),
+            usesGradient: true
+          };
+        }
+        return {
+          accent,
+          start: accent,
+          end: accent,
+          set: accent,
+          offset: accent,
+          usesGradient: false
+        };
+      }
+
+      function normalizeMetricValue(widget) {
+        if (typeof widget.data.progress === "number") {
+          return clamp(widget.data.progress, 0, 1);
+        }
+        const numericValue = Number.parseFloat(widget.data.measuredValue ?? widget.data.value);
+        const min = Number(widget.data.min ?? 0);
+        const max = Number(widget.data.max ?? 100);
+        if (Number.isFinite(numericValue) && Number.isFinite(min) && Number.isFinite(max) && max !== min) {
+          return clamp((numericValue - min) / (max - min), 0, 1);
+        }
+        return 0.5;
+      }
+
+      function renderMaterialIcon(token, size, color) {
+        const icon = createElement("span", "watch-symbol", MATERIAL_SYMBOLS[token] || token || "help");
+        icon.style.fontSize = `${size}px`;
+        icon.style.color = color;
+        icon.setAttribute("aria-hidden", "true");
+        return icon;
+      }
+
+      function appendCloseGaugeContent(container, widget, sizeToken, color) {
+        if (widget.variant.property === "icon") {
+          const box = createElement("div", "gauge-text gauge-icon");
+          applyTextBox(box, { ...sizeToken.iconBox, box: sizeToken.iconBox, fontSize: sizeToken.iconBox.width }, color);
+          box.append(renderMaterialIcon(widget.data.icon, sizeToken.iconBox.width, color));
+          container.append(box);
+          return;
+        }
+
+        const value = createElement("div", "gauge-text gauge-value", widget.data.value);
+        applyTextBox(value, sizeToken.closeText.value, color);
+        const label = createElement("div", "gauge-text gauge-label", widget.data.label);
+        applyTextBox(label, sizeToken.closeText.label, color);
+        container.append(value, label);
+      }
+
+      function appendOpenGaugeContent(container, widget, sizeToken, colors, normalized) {
+        const color = widget.variant.property === "offset" ? colors.offset : mixHex(colors.start, colors.end, normalized);
+        if (widget.variant.property === "icon") {
+          const box = createElement("div", "gauge-text gauge-icon");
+          applyTextBox(box, { ...sizeToken.iconBox, box: sizeToken.iconBox, fontSize: sizeToken.iconBox.width }, color);
+          box.append(renderMaterialIcon(widget.data.icon, sizeToken.iconBox.width, color));
+          container.append(box);
+          return;
+        }
+
+        const current = createElement("div", "gauge-text gauge-value", widget.data.value);
+        applyTextBox(current, sizeToken.openText.current, color);
+        container.append(current);
+
+        if (widget.variant.property === "text" && widget.data.label) {
+          const label = createElement("div", "gauge-text gauge-label", widget.data.label);
+          applyTextBox(label, sizeToken.openText.reference, color);
+          container.append(label);
+        }
+
+        if (widget.variant.property === "range") {
+          const low = createElement("div", "gauge-text", widget.data.lowLabel ?? widget.data.min);
+          applyTextBox(low, sizeToken.openText.low, colors.start);
+          const high = createElement("div", "gauge-text", widget.data.highLabel ?? widget.data.max);
+          applyTextBox(high, sizeToken.openText.high, colors.end);
+          container.append(low, high);
+        }
+
+        if (widget.variant.property === "offset" && widget.data.referenceValue !== undefined) {
+          const reference = createElement("div", "gauge-text", widget.data.referenceValue);
+          applyTextBox(reference, sizeToken.openText.reference, colors.set);
+          container.append(reference);
+        }
+      }
+
+      function normalizedMetricFromValue(widget, rawValue) {
+        const numericValue = Number.parseFloat(rawValue);
+        const min = Number(widget.data.min ?? 0);
+        const max = Number(widget.data.max ?? 100);
+        if (Number.isFinite(numericValue) && Number.isFinite(min) && Number.isFinite(max) && max !== min) {
+          return clamp((numericValue - min) / (max - min), 0, 1);
+        }
+        return 0.5;
+      }
+
+      function appendOpenGaugeDot(svg, sizeToken, normalized, fill) {
+        const angle = 135 + normalized * 270;
+        const point = polarToCartesian(sizeToken.center, sizeToken.radius, angle);
+        svg.append(createSvgElement("circle", {
+          cx: point.x,
+          cy: point.y,
+          r: sizeToken.measureDot.diameter / 2,
+          fill,
+          stroke: "#000",
+          "stroke-width": sizeToken.measureDot.strokeWidth
+        }));
+      }
+
+      function renderCircularWidget(widget, layout) {
+        if (!["close_gauge", "open_gauge"].includes(widget.component)) {
+          throw new Error(`Unknown circular component: ${widget.component}`);
+        }
+        if (!CIRCULAR_SIZE_TOKENS[widget.variant?.size]) {
+          throw new Error(`Unknown circular size: ${widget.variant?.size}`);
+        }
+
+        const sizeToken = CIRCULAR_SIZE_TOKENS[widget.variant.size];
+        const colors = colorsForWidget(widget, layout?.colorSystem);
+        const color = colors.accent;
+        const container = createElement("div", "watch-widget circular-widget");
+        applyFrame(container, widget.frame);
+        container.style.color = color;
+
+        const svg = createSvgElement("svg", {
+          viewBox: `0 0 ${sizeToken.diameter} ${sizeToken.diameter}`,
+          role: "img",
+          "aria-label": `${widget.contentType} ${widget.component}`
+        });
+
+        if (widget.component === "close_gauge") {
+          const circumference = 2 * Math.PI * sizeToken.radius;
+          const progress = normalizeMetricValue(widget);
+          svg.append(
+            createSvgElement("circle", {
+              cx: sizeToken.center.x,
+              cy: sizeToken.center.y,
+              r: sizeToken.radius,
+              fill: "none",
+              stroke: "rgba(140, 140, 140, 0.28)",
+              "stroke-width": sizeToken.strokeWidth,
+              "stroke-linecap": "round"
+            }),
+            createSvgElement("circle", {
+              cx: sizeToken.center.x,
+              cy: sizeToken.center.y,
+              r: sizeToken.radius,
+              fill: "none",
+              stroke: color,
+              "stroke-width": sizeToken.strokeWidth,
+              "stroke-linecap": "round",
+              "stroke-dasharray": `${circumference * 0.833} ${circumference}`,
+              "stroke-dashoffset": `${circumference * 0.833 * (1 - progress)}`,
+              transform: `rotate(-90 ${sizeToken.center.x} ${sizeToken.center.y})`
+            })
+          );
+          container.append(svg);
+          appendCloseGaugeContent(container, widget, sizeToken, color);
+          return container;
+        }
+
+        const normalized = normalizeMetricValue(widget);
+        let progressStroke = color;
+        if (colors.usesGradient) {
+          const gradientId = `${widget.id || "open-gauge"}-gradient`;
+          const defs = createSvgElement("defs");
+          const gradient = createSvgElement("linearGradient", {
+            id: gradientId,
+            x1: "0%",
+            y1: "100%",
+            x2: "100%",
+            y2: "100%"
+          });
+          gradient.append(
+            createSvgElement("stop", { offset: "0%", "stop-color": widget.variant.property === "offset" ? colors.set : colors.start }),
+            createSvgElement("stop", { offset: "100%", "stop-color": widget.variant.property === "offset" ? colors.offset : colors.end })
+          );
+          defs.append(gradient);
+          svg.append(defs);
+          progressStroke = `url(#${gradientId})`;
+        }
+        const trackPath = describeArc(sizeToken.center, sizeToken.radius, 135, 270);
+        const progressPath = describeArc(sizeToken.center, sizeToken.radius, 135, 270 * normalized);
+        svg.append(
+          createSvgElement("path", {
+            d: trackPath,
+            fill: "none",
+            stroke: "#3D3D3D",
+            "stroke-width": sizeToken.strokeWidth,
+            "stroke-linecap": "round"
+          }),
+          createSvgElement("path", {
+            d: progressPath,
+            fill: "none",
+            stroke: progressStroke,
+            "stroke-width": sizeToken.strokeWidth,
+            "stroke-linecap": "round"
+          })
+        );
+
+        if (widget.variant.property === "range") {
+          appendOpenGaugeDot(svg, sizeToken, normalized, mixHex(colors.start, colors.end, normalized));
+        }
+
+        if (widget.variant.property === "offset") {
+          appendOpenGaugeDot(svg, sizeToken, normalizedMetricFromValue(widget, widget.data.referenceMeasuredValue ?? widget.data.referenceValue), colors.set);
+          appendOpenGaugeDot(svg, sizeToken, normalizedMetricFromValue(widget, widget.data.measuredValue ?? widget.data.value), colors.offset);
+        }
+
+        container.append(svg);
+        appendOpenGaugeContent(container, widget, sizeToken, colors, normalized);
+        return container;
+      }
+
+      function renderControlIcon(name, color = "#F2F4FC") {
+        const symbolByName = {
+          previous: "skip_previous",
+          play: "play_arrow",
+          playPause: "pause",
+          next: "skip_next",
+          reset: "restart_alt",
+          startPause: "pause",
+          cancel: "close"
+        };
+        const button = createElement("div", "rect-control");
+        button.append(renderMaterialIcon(symbolByName[name], 28, color));
+        return button;
+      }
+
+      function renderRadioButton(checked = false) {
+        const radio = createElement("span", "rect-radio");
+        const ring = createElement("span", "rect-radio-ring");
+        if (checked) {
+          ring.append(createElement("span", "rect-radio-dot"));
+        }
+        radio.append(ring);
+        return radio;
+      }
+
+      function renderGeneratedTextBlock(block) {
+        const classByUnit = {
+          numbers: "rect-number",
+          body_emphasis: "rect-primary",
+          body: "rect-secondary",
+          secondary: "rect-secondary"
+        };
+        const element = createElement("div", classByUnit[block.unit], block.text);
+        element.style.textAlign = block.align || "left";
+        if (block.maxLines === 2) {
+          element.style.whiteSpace = "normal";
+          element.style.display = "-webkit-box";
+          element.style.WebkitLineClamp = "2";
+          element.style.WebkitBoxOrient = "vertical";
+        }
+        return element;
+      }
+
+      function renderGeneratedInlineSmallIconText(block, color) {
+        const row = createElement("div", "rect-radio-row");
+        row.style.alignItems = "center";
+        row.style.gap = "4px";
+        const icon = renderMaterialIcon(block.icon, 24, color);
+        icon.style.width = "24px";
+        icon.style.height = "24px";
+        icon.style.flex = "0 0 auto";
+        const textClass = block.textUnit === "body_emphasis" ? "rect-primary" : "rect-secondary";
+        row.append(icon, createElement("span", textClass, block.text));
+        return row;
+      }
+
+      function renderGeneratedBigIconTextGroup(block, color) {
+        const row = createElement("div", "rect-controls");
+        row.style.justifyContent = "flex-start";
+        row.style.gap = "8px";
+        const icon = renderMaterialIcon(block.icon, 48, color);
+        icon.style.width = "48px";
+        icon.style.height = "48px";
+        icon.style.flex = "0 0 auto";
+        const textGroup = createElement("div", "");
+        textGroup.style.display = "flex";
+        textGroup.style.flexDirection = "column";
+        textGroup.style.minWidth = "0";
+        for (const textBlock of block.textGroup) {
+          textGroup.append(renderGeneratedTextBlock(textBlock));
+        }
+        if (block.iconPosition === "right") {
+          row.append(textGroup, icon);
+        } else {
+          row.append(icon, textGroup);
+        }
+        return row;
+      }
+
+      function renderGeneratedNumberTextLockup(block) {
+        const row = createElement("div", "rect-radio-row");
+        row.style.alignItems = "baseline";
+        row.style.gap = "4px";
+        row.append(createElement("span", "rect-number", block.value));
+        if (block.unitLabel) {
+          row.append(createElement("span", "rect-primary", block.unitLabel));
+        }
+        if (block.secondaryText) {
+          row.append(createElement("span", "rect-secondary", block.secondaryText));
+        }
+        return row;
+      }
+
+      function renderGeneratedEdgeProgressBar(block) {
+        const progress = createElement("div", "rect-progress");
+        const value = createElement("div", "rect-progress-value");
+        value.style.width = `${Math.round(clamp(block.progress, 0, 1) * 100)}%`;
+        progress.append(value);
+        if (block.edge === "top") {
+          progress.style.order = "-1";
+        }
+        return progress;
+      }
+
+      function renderGeneratedRectangularBlock(block, color) {
+        if (block.type === "text") {
+          return renderGeneratedTextBlock(block);
+        }
+        if (block.type === "inline_small_icon_text") {
+          return renderGeneratedInlineSmallIconText(block, color);
+        }
+        if (block.type === "big_icon_text_group") {
+          return renderGeneratedBigIconTextGroup(block, color);
+        }
+        if (block.type === "number_text_lockup") {
+          return renderGeneratedNumberTextLockup(block);
+        }
+        if (block.type === "edge_progress_bar") {
+          return renderGeneratedEdgeProgressBar(block);
+        }
+        throw new Error(`Unknown generated rectangular block type: ${block.type}`);
+      }
+
+      function renderGeneratedRectangularWidget(widget, element, color) {
+        if (!widget.composition?.blocks?.length) {
+          throw new Error("Generated rectangular widget is missing composition blocks");
+        }
+
+        const inner = createElement("div", "rect-inner");
+        inner.style.flexDirection = widget.composition.layout === "horizontal" ? "row" : "column";
+        inner.style.gap = `${widget.composition.gap}px`;
+        inner.style.padding = `${widget.composition.padding.top}px ${widget.composition.padding.right}px ${widget.composition.padding.bottom}px ${widget.composition.padding.left}px`;
+        if (widget.composition.verticalAlignment === "center") {
+          inner.style.justifyContent = "center";
+        } else if (widget.composition.verticalAlignment === "bottom") {
+          inner.style.justifyContent = "flex-end";
+        }
+        for (const block of widget.composition.blocks) {
+          inner.append(renderGeneratedRectangularBlock(block, color));
+        }
+        element.append(inner);
+        return element;
+      }
+
+      function renderRectangularWidget(widget, layout) {
+        if (!["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"].includes(widget.template)) {
+          throw new Error(`Unknown rectangular template: ${widget.template}`);
+        }
+
+        const element = createElement("div", "watch-widget rect-widget");
+        applyFrame(element, widget.frame);
+        const color = accentFor(widget, layout?.colorSystem);
+        element.style.setProperty("--widget-accent", color);
+
+        if (widget.template === "generated_rectangular_widget") {
+          return renderGeneratedRectangularWidget(widget, element, color);
+        }
+
+        if (widget.template === "checklist_full_face") {
+          const date = createElement("div", "watch-el rect-secondary", layout.date.value);
+          date.style.left = "16px";
+          date.style.top = "16px";
+          const time = createElement("div", "watch-el rect-secondary", layout.time.value);
+          time.style.left = "139px";
+          time.style.top = "16px";
+          time.style.width = "50px";
+          time.style.textAlign = "right";
+          const title = createElement("div", "watch-el rect-primary", widget.data.label || "Checklist");
+          title.style.left = "16px";
+          title.style.top = "42px";
+          title.style.width = "173px";
+          const list = createElement("div", "checklist-list");
+          const completedItems = new Set(widget.data.completedItems || []);
+          for (const item of (widget.data.items || []).slice(0, 4)) {
+            const row = createElement("div", "checklist-item");
+            row.append(renderRadioButton(completedItems.has(item)), createElement("span", "rect-secondary", item));
+            list.append(row);
+          }
+          element.append(date, time, title, list);
+          return element;
+        }
+
+        const inner = createElement("div", "rect-inner");
+        element.append(inner);
+
+        if (widget.template === "music_control") {
+          inner.style.paddingBottom = "0";
+          inner.style.gap = "10px";
+          inner.style.alignItems = "center";
+          inner.append(
+            createElement("div", "rect-primary", widget.data.song),
+            createElement("div", "rect-secondary", widget.data.artist || widget.data.album || "Now playing")
+          );
+          const controls = createElement("div", "rect-controls");
+          controls.style.width = "173px";
+          controls.style.height = "48px";
+          controls.append(
+            renderControlIcon("previous", color),
+            renderControlIcon(widget.data.playbackState === "paused" ? "play" : "playPause", color),
+            renderControlIcon("next", color)
+          );
+          const progress = createElement("div", "rect-progress");
+          const value = createElement("div", "rect-progress-value");
+          value.style.width = `${Math.round(clamp(widget.data.progress ?? 0.42, 0, 1) * 100)}%`;
+          progress.append(value);
+          inner.append(controls, progress);
+          return element;
+        }
+
+        if (widget.template === "reminder") {
+          inner.style.gap = "8px";
+          const metadata = createElement("div", "rect-secondary", widget.data.dueDatetime || widget.data.label || "Reminder");
+          metadata.style.paddingLeft = "32px";
+          metadata.style.width = "173px";
+          metadata.style.height = "22px";
+          const row = createElement("div", "rect-radio-row");
+          row.style.width = "173px";
+          const content = createElement("span", "rect-primary", widget.data.content);
+          content.style.width = "140px";
+          content.style.whiteSpace = "normal";
+          content.style.display = "-webkit-box";
+          content.style.WebkitLineClamp = "3";
+          content.style.WebkitBoxOrient = "vertical";
+          row.append(renderRadioButton(widget.data.completed), content);
+          inner.append(metadata, row);
+          return element;
+        }
+
+        if (widget.template === "timer_rectangular") {
+          inner.style.gap = "16px";
+          inner.style.alignItems = "center";
+          inner.append(createElement("div", "rect-number", widget.data.countdown));
+          const controls = createElement("div", "rect-controls");
+          controls.style.width = "173px";
+          controls.style.height = "48px";
+          controls.append(
+            renderControlIcon("reset", color),
+            renderControlIcon(widget.data.running === false ? "play" : "playPause", color),
+            renderControlIcon("cancel", color)
+          );
+          inner.append(controls);
+          return element;
+        }
+
+        return element;
+      }
+
+      function rectOverlapDepth(a, b) {
+        const xOverlap = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+        const yOverlap = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+        return Math.min(xOverlap, yOverlap);
+      }
+
+      function validateWidgetTextOverlap(layout, textObject, path) {
+        for (const widget of layout.widgets) {
+          const overlapDepth = rectOverlapDepth(textObject.frame, widget.frame);
+          if (overlapDepth > 10) {
+            throw new Error(`${path} overlaps ${widget.id} by ${Math.round(overlapDepth)}px; maximum controlled overlap is 10px`);
+          }
+        }
+      }
+
+      function validateRenderableLayout(layout) {
+        if (layout.targetContainer !== "Gen Watch Face") {
+          throw new Error("Layout targetContainer must be Gen Watch Face");
+        }
+        if (!["mono_tone", "multicolor"].includes(layout.colorSystem?.mode)) {
+          throw new Error("Layout colorSystem.mode must be mono_tone or multicolor");
+        }
+        if (!/^#[0-9a-fA-F]{6}$/.test(layout.colorSystem?.accentColor || "")) {
+          throw new Error("Layout colorSystem.accentColor must be a 6-digit hex color");
+        }
+        if (!Array.isArray(layout.widgets)) {
+          throw new Error("Layout widgets must be an array");
+        }
+        for (const widget of layout.widgets) {
+          if (widget.shape === "circular" && !["close_gauge", "open_gauge"].includes(widget.component)) {
+            throw new Error(`Renderer rejected unknown circular component ${widget.component}`);
+          }
+          if (widget.shape === "rectangular" && !["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"].includes(widget.template)) {
+            throw new Error(`Renderer rejected unknown rectangular template ${widget.template}`);
+          }
+        }
+        validateWidgetTextOverlap(layout, layout.time, "time");
+        validateWidgetTextOverlap(layout, layout.date, "date");
+      }
+
+      function renderWatchFace(layout) {
+        validateRenderableLayout(layout);
+        genWatchFace.replaceChildren();
+        const root = createElement("div", "watch-face-render");
+
+        const time = createElement("div", "watch-el watch-time", layout.time.value);
+        applyFrame(time, layout.time.frame);
+        time.style.color = layout.time.style?.color || "#fff";
+        time.style.fontSize = `${layout.time.style?.fontSize || 64}px`;
+        time.style.fontWeight = layout.time.style?.fontWeight || 760;
+
+        const date = createElement("div", "watch-el watch-date", layout.date.value);
+        applyFrame(date, layout.date.frame);
+        date.style.color = layout.date.style?.color || "rgba(255, 255, 255, 0.62)";
+        date.style.fontSize = `${layout.date.style?.fontSize || 12}px`;
+        date.style.fontWeight = layout.date.style?.fontWeight || 600;
+
+        root.append(time, date);
+        for (const widget of layout.widgets) {
+          root.append(widget.shape === "circular" ? renderCircularWidget(widget, layout) : renderRectangularWidget(widget, layout));
+        }
+        genWatchFace.append(root);
+      }
+
+      function formatLogs(run) {
+        const pipelinePhase = run.layout?.metadata?.pipelinePhase || "phase-unknown";
+        return [
+          `[${pipelinePhase}] Pipeline started.`,
+          `[${pipelinePhase}] ${run.reason}`,
+          "",
+          ...run.pipelineSteps.map((step) => `[${step.id}] ${step.status}: ${step.detail}`),
+          "",
+          `[fallback] used=${run.layout.metadata.fallbackUsed}; id=${run.layout.metadata.fallbackId || "none"}; reason=${run.layout.metadata.fallbackReason || "none"}`,
+          "",
+          `[color-system] ${run.layout.colorSystem.mode}: accent ${run.layout.colorSystem.accentColor}, source ${run.layout.colorSystem.sourceRule}`,
+          "",
+          `[debug-split] Generated Layout JSON contains final render contract plus compact metadata.`,
+          `[debug-split] Logs contain context summary, reasoning, validation status, retry/fallback status, and model metadata.`,
+          `[copy-debug-bundle] Ready. Paste the copied bundle into Codex to diagnose generation, validation, or renderer issues.`
         ].join("\n");
-        faceTime.textContent = timeForFace(context.timeOfDay);
+      }
+
+      function buildDebugBundle(run) {
+        return [
+          "## Watch UI Debug Bundle",
+          "",
+          "Paste this bundle into Codex and ask it to diagnose whether the issue is in layout generation, validation, or renderer code, then make the smallest safe fix.",
+          "",
+          `Generation ID: ${run.generationId}`,
+          `Pipeline Phase: ${run.layout.metadata.pipelinePhase}`,
+          "",
+          "### Live Context",
+          "```json",
+          JSON.stringify(run.context, null, 2),
+          "```",
+          "",
+          "### Pseudo-Context Summary",
+          run.pseudoContextSummary.map((item) => `- ${item}`).join("\n"),
+          "",
+          "### Selected Content Types",
+          "```json",
+          JSON.stringify(run.selectedContentTypes, null, 2),
+          "```",
+          "",
+          "### Widget Decisions",
+          run.widgetDecisions.map((item) => `- ${item}`).join("\n"),
+          "",
+          "### Generated Layout JSON",
+          "```json",
+          JSON.stringify(run.layout, null, 2),
+          "```",
+          "",
+          "### Validation",
+          "```json",
+          JSON.stringify(run.validation, null, 2),
+          "```",
+          "",
+          "### Renderer Logs",
+          "```txt",
+          formatLogs(run),
+          "```",
+          "",
+          "### Model Metadata",
+          "```json",
+          JSON.stringify(run.model, null, 2),
+          "```"
+        ].join("\n");
+      }
+
+      function setPipelineOutput(run) {
+        if (!run.validation.ok) {
+          genWatchFace.replaceChildren(createElement("div", "watch-face-render"));
+          layoutJson.textContent = JSON.stringify(run.layout, null, 2);
+          logs.textContent = formatLogs(run);
+          latestDebugBundle = buildDebugBundle(run);
+          return;
+        }
+        try {
+          renderWatchFace(run.layout);
+          const renderStep = run.pipelineSteps.find((step) => step.id === "render");
+          if (renderStep) {
+            renderStep.status = "complete";
+            renderStep.detail = "Rendered accepted layout through deterministic watch-face DOM/SVG primitives.";
+          }
+        } catch (error) {
+          genWatchFace.replaceChildren(createElement("div", "watch-face-render"));
+          run.pipelineSteps.push({ id: "render-error", status: "failed", detail: error.message });
+          run.validation = {
+            ...run.validation,
+            ok: false,
+            stage: "renderer",
+            rendererError: error.message
+          };
+        }
+        layoutJson.textContent = JSON.stringify(run.layout, null, 2);
+        logs.textContent = formatLogs(run);
+        latestDebugBundle = buildDebugBundle(run);
+      }
+
+      function refreshStaticOutput(reason) {
+        const run = buildPipelineRun(reason);
+        setPipelineOutput(run);
+      }
+
+      async function loadSampleLayout() {
+        try {
+          const response = await fetch("design-pack/sample-layouts.json", { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(`sample layout request failed: ${response.status}`);
+          }
+          const samples = await response.json();
+          const sampleIndex = nextSampleLayoutIndex % samples.layouts.length;
+          const layout = samples.layouts?.[sampleIndex];
+          if (!layout) {
+            throw new Error(`sample-layouts.json does not contain layouts[${sampleIndex}]`);
+          }
+          nextSampleLayoutIndex += 1;
+          setPipelineOutput(buildSampleRun(layout, sampleIndex));
+        } catch (error) {
+          logs.textContent = `${logs.textContent}\n[load-sample-layout] Failed: ${error.message}`;
+        }
+      }
+
+      function copyTextWithFallback(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+
+      async function copyDebugBundle() {
+        if (!latestDebugBundle) {
+          return;
+        }
+
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(latestDebugBundle);
+          } catch (error) {
+            copyTextWithFallback(latestDebugBundle);
+          }
+        } else {
+          copyTextWithFallback(latestDebugBundle);
+        }
+
+        logs.textContent = `${logs.textContent}\n[copy-debug-bundle] Copied debug bundle to clipboard.`;
       }
 
       timeField.value = currentTimeLabel();
-      faceDate.textContent = currentDateLabel();
       refreshStaticOutput("Default context rendered.");
 
-      document.querySelector("#generate-button").addEventListener("click", () => {
-        refreshStaticOutput("Generate clicked; captured form values for debug only.");
+      async function handleGenerate() {
+        const context = readContext();
+        try {
+          const result = await requestBackendGeneration(context);
+          setPipelineOutput(buildRunFromApiResponse(result, context, "Generate clicked; backend Phase 8 endpoint returned deterministic fallback layout."));
+        } catch (error) {
+          const run = buildPipelineRun("Generate clicked; backend endpoint unavailable, so browser-local deterministic fallback was used.");
+          run.pipelineSteps.unshift({
+            id: "call-backend-endpoint",
+            status: "failed",
+            detail: `/api/generate-watch-ui failed: ${error.message}`
+          });
+          setPipelineOutput(run);
+        }
+      }
+
+      copyDebugButton.addEventListener("click", () => {
+        copyDebugBundle().catch((error) => {
+          logs.textContent = `${logs.textContent}\n[copy-debug-bundle] Failed to copy: ${error.message}`;
+        });
+      });
+
+      sampleLayoutButton.addEventListener("click", () => {
+        loadSampleLayout();
+      });
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        handleGenerate();
       });
 
       tabButtons.forEach((button) => {

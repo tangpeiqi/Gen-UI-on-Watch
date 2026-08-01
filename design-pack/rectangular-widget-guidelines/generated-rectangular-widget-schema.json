@@ -1,0 +1,467 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gen-ui-on-watch.local/design-pack/rectangular-widget-guidelines/generated-rectangular-widget-schema.json",
+  "schemaVersion": "1.0.0",
+  "title": "Generated Rectangular Widget Schema",
+  "purpose": "Constrained schema for generative rectangular watch-face widgets that do not use strict templates. This schema allows flexible composition from approved rectangular atomic units and patterns, while blocking arbitrary HTML, CSS, SVG, script, or unapproved visual primitives.",
+  "sourceDocuments": [
+    "rectangular-widget-composition-guidelines.md",
+    "rectangular-widget-visual-specs.json",
+    "rectangular-widget-catalog.json",
+    "../layout-schema.json",
+    "../material-symbols-registry.json",
+    "../watch-face-generation-rules.md"
+  ],
+  "generatedRectangularWidgetContentTypes": [
+    "workout",
+    "activity_summary",
+    "upcoming_event",
+    "heart_rate",
+    "last_message",
+    "iot_control",
+    "map_navigation",
+    "sleep_summary",
+    "weather"
+  ],
+  "strictTemplateExcludedContentTypes": [
+    "music_control",
+    "reminder",
+    "timer",
+    "checklist"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "contentType",
+    "shape",
+    "template",
+    "frame",
+    "layer",
+    "cornerRadius",
+    "verticalAlignment",
+    "composition"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "workout",
+        "activity_summary",
+        "upcoming_event",
+        "heart_rate",
+        "last_message",
+        "iot_control",
+        "map_navigation",
+        "sleep_summary",
+        "weather"
+      ]
+    },
+    "shape": {
+      "const": "rectangular"
+    },
+    "template": {
+      "const": "generated_rectangular_widget"
+    },
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "const": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 171
+        },
+        "width": {
+          "const": 205
+        },
+        "height": {
+          "type": "number",
+          "minimum": 80,
+          "maximum": 180
+        }
+      }
+    },
+    "layer": {
+      "const": "top"
+    },
+    "cornerRadius": {
+      "const": 54
+    },
+    "verticalAlignment": {
+      "type": "string",
+      "enum": [
+        "top",
+        "bottom"
+      ]
+    },
+    "accentSource": {
+      "type": "string",
+      "enum": [
+        "widget_accent_color"
+      ],
+      "default": "widget_accent_color"
+    },
+    "composition": {
+      "$ref": "#/$defs/composition"
+    }
+  },
+  "$defs": {
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "padding",
+        "gap",
+        "blocks"
+      ],
+      "properties": {
+        "layout": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "padding": {
+          "$ref": "#/$defs/padding"
+        },
+        "gap": {
+          "type": "number",
+          "enum": [
+            0,
+            4,
+            8,
+            10,
+            16
+          ]
+        },
+        "verticalAlignment": {
+          "type": "string",
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "center"
+        },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        }
+      }
+    },
+    "padding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "properties": {
+        "top": {
+          "type": "number",
+          "enum": [
+            0,
+            16
+          ]
+        },
+        "right": {
+          "const": 16
+        },
+        "bottom": {
+          "type": "number",
+          "enum": [
+            0,
+            16
+          ]
+        },
+        "left": {
+          "const": 16
+        }
+      }
+    },
+    "block": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/textBlock"
+        },
+        {
+          "$ref": "#/$defs/inlineSmallIconText"
+        },
+        {
+          "$ref": "#/$defs/bigIconTextGroup"
+        },
+        {
+          "$ref": "#/$defs/numberTextLockup"
+        },
+        {
+          "$ref": "#/$defs/edgeProgressBar"
+        }
+      ]
+    },
+    "textBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "unit",
+        "text"
+      ],
+      "properties": {
+        "type": {
+          "const": "text"
+        },
+        "unit": {
+          "$ref": "#/$defs/textUnit"
+        },
+        "text": {
+          "$ref": "#/$defs/displayText"
+        },
+        "align": {
+          "$ref": "#/$defs/textAlign"
+        },
+        "maxLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "default": 1
+        }
+      }
+    },
+    "inlineSmallIconText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "icon",
+        "textUnit",
+        "text"
+      ],
+      "properties": {
+        "type": {
+          "const": "inline_small_icon_text"
+        },
+        "icon": {
+          "$ref": "#/$defs/iconToken"
+        },
+        "textUnit": {
+          "type": "string",
+          "enum": [
+            "body",
+            "body_emphasis",
+            "secondary"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/displayText"
+        }
+      }
+    },
+    "bigIconTextGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "icon",
+        "iconPosition",
+        "textGroup"
+      ],
+      "properties": {
+        "type": {
+          "const": "big_icon_text_group"
+        },
+        "icon": {
+          "$ref": "#/$defs/iconToken"
+        },
+        "iconPosition": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "textGroup": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/textBlock"
+          }
+        }
+      }
+    },
+    "numberTextLockup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "const": "number_text_lockup"
+        },
+        "value": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "unitLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12
+        },
+        "secondaryText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 18
+        }
+      }
+    },
+    "edgeProgressBar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "edge",
+        "progress"
+      ],
+      "properties": {
+        "type": {
+          "const": "edge_progress_bar"
+        },
+        "edge": {
+          "type": "string",
+          "enum": [
+            "top",
+            "bottom"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "textUnit": {
+      "type": "string",
+      "enum": [
+        "numbers",
+        "body_emphasis",
+        "body",
+        "secondary"
+      ]
+    },
+    "textAlign": {
+      "type": "string",
+      "enum": [
+        "left",
+        "center",
+        "right"
+      ],
+      "default": "left"
+    },
+    "displayText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 36
+    },
+    "iconToken": {
+      "type": "string",
+      "enum": [
+        "activity_mobility",
+        "activity_sitting",
+        "activity_standing",
+        "activity_walking",
+        "calendar",
+        "checklist",
+        "commute",
+        "heart_rate",
+        "location",
+        "map_navigation",
+        "message",
+        "music",
+        "sleep",
+        "thermometer",
+        "time",
+        "timer",
+        "weather_cloudy",
+        "weather_partly_cloudy",
+        "weather_rain",
+        "weather_rainy",
+        "weather_snowy",
+        "weather_umbrella",
+        "weather_sunny",
+        "weather_windy",
+        "workout_running",
+        "workout_strength",
+        "workout_trail_run"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "id": "event-eta",
+      "contentType": "upcoming_event",
+      "shape": "rectangular",
+      "template": "generated_rectangular_widget",
+      "frame": {
+        "x": 0,
+        "y": 112,
+        "width": 205,
+        "height": 139
+      },
+      "layer": "top",
+      "cornerRadius": 54,
+      "verticalAlignment": "bottom",
+      "accentSource": "widget_accent_color",
+      "composition": {
+        "layout": "vertical",
+        "padding": {
+          "top": 16,
+          "right": 16,
+          "bottom": 16,
+          "left": 16
+        },
+        "gap": 8,
+        "blocks": [
+          {
+            "type": "inline_small_icon_text",
+            "icon": "calendar",
+            "textUnit": "secondary",
+            "text": "Dinner at 7:30"
+          },
+          {
+            "type": "number_text_lockup",
+            "value": "12",
+            "unitLabel": "min",
+            "secondaryText": "to leave"
+          }
+        ]
+      }
+    }
+  ]
+}

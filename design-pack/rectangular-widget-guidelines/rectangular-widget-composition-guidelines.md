@@ -254,6 +254,20 @@ icon_color_contract:
 
 These patterns define how atomic units may be assembled inside a rectangular widget. Treat the pattern rules as generator constraints, not visual suggestions.
 
+## Generated Rectangular Widget Schema
+
+Generative rectangular widgets that are not covered by strict templates must use `generated-rectangular-widget-schema.json`.
+
+The schema allows only the atomic units and composition patterns in this document:
+
+- `text`
+- `inline_small_icon_text`
+- `big_icon_text_group`
+- `number_text_lockup`
+- `edge_progress_bar`
+
+The schema rejects arbitrary HTML, CSS, SVG, script, unapproved icon names, unapproved type units, and freeform visual primitives. Strict template content types are excluded from `generated_rectangular_widget`; Music Control, Reminder, Timer, and Checklist must keep using their required templates.
+
 ```yaml
 composition_patterns:
   inline_small_icon_text:

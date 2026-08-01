@@ -1,0 +1,376 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Hand-authored valid layouts for schema, renderer, and validator testing.",
+  "layouts": [
+    {
+      "schemaVersion": "1.0.0",
+      "targetContainer": "Gen Watch Face",
+      "metadata": {
+        "pipelinePhase": "phase-2-layout-schema",
+        "provider": "local-sample",
+        "model": "none",
+        "promptVersion": "watch-face-sample-v1",
+        "schemaVersion": "1.0.0",
+        "selectedContentTypes": [
+          "workout",
+          "weather"
+        ],
+        "retryCount": 0,
+        "fallbackUsed": false,
+        "contextSource": "live_context_plus_pseudo_context",
+        "generationStepProvenance": [
+          "read-live-context",
+          "load-pseudo-context",
+          "select-content-types",
+          "choose-widgets",
+          "populate-widgets",
+          "generate-layout-json"
+        ]
+      },
+      "canvas": {
+        "width": 205,
+        "height": 251,
+        "borderRadius": 54,
+        "coordinateSystem": "fixed"
+      },
+      "colorSystem": {
+        "mode": "multicolor",
+        "accentColor": "#FF7A1A",
+        "sourceRule": "two-content-types-prefers-multicolor"
+      },
+      "time": {
+        "mode": "single_line",
+        "value": "5:42",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 169,
+          "width": 150,
+          "height": 58
+        },
+        "style": {
+          "fontFamily": "SF Pro Display",
+          "fontSize": 64,
+          "fontWeight": 760,
+          "letterSpacing": 0,
+          "color": "#FFFFFF",
+          "treatment": "fill"
+        }
+      },
+      "date": {
+        "value": "Thu 30",
+        "priority": "secondary",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 18,
+          "width": 62,
+          "height": 18
+        },
+        "style": {
+          "fontFamily": "SF Pro Text",
+          "fontSize": 12,
+          "fontWeight": 600,
+          "letterSpacing": 0,
+          "color": "#FFFFFF",
+          "treatment": "fill"
+        }
+      },
+      "widgets": [
+        {
+          "id": "workout-progress",
+          "contentType": "workout",
+          "shape": "circular",
+          "component": "close_gauge",
+          "variant": {
+            "property": "text",
+            "size": "S"
+          },
+          "data": {
+            "value": "42",
+            "label": "run",
+            "progress": 0.42,
+            "metricKind": "workout"
+          },
+          "frame": {
+            "x": 118,
+            "y": 20,
+            "width": 72,
+            "height": 72
+          },
+          "layer": "top"
+        },
+        {
+          "id": "precipitation-chance",
+          "contentType": "weather",
+          "shape": "circular",
+          "component": "open_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "data": {
+            "icon": "weather_umbrella",
+            "value": "62%",
+            "progress": 0.62,
+            "metricKind": "precipitation_probability"
+          },
+          "frame": {
+            "x": 18,
+            "y": 88,
+            "width": 72,
+            "height": 72
+          },
+          "layer": "top"
+        }
+      ],
+      "layers": {
+        "bottom": [
+          "time",
+          "date"
+        ],
+        "top": [
+          "workout-progress",
+          "precipitation-chance"
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "targetContainer": "Gen Watch Face",
+      "metadata": {
+        "pipelinePhase": "phase-2-layout-schema",
+        "provider": "local-sample",
+        "model": "none",
+        "promptVersion": "watch-face-sample-v1",
+        "schemaVersion": "1.0.0",
+        "selectedContentTypes": [
+          "reminder"
+        ],
+        "retryCount": 0,
+        "fallbackUsed": false,
+        "contextSource": "live_context_plus_pseudo_context",
+        "generationStepProvenance": [
+          "read-live-context",
+          "load-pseudo-context",
+          "select-content-types",
+          "choose-widgets",
+          "populate-widgets",
+          "generate-layout-json"
+        ]
+      },
+      "canvas": {
+        "width": 205,
+        "height": 251,
+        "borderRadius": 54,
+        "coordinateSystem": "fixed"
+      },
+      "colorSystem": {
+        "mode": "mono_tone",
+        "accentColor": "#F2F4FC",
+        "sourceRule": "one-content-type-prefers-mono-tone"
+      },
+      "time": {
+        "mode": "single_line",
+        "value": "6:08",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 28,
+          "width": 150,
+          "height": 58
+        },
+        "style": {
+          "fontFamily": "SF Pro Display",
+          "fontSize": 64,
+          "fontWeight": 760,
+          "letterSpacing": 0,
+          "color": "#F2F4FC",
+          "treatment": "fill"
+        }
+      },
+      "date": {
+        "value": "Thu 30",
+        "priority": "secondary",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 94,
+          "width": 62,
+          "height": 18
+        },
+        "style": {
+          "fontFamily": "SF Pro Text",
+          "fontSize": 12,
+          "fontWeight": 600,
+          "letterSpacing": 0,
+          "color": "#F2F4FC",
+          "treatment": "fill"
+        }
+      },
+      "widgets": [
+        {
+          "id": "dinner-reminder",
+          "contentType": "reminder",
+          "shape": "rectangular",
+          "template": "reminder",
+          "data": {
+            "content": "Dinner in Redmond",
+            "dueDatetime": "7:30 PM",
+            "label": "next"
+          },
+          "frame": {
+            "x": 0,
+            "y": 124,
+            "width": 205,
+            "height": 127
+          },
+          "layer": "top",
+          "cornerRadius": 54,
+          "verticalAlignment": "bottom"
+        }
+      ],
+      "layers": {
+        "bottom": [
+          "time",
+          "date"
+        ],
+        "top": [
+          "dinner-reminder"
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "targetContainer": "Gen Watch Face",
+      "metadata": {
+        "pipelinePhase": "phase-5-generated-rectangular-renderer",
+        "provider": "local-sample",
+        "model": "none",
+        "promptVersion": "watch-face-generated-rectangular-sample-v1",
+        "schemaVersion": "1.0.0",
+        "selectedContentTypes": [
+          "upcoming_event",
+          "weather"
+        ],
+        "retryCount": 0,
+        "fallbackUsed": false,
+        "contextSource": "live_context_plus_pseudo_context",
+        "generationStepProvenance": [
+          "read-live-context",
+          "load-pseudo-context",
+          "select-content-types",
+          "choose-renderable-composition",
+          "populate-widgets",
+          "generate-layout-json"
+        ]
+      },
+      "canvas": {
+        "width": 205,
+        "height": 251,
+        "borderRadius": 54,
+        "coordinateSystem": "fixed"
+      },
+      "colorSystem": {
+        "mode": "mono_tone",
+        "accentColor": "#7DD3FC",
+        "sourceRule": "one-content-type-prefers-mono-tone"
+      },
+      "time": {
+        "mode": "single_line",
+        "value": "6:42",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 28,
+          "width": 150,
+          "height": 58
+        },
+        "style": {
+          "fontFamily": "SF Pro Display",
+          "fontSize": 64,
+          "fontWeight": 760,
+          "letterSpacing": 0,
+          "color": "#7DD3FC",
+          "treatment": "fill"
+        }
+      },
+      "date": {
+        "value": "Thu 30",
+        "priority": "secondary",
+        "layer": "bottom",
+        "frame": {
+          "x": 18,
+          "y": 94,
+          "width": 62,
+          "height": 18
+        },
+        "style": {
+          "fontFamily": "SF Pro Text",
+          "fontSize": 12,
+          "fontWeight": 600,
+          "letterSpacing": 0,
+          "color": "#7DD3FC",
+          "treatment": "fill"
+        }
+      },
+      "widgets": [
+        {
+          "id": "dinner-eta",
+          "contentType": "upcoming_event",
+          "shape": "rectangular",
+          "template": "generated_rectangular_widget",
+          "data": {
+            "icon": "calendar",
+            "value": "12",
+            "label": "min",
+            "metricKind": "upcoming_event"
+          },
+          "composition": {
+            "layout": "vertical",
+            "padding": {
+              "top": 16,
+              "right": 16,
+              "bottom": 16,
+              "left": 16
+            },
+            "gap": 8,
+            "verticalAlignment": "center",
+            "blocks": [
+              {
+                "type": "inline_small_icon_text",
+                "icon": "calendar",
+                "textUnit": "secondary",
+                "text": "Dinner at 7:30"
+              },
+              {
+                "type": "number_text_lockup",
+                "value": "12",
+                "unitLabel": "min",
+                "secondaryText": "to leave"
+              }
+            ]
+          },
+          "frame": {
+            "x": 0,
+            "y": 124,
+            "width": 205,
+            "height": 127
+          },
+          "layer": "top",
+          "cornerRadius": 54,
+          "verticalAlignment": "bottom"
+        }
+      ],
+      "layers": {
+        "bottom": [
+          "time",
+          "date"
+        ],
+        "top": [
+          "dinner-eta"
+        ]
+      }
+    }
+  ]
+}

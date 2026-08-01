@@ -3,6 +3,7 @@
   "purpose": "Agent-readable catalog for selecting strict rectangular watch-face widget templates before rendering them on a webpage.",
   "relatedDocuments": [
     "rectangular-widget-composition-guidelines.md",
+    "generated-rectangular-widget-schema.json",
     "rectangular-widget-visual-specs.json",
     "RectangularWidgets.tsx",
     "../watch-face-generation-rules.md",
@@ -45,6 +46,36 @@
       "rule": "widget_accent_color is resolved by watch-face-generation-rules.md and consumed by rectangular templates."
     }
   ],
+  "templatePolicy": {
+    "purpose": "Defines which semantic content types must use strict rectangular templates and which content types may choose between circular and rectangular rendering.",
+    "strictRectangularContentTypes": {
+      "music_control": {
+        "requiredTemplate": "music_control",
+        "customRectangularLayoutAllowed": false
+      },
+      "reminder": {
+        "requiredTemplate": "reminder",
+        "customRectangularLayoutAllowed": false
+      },
+      "checklist": {
+        "requiredTemplate": "checklist_full_face",
+        "customRectangularLayoutAllowed": false,
+        "mustBeOnlyWidget": true
+      }
+    },
+    "conditionalRectangularContentTypes": {
+      "timer": {
+        "allowedCircularComponent": "close_gauge",
+        "allowedRectangularTemplate": "timer_rectangular",
+        "customRectangularLayoutAllowed": false,
+        "rule": "Timer may render as a circular close_gauge or as the timer_rectangular template. If the model chooses rectangular timer rendering, it must use timer_rectangular exactly."
+      }
+    },
+    "generativeContentTypes": {
+      "schema": "generated-rectangular-widget-schema.json",
+      "rule": "Content types not listed in strictRectangularContentTypes or conditionalRectangularContentTypes are not forced to use these strict templates by this catalog. When they render as rectangular widgets, they must use generated_rectangular_widget and obey generated-rectangular-widget-schema.json, rectangular composition guidelines, layout schema, and validators."
+    }
+  },
   "templates": [
     {
       "id": "music_control",
@@ -57,6 +88,10 @@
       },
       "shape": "rectangular_widget",
       "strict": true,
+      "templatePolicy": {
+        "mode": "strict_required_for_content_type",
+        "customRectangularLayoutAllowed": false
+      },
       "legalSize": { "width": 205, "height": 140 },
       "requiredData": {
         "song": "string",
@@ -88,6 +123,10 @@
       },
       "shape": "rectangular_widget",
       "strict": true,
+      "templatePolicy": {
+        "mode": "strict_required_for_content_type",
+        "customRectangularLayoutAllowed": false
+      },
       "legalSize": { "width": 205, "height": 127 },
       "requiredData": {
         "content": "string",
@@ -118,6 +157,12 @@
       },
       "shape": "rectangular_widget",
       "strict": true,
+      "templatePolicy": {
+        "mode": "conditional_timer_rectangular",
+        "allowedAlternativeShape": "circular",
+        "allowedAlternativeComponent": "close_gauge",
+        "customRectangularLayoutAllowed": false
+      },
       "legalSize": { "width": 205, "height": 139 },
       "alternativeAllowedComponent": "close_gauge",
       "alternativeComponentCatalog": "../Circular Widget Guidelines/circular-widget-catalog.json",
@@ -149,6 +194,11 @@
       },
       "shape": "full_watch_face_rectangular",
       "strict": true,
+      "templatePolicy": {
+        "mode": "strict_required_for_content_type",
+        "customRectangularLayoutAllowed": false,
+        "mustBeOnlyWidget": true
+      },
       "legalSize": { "width": 205, "height": 251 },
       "mustBeOnlyWidget": true,
       "requiredData": {

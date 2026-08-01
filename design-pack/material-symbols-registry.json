@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Maps project semantic icon tokens to official Material Symbols names and constrains which semantic content types may use each token. Rendering style, sizing, and font loading live in the renderer, CSS, and visual specs.",
+  "tokens": {
+    "activity_mobility": {
+      "materialSymbol": "self_improvement",
+      "allowedContentTypes": [
+        "activity_summary",
+        "workout"
+      ]
+    },
+    "activity_sitting": {
+      "materialSymbol": "chair",
+      "allowedContentTypes": [
+        "activity_summary"
+      ]
+    },
+    "activity_standing": {
+      "materialSymbol": "accessibility_new",
+      "allowedContentTypes": [
+        "activity_summary"
+      ]
+    },
+    "activity_walking": {
+      "materialSymbol": "directions_walk",
+      "allowedContentTypes": [
+        "activity_summary",
+        "heart_rate",
+        "workout"
+      ]
+    },
+    "thermometer": {
+      "materialSymbol": "thermometer",
+      "allowedContentTypes": [
+        "iot_control"
+      ]
+    },
+    "calendar": {
+      "materialSymbol": "calendar_month",
+      "allowedContentTypes": [
+        "upcoming_event",
+        "reminder"
+      ]
+    },
+    "checklist": {
+      "materialSymbol": "checklist",
+      "allowedContentTypes": [
+        "checklist",
+        "reminder"
+      ]
+    },
+    "commute": {
+      "materialSymbol": "directions_car",
+      "allowedContentTypes": [
+        "map_navigation",
+        "upcoming_event"
+      ]
+    },
+    "location": {
+      "materialSymbol": "location_on",
+      "allowedContentTypes": [
+        "map_navigation",
+        "upcoming_event"
+      ]
+    },
+    "heart_rate": {
+      "materialSymbol": "favorite",
+      "allowedContentTypes": [
+        "heart_rate",
+        "workout"
+      ]
+    },
+    "map_navigation": {
+      "materialSymbol": "near_me",
+      "allowedContentTypes": [
+        "map_navigation"
+      ]
+    },
+    "message": {
+      "materialSymbol": "chat_bubble",
+      "allowedContentTypes": [
+        "last_message"
+      ]
+    },
+    "music": {
+      "materialSymbol": "music_note",
+      "allowedContentTypes": [
+        "music_control"
+      ]
+    },
+    "sleep": {
+      "materialSymbol": "bedtime",
+      "allowedContentTypes": [
+        "sleep_summary"
+      ]
+    },
+    "timer": {
+      "materialSymbol": "timer",
+      "allowedContentTypes": [
+        "timer"
+      ]
+    },
+    "time": {
+      "materialSymbol": "alarm",
+      "allowedContentTypes": [
+        "upcoming_event"
+      ]
+    },
+    "weather_cloudy": {
+      "materialSymbol": "cloud",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_partly_cloudy": {
+      "materialSymbol": "partly_cloudy_day",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_rain": {
+      "materialSymbol": "rainy",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_rainy": {
+      "materialSymbol": "rainy",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_snowy": {
+      "materialSymbol": "weather_snowy",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_umbrella": {
+      "materialSymbol": "umbrella",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_sunny": {
+      "materialSymbol": "clear_day",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "weather_windy": {
+      "materialSymbol": "air",
+      "allowedContentTypes": [
+        "weather"
+      ]
+    },
+    "workout_running": {
+      "materialSymbol": "directions_run",
+      "allowedContentTypes": [
+        "workout"
+      ]
+    },
+    "workout_strength": {
+      "materialSymbol": "fitness_center",
+      "allowedContentTypes": [
+        "workout"
+      ]
+    },
+    "workout_trail_run": {
+      "materialSymbol": "hiking",
+      "allowedContentTypes": [
+        "workout"
+      ]
+    }
+  }
+}

@@ -36,11 +36,18 @@ The current baseline is `index.html`: a static web simulator with a Context pane
   - render into `Gen Watch Face`
 - Define a debug log shape for each step.
 - Define what intermediate step data should be visible in the Debug panel.
+- Define the Debug panel information split:
+  - `Generated Layout JSON` shows only the final render contract plus compact metadata, such as selected content types, retry count, fallback status, provider, model, prompt version, schema version, and context source.
+  - `Logs` shows the step-by-step story: context summary, pseudo-context facts used, content-type reasoning, widget-selection reasoning, icon-selection notes, generation attempts, validation summary, retries, fallback decisions, model metadata, latency, and cost estimate.
+  - A future `Validation` view can show structured schema and rule validation results when validation becomes complex enough to deserve its own tab.
+- Define a `Copy Debug Bundle` action for Codex handoff. The copied bundle should include the live context, relevant pseudo-context summary, selected content types, widget decisions, generated layout JSON, validation results, renderer logs, model metadata when available, and a short prompt scaffold asking Codex to diagnose whether the issue is in layout generation, validation, or renderer code.
 - Keep the step contract provider-neutral so deterministic fallbacks, OpenAI, and future providers use the same sequence.
 
 **Done when:**
 - Generate can run through a mocked step sequence locally.
 - Debug logs show each step in order.
+- The Debug panel separates final layout JSON from human-readable pipeline reasoning.
+- The Debug panel can copy a single debug bundle that can be pasted directly into Codex for diagnosis and fixes.
 - The final mocked output is still the only object passed toward validation and rendering.
 
 ## Phase 2: Layout Schema And Valid Sample Layouts
@@ -51,6 +58,7 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 - Add `design-pack/layout-schema.json`.
 - Define required top-level fields for schema version, canvas, metadata, time, date, widgets, and layers.
 - Include metadata fields for selected content types and generation-step provenance.
+- Include compact debug metadata in `metadata`, such as `selectedContentTypes`, `retryCount`, `fallbackUsed`, `contextSource`, `provider`, `model`, `promptVersion`, and `schemaVersion`.
 - Cap visible widgets at three.
 - Constrain circular widget size tokens to `S`, `M`, and `L`.
 - Constrain circular component IDs to approved catalog components.
@@ -91,17 +99,46 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 - Use `watch-face-generation-rules.md` to decide whether the layout should use one, two, or three widgets.
 - Use `design-pack/circular-widget-guidelines/circular-widget-catalog.json` for circular component and variant options.
 - Use `design-pack/rectangular-widget-guidelines/rectangular-widget-catalog.json` for rectangular template options.
+- Add `design-pack/widget-selection-policy.json` as the Phase 4 executable decision contract.
+- Guide the model with this selection sequence:
+  - rank candidate content types by usefulness to the current context
+  - choose a renderable composition from the ranked candidates
+  - choose widget shapes for the composition
+  - cap rendered content types based on the selected widget shapes
+  - emit only the widgets that fit the final legal composition
+- Define circular widget eligibility as a whitelist:
+  - `workout`
+  - `timer`
+  - `heart_rate`
+  - `iot_control`
+  - `weather`
+- Treat circular eligibility as permission, not a requirement. Eligible content types may still choose rectangular rendering when they need detail, controls, or text density.
+- Treat every other content type as rectangular-only. If a rectangular-only content type does not yet have a strict rectangular template, it must wait for generated rectangular composition support instead of being forced into a circular widget.
+- Apply composition caps after shape selection:
+  - all-circular layouts may render up to three widgets
+  - rectangular-present layouts may render at most two widgets total
+  - rectangular-present layouts may use one rectangular widget plus one circular widget, or two rectangular widgets
+  - checklist layouts still render exactly one full-face widget
+- Apply strict template ownership before generic widget selection:
+  - `music_control` must use the `music_control` rectangular template.
+  - `reminder` must use the `reminder` rectangular template.
+  - `checklist` must use the `checklist_full_face` template and must be the only rendered widget.
+  - `timer` may use a circular `close_gauge`, but if it renders rectangular it must use `timer_rectangular`.
+  - Generative rectangular-only content types such as `upcoming_event`, `map_navigation`, `last_message`, `sleep_summary`, and `activity_summary` must not borrow strict templates unless they are explicitly promoted into a matching strict content type.
 - Create deterministic selection examples for:
   - one circular widget
   - two circular widgets
   - one rectangular widget
   - mixed circular-and-rectangular widgets
-  - three compact widgets
+  - three compact circular widgets
 
 **Done when:**
 - The local pipeline can explain why each widget was selected.
 - Selected widgets always reference approved components, templates, sizes, and variants.
 - Debug logs distinguish content-type selection from widget-shape selection.
+- Validation rejects strict template borrowing, such as rendering `upcoming_event` with the `reminder` template.
+- Validation rejects circular widgets for rectangular-only content types, such as rendering `upcoming_event` as an `open_gauge`.
+- Validation rejects rectangular-present layouts with three rendered widgets.
 
 ## Phase 5: Deterministic Frontend Renderer
 
