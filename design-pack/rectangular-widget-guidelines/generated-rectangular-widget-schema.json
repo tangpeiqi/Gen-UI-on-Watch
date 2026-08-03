@@ -39,6 +39,7 @@
     "frame",
     "layer",
     "cornerRadius",
+    "cornerSmoothing",
     "verticalAlignment",
     "composition"
   ],
@@ -90,7 +91,7 @@
         },
         "height": {
           "type": "number",
-          "minimum": 80,
+          "minimum": 108,
           "maximum": 180
         }
       }
@@ -100,6 +101,9 @@
     },
     "cornerRadius": {
       "const": 54
+    },
+    "cornerSmoothing": {
+      "const": 100
     },
     "verticalAlignment": {
       "type": "string",
@@ -436,6 +440,7 @@
       },
       "layer": "top",
       "cornerRadius": 54,
+      "cornerSmoothing": 100,
       "verticalAlignment": "bottom",
       "accentSource": "widget_accent_color",
       "composition": {

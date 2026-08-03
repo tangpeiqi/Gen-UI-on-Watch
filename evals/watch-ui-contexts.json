@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Representative Context panel inputs for Phase 11 watch UI generation evals.",
+  "cases": [
+    {
+      "id": "run-before-dinner-rain",
+      "description": "Workout plus rain chance plus event pressure.",
+      "context": {
+        "timeOfDay": "6:12 PM",
+        "location": "home",
+        "activity": "going for a run before dinner, chance of rain later",
+        "goal": "show workout progress, rain chance, and dinner timing"
+      }
+    },
+    {
+      "id": "music-during-workout",
+      "description": "Strict rectangular music control with workout context.",
+      "context": {
+        "timeOfDay": "7:45 AM",
+        "location": "gym",
+        "activity": "listening to a playlist during strength training",
+        "goal": "control music while keeping workout glanceable"
+      }
+    },
+    {
+      "id": "commute-reminder",
+      "description": "Reminder and commute/event detail pressure.",
+      "context": {
+        "timeOfDay": "8:20 AM",
+        "location": "home",
+        "activity": "getting ready to commute to a meeting",
+        "goal": "remind me to leave on time and bring my badge"
+      }
+    },
+    {
+      "id": "cooking-timer",
+      "description": "Timer with possible controls.",
+      "context": {
+        "timeOfDay": "5:35 PM",
+        "location": "kitchen",
+        "activity": "cooking pasta with a timer running",
+        "goal": "show countdown clearly and make timer status easy to read"
+      }
+    },
+    {
+      "id": "errands-checklist",
+      "description": "Checklist should own the face.",
+      "context": {
+        "timeOfDay": "11:10 AM",
+        "location": "downtown",
+        "activity": "running errands with a shopping list",
+        "goal": "show my checklist and completed items"
+      }
+    },
+    {
+      "id": "morning-weather-heart-rate",
+      "description": "Compact circular status mix.",
+      "context": {
+        "timeOfDay": "6:50 AM",
+        "location": "home",
+        "activity": "checking morning weather before a walk",
+        "goal": "show weather, heart rate, and walking readiness"
+      }
+    },
+    {
+      "id": "smart-home-temperature",
+      "description": "IoT status should stay compact and legal.",
+      "context": {
+        "timeOfDay": "9:05 PM",
+        "location": "home",
+        "activity": "checking indoor temperature before bed",
+        "goal": "show thermostat status and sleep wind-down info"
+      }
+    },
+    {
+      "id": "appointment-navigation",
+      "description": "Map/navigation and upcoming event require rectangular detail.",
+      "context": {
+        "timeOfDay": "3:25 PM",
+        "location": "office",
+        "activity": "leaving for an appointment across town",
+        "goal": "show travel time, destination, and next appointment"
+      }
+    }
+  ]
+}

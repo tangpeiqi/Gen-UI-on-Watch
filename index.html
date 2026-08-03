@@ -165,6 +165,28 @@
         padding: 12px;
         font-size: 16px;
         line-height: 1.2;
+        box-shadow: 0 3px 0 #8f2f00;
+        transition:
+          background-color 120ms ease,
+          box-shadow 120ms ease,
+          transform 120ms ease;
+      }
+
+      .generate-button:hover {
+        background: #c74400;
+      }
+
+      .generate-button:active {
+        background: #9f3500;
+        box-shadow: 0 1px 0 #6e2500;
+        transform: translateY(2px);
+      }
+
+      .generate-button[aria-busy="true"] {
+        background: #9f3500;
+        box-shadow: 0 1px 0 #6e2500;
+        cursor: wait;
+        transform: translateY(2px);
       }
 
       .copy-debug-button {
@@ -178,6 +200,41 @@
         font-size: 13px;
         line-height: 1.2;
         white-space: nowrap;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+        transition:
+          background-color 120ms ease,
+          border-color 120ms ease,
+          box-shadow 120ms ease,
+          color 120ms ease,
+          transform 120ms ease;
+      }
+
+      .copy-debug-button:hover {
+        background: rgba(0, 0, 0, 0.06);
+        border-color: #000;
+      }
+
+      .copy-debug-button:active,
+      .copy-debug-button[data-copy-state="copying"] {
+        background: #000;
+        border-color: #000;
+        color: #fff;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+        transform: translateY(2px);
+      }
+
+      .copy-debug-button[data-copy-state="copied"] {
+        background: #156b3a;
+        border-color: #156b3a;
+        color: #fff;
+        box-shadow: 0 2px 0 #0b3d20;
+      }
+
+      .copy-debug-button[data-copy-state="failed"] {
+        background: #9f3500;
+        border-color: #9f3500;
+        color: #fff;
+        box-shadow: 0 2px 0 #6e2500;
       }
 
       .copy-debug-button:focus-visible,
@@ -337,6 +394,37 @@
         background: #000;
         color: #fff;
         font-family: "SF Compact", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+      }
+
+      .watch-loading {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        gap: 12px;
+        align-content: center;
+        background: radial-gradient(circle at 50% 42%, #171717 0%, #050505 68%);
+        color: rgba(255, 255, 255, 0.78);
+        font-family: "SF Compact", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-align: center;
+      }
+
+      .watch-loading-spinner {
+        width: 34px;
+        height: 34px;
+        border: 3px solid rgba(255, 255, 255, 0.18);
+        border-top-color: #fff;
+        border-radius: 999px;
+        animation: watch-spin 850ms linear infinite;
+      }
+
+      @keyframes watch-spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .watch-el {
@@ -723,12 +811,15 @@
       const logs = document.querySelector("#logs");
       const layoutJson = document.querySelector("#layout-json");
       const genWatchFace = document.querySelector(".gen-watch-face");
+      const generateButton = document.querySelector("#generate-button");
       const copyDebugButton = document.querySelector("#copy-debug-button");
       const sampleLayoutButton = document.querySelector("#sample-layout-button");
       const tabButtons = [...document.querySelectorAll(".debug-tab")];
       const tabPanels = [...document.querySelectorAll("[role='tabpanel']")];
       let latestDebugBundle = "";
       let nextSampleLayoutIndex = 0;
+      let isGenerating = false;
+      let copyDebugResetTimer = 0;
 
       const MATERIAL_SYMBOLS = {
         activity_mobility: "self_improvement",
@@ -780,8 +871,7 @@
           center: { x: 36, y: 36 },
           iconBox: { x: 20, y: 20, width: 32, height: 32 },
           closeText: {
-            value: { fontSize: 22, box: { x: 9.6, y: 24.8, width: 52.8, height: 22.4 } },
-            label: { fontSize: 10, box: { x: 16, y: 47.2, width: 40, height: 9.6 } }
+            value: { fontSize: 22, box: { x: 9.6, y: 24.8, width: 52.8, height: 22.4 } }
           },
           openText: {
             current: { fontSize: 22, box: { x: 18, y: 23, width: 35, height: 25 } },
@@ -798,8 +888,7 @@
           center: { x: 45, y: 45 },
           iconBox: { x: 26, y: 26, width: 38, height: 38 },
           closeText: {
-            value: { fontSize: 32, box: { x: 12, y: 31, width: 66, height: 28 } },
-            label: { fontSize: 15, box: { x: 20, y: 59, width: 50, height: 12 } }
+            value: { fontSize: 32, box: { x: 12, y: 31, width: 66, height: 28 } }
           },
           openText: {
             current: { fontSize: 32, box: { x: 19, y: 27, width: 51, height: 35 } },
@@ -810,14 +899,13 @@
           measureDot: { diameter: 10.27, strokeWidth: 2 }
         },
         L: {
-          diameter: 149,
+          diameter: 150,
           strokeWidth: 15,
           radius: 66.5,
-          center: { x: 74.5, y: 74.5 },
+          center: { x: 75, y: 75 },
           iconBox: { x: 42, y: 43, width: 64, height: 64 },
           closeText: {
-            value: { fontSize: 42, box: { x: 41, y: 52, width: 67, height: 45 } },
-            label: { fontSize: 18, box: { x: 57, y: 97, width: 35, height: 21 } }
+            value: { fontSize: 42, box: { x: 41, y: 52, width: 67, height: 45 } }
           },
           openText: {
             current: { fontSize: 48, box: { x: 36, y: 52, width: 77, height: 45 } },
@@ -835,7 +923,7 @@
 
       function currentDateLabel() {
         const now = new Date();
-        const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(now);
+        const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(now).slice(0, 3).toUpperCase();
         return `${weekday} ${now.getDate()}`;
       }
 
@@ -843,6 +931,12 @@
         const match = value.match(/(\d{1,2})(?::(\d{2}))?/);
         if (!match) return value;
         return `${match[1]}:${match[2] || "00"}`;
+      }
+
+      function splitTimeForFace(value) {
+        const combined = timeForFace(value);
+        const [hour, minute = "00"] = combined.split(":");
+        return { combined, hour, minute };
       }
 
       function readContext() {
@@ -966,7 +1060,6 @@
           variant: { property: "text", size },
           data: {
             value: "42",
-            label: activityLabelFromContext(context),
             progress: 0.42,
             metricKind: "workout"
           },
@@ -1004,7 +1097,6 @@
           variant: { property: "text", size },
           data: {
             value: "3:40",
-            label: "tea",
             progress: 0.27,
             metricKind: "timer"
           },
@@ -1019,7 +1111,7 @@
           id: "fallback-heart",
           contentType: "heart_rate",
           shape: "circular",
-          component: "close_gauge",
+          component: "open_gauge",
           variant: { property: "text", size },
           data: {
             value: "92",
@@ -1029,7 +1121,7 @@
           },
           frame,
           layer: "top",
-          decision: `fallback heart_rate -> close_gauge ${size} because heart rate is a compact numeric status`
+          decision: `fallback heart_rate -> open_gauge ${size} because heart rate moves within a range`
         };
       }
 
@@ -1068,6 +1160,7 @@
           frame: { x: 0, y, width: 205, height },
           layer: "top",
           cornerRadius: 54,
+          cornerSmoothing: 100,
           verticalAlignment: y === 0 ? "top" : "bottom",
           decision: "fallback upcoming_event -> generated_rectangular_widget because event timing needs readable text"
         };
@@ -1086,7 +1179,7 @@
 
       function buildFallbackWidgets(fallbackId, context) {
         if (fallbackId === "one-circular-widget-with-large-time") {
-          return [makeWeatherWidget({ x: 118, y: 20, width: 72, height: 72 }, "S")];
+          return [makeWeatherWidget({ x: 28, y: 6, width: 150, height: 150 }, "L")];
         }
         if (fallbackId === "two-circular-widgets-with-compact-time") {
           return [
@@ -1099,15 +1192,26 @@
         }
         if (fallbackId === "three-compact-widgets") {
           return [
-            makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
-            makeWeatherWidget({ x: 18, y: 88, width: 72, height: 72 }, "S"),
-            makeTimerWidget({ x: 118, y: 88, width: 72, height: 72 }, "S")
+            makeWorkoutWidget(context, { x: 127, y: 6, width: 72, height: 72 }, "S"),
+            makeWeatherWidget({ x: 127, y: 89.5, width: 72, height: 72 }, "S"),
+            makeTimerWidget({ x: 127, y: 173, width: 72, height: 72 }, "S")
           ];
         }
         return [
           makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
           makeEventRectangle(context)
         ];
+      }
+
+      function fallbackIdFromWidgets(widgets) {
+        const circularCount = widgets.filter((widget) => widget.shape === "circular").length;
+        const rectangularCount = widgets.filter((widget) => widget.shape === "rectangular").length;
+        if (widgets.some((widget) => widget.template === "checklist_full_face")) return "one-rectangular-widget";
+        if (rectangularCount > 0 && circularCount > 0) return "mixed-circular-and-rectangular-layout";
+        if (rectangularCount > 0) return "one-rectangular-widget";
+        if (circularCount >= 3) return "three-compact-widgets";
+        if (circularCount >= 2) return "two-circular-widgets-with-compact-time";
+        return "one-circular-widget-with-large-time";
       }
 
       function chooseWidgets(selectedContentTypes, context) {
@@ -1132,6 +1236,7 @@
                 },
                 layer: "top",
                 cornerRadius: 54,
+                cornerSmoothing: 100,
                 verticalAlignment: "top",
                 decision: "checklist -> checklist_full_face because checklist is a strict full-face template and must be the only widget"
               }
@@ -1159,6 +1264,7 @@
               },
               layer: "top",
               cornerRadius: 54,
+              cornerSmoothing: 100,
               verticalAlignment: "bottom",
               decision: "timer -> timer_rectangular because rectangular timer rendering must use the strict timer template"
             }
@@ -1170,7 +1276,6 @@
               variant: { property: "text", size: "S" },
               data: {
                 value: "3:40",
-                label: "tea",
                 progress: 0.27,
                 metricKind: "timer"
               },
@@ -1203,6 +1308,7 @@
             },
             layer: "top",
             cornerRadius: 54,
+            cornerSmoothing: 100,
             verticalAlignment: "bottom",
             decision: "music_control -> music_control because playback controls require the strict rectangular template"
           },
@@ -1224,6 +1330,7 @@
             },
             layer: "top",
             cornerRadius: 54,
+            cornerSmoothing: 100,
             verticalAlignment: "bottom",
             decision: "reminder -> reminder because reminder is a strict rectangular template content type"
           },
@@ -1236,7 +1343,6 @@
             variant: { property: "text", size: "S" },
             data: {
               value: "42",
-              label: "run",
               progress: 0.42,
               metricKind: "workout"
             },
@@ -1293,6 +1399,7 @@
             },
             layer: "top",
             cornerRadius: 54,
+            cornerSmoothing: 100,
             verticalAlignment: "bottom",
             decision: "upcoming_event -> generated_rectangular_widget because event timing is rectangular-only but can use approved generated composition blocks"
           },
@@ -1323,14 +1430,31 @@
         const hasRectangularWidget = mappedWidgets.some((widget) => widget.shape === "rectangular");
 
         if (!hasRectangularWidget) {
-          const widgets = mappedWidgets.slice(0, 3);
+          const widgets = mappedWidgets.slice(0, 3).map((widget) => ({ ...widget, frame: { ...widget.frame } }));
+          if (widgets.length === 3 && widgets.every((widget) => widget.shape === "circular")) {
+            const verticalFrames = [
+              { x: 127, y: 6, width: 72, height: 72 },
+              { x: 127, y: 89.5, width: 72, height: 72 },
+              { x: 127, y: 173, width: 72, height: 72 }
+            ];
+            widgets.forEach((widget, index) => {
+              widget.frame = verticalFrames[index];
+            });
+          }
           return {
             widgets,
             omittedContentTypes: mappedWidgets.slice(3).map((widget) => widget.contentType)
           };
         }
 
-        const widgets = mappedWidgets.slice(0, 2);
+        const widgets = mappedWidgets.slice(0, 2).map((widget) => ({ ...widget, frame: { ...widget.frame } }));
+        if (widgets.some((widget) => widget.shape === "rectangular" && widget.verticalAlignment === "bottom")) {
+          for (const widget of widgets) {
+            if (widget.shape === "circular") {
+              widget.frame = { x: 127, y: 52, width: 72, height: 72 };
+            }
+          }
+        }
         return {
           widgets,
           omittedContentTypes: mappedWidgets.slice(2).map((widget) => widget.contentType)
@@ -1367,62 +1491,136 @@
       }
 
       function resolveTimeDatePlacement(widgets) {
+        if (widgets.some((widget) => widget.template === "checklist_full_face")) {
+          return {
+            timeFrame: {
+              x: 139,
+              y: 16,
+              width: 50,
+              height: 22
+            },
+            dateFrame: {
+              x: 16,
+              y: 16,
+              width: 70,
+              height: 22
+            },
+            timeFontSize: 19,
+            timeAnchor: "top_right",
+            timeMode: "single_line"
+          };
+        }
+
         const bottomRectangle = widgets.find((widget) => widget.shape === "rectangular" && widget.verticalAlignment === "bottom");
         const topCircular = widgets.find((widget) => widget.shape === "circular" && widget.frame.y <= 32);
+        const circularCount = widgets.filter((widget) => widget.shape === "circular").length;
+
+        if (circularCount >= 3) {
+          return {
+            timeFrame: {
+              x: 0,
+              y: 54,
+              width: 110,
+              height: 152
+            },
+            dateFrame: {
+              x: 0,
+              y: 32,
+              width: 70,
+              height: 22
+            },
+            timeFontSize: 82,
+            timeAnchor: "left",
+            timeMode: "split_hour_minute",
+            timeContainers: [
+              { id: "time-hour", role: "hour", frame: { x: 0, y: 54, width: 110, height: 76 }, anchor: "left" },
+              { id: "time-minute", role: "minute", frame: { x: 0, y: 130, width: 110, height: 76 }, anchor: "left" }
+            ],
+            dateStackedWithTimeContainerId: "time-hour"
+          };
+        }
 
         if (bottomRectangle && topCircular) {
           return {
             timeFrame: {
-              x: 18,
-              y: 84,
-              width: 130,
-              height: 40
+              x: 0,
+              y: 0,
+              width: 110,
+              height: 102
             },
             dateFrame: {
-              x: 18,
-              y: 62,
-              width: 90,
-              height: 18
+              x: 0,
+              y: 102,
+              width: 70,
+              height: 22
             },
-            timeFontSize: 44,
-            dateFontSize: 12
+            timeFontSize: 56,
+            timeAnchor: "left",
+            timeMode: "split_hour_minute",
+            timeContainers: [
+              { id: "time-hour", role: "hour", frame: { x: 0, y: 0, width: 110, height: 51 }, anchor: "left" },
+              { id: "time-minute", role: "minute", frame: { x: 0, y: 51, width: 110, height: 51 }, anchor: "left" }
+            ],
+            dateStackedWithTimeContainerId: "time-minute"
           };
         }
 
         if (bottomRectangle) {
           return {
             timeFrame: {
-              x: 18,
-              y: 28,
-              width: 150,
+              x: 0,
+              y: 0,
+              width: 205,
               height: 58
             },
             dateFrame: {
-              x: 18,
-              y: 94,
-              width: 90,
-              height: 18
+              x: 0,
+              y: 58,
+              width: 70,
+              height: 22
             },
             timeFontSize: 64,
-            dateFontSize: 12
+            timeAnchor: "top_left",
+            timeMode: "single_line"
+          };
+        }
+
+        if (widgets.length === 1 && widgets[0].shape === "circular" && widgets[0].variant?.size === "L") {
+          return {
+            timeFrame: {
+              x: 0,
+              y: 178,
+              width: 205,
+              height: 73
+            },
+            dateFrame: {
+              x: 0,
+              y: 156,
+              width: 70,
+              height: 22
+            },
+            timeFontSize: 84,
+            timeAnchor: "bottom_left",
+            timeMode: "single_line"
           };
         }
 
         return {
           timeFrame: {
-            x: 18,
-            y: 169,
-            width: 150,
-            height: 58
+            x: 0,
+            y: 175,
+            width: 205,
+            height: 76
           },
             dateFrame: {
-              x: 18,
-              y: 18,
-              width: 90,
-              height: 18
+              x: 0,
+              y: 153,
+              width: 70,
+              height: 22
             },
-            timeFontSize: 64,
-            dateFontSize: 12
+            timeFontSize: 84,
+            timeAnchor: "bottom_left",
+            timeMode: "single_line"
         };
       }
 
@@ -1430,6 +1628,31 @@
         const colorSystem = resolveColorSystem(widgets, selectedContentTypes);
         const timeAndDateColor = colorSystem.mode === "mono_tone" ? colorSystem.accentColor : "#FFFFFF";
         const placement = resolveTimeDatePlacement(widgets);
+        const splitTime = splitTimeForFace(context.timeOfDay);
+        const timeStyle = {
+          fontFamily: "SF Compact",
+          fontSize: placement.timeFontSize,
+          fontWeight: 760,
+          letterSpacing: 0,
+          color: timeAndDateColor,
+          treatment: "fill"
+        };
+        const timeContainers = placement.timeMode === "split_hour_minute"
+          ? placement.timeContainers.map((container) => ({
+              ...container,
+              value: container.role === "hour" ? splitTime.hour : splitTime.minute,
+              style: { ...timeStyle }
+            }))
+          : [
+              {
+                id: "time-combined",
+                role: "combined",
+                value: splitTime.combined,
+                frame: placement.timeFrame,
+                style: { ...timeStyle },
+                anchor: placement.timeAnchor
+              }
+            ];
         return {
           schemaVersion: "1.0.0",
           targetContainer: "Gen Watch Face",
@@ -1463,18 +1686,12 @@
           },
           colorSystem,
           time: {
-            mode: "single_line",
-            value: timeForFace(context.timeOfDay),
+            mode: placement.timeMode,
+            value: splitTime.combined,
             layer: "bottom",
             frame: placement.timeFrame,
-            style: {
-              fontFamily: "SF Pro Display",
-              fontSize: placement.timeFontSize,
-              fontWeight: 760,
-              letterSpacing: 0,
-              color: timeAndDateColor,
-              treatment: "fill"
-            }
+            style: timeStyle,
+            containers: timeContainers
           },
           date: {
             value: currentDateLabel(),
@@ -1482,13 +1699,16 @@
             layer: "bottom",
             frame: placement.dateFrame,
             style: {
-              fontFamily: "SF Pro Text",
-              fontSize: placement.dateFontSize,
-              fontWeight: 600,
+              fontFamily: "SF Compact",
+              fontSize: 19,
+              fontWeight: 400,
               letterSpacing: 0,
               color: timeAndDateColor,
               treatment: "fill"
-            }
+            },
+            stackedWithTimeContainerId: placement.dateStackedWithTimeContainerId || timeContainers[0].id,
+            stackGap: 0,
+            edgePaddingWhenStackedFromEdge: 16
           },
           widgets: widgets.map(({ decision, ...widget }) => widget),
           layers: {
@@ -1504,6 +1724,65 @@
 
       function estimateTextWidth(text, fontSize) {
         return String(text).length * fontSize * 0.58;
+      }
+
+      function isBlank(value) {
+        return value === undefined || value === null || String(value).trim() === "";
+      }
+
+      function hasWidgetOnSameRow(widgets, frame) {
+        return (widgets || []).some((widget) => {
+          if (!widget.frame) return false;
+          return Math.max(0, Math.min(frame.y + frame.height, widget.frame.y + widget.frame.height) - Math.max(frame.y, widget.frame.y)) > 0;
+        });
+      }
+
+      function horizontalOverlap(a, b) {
+        return Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+      }
+
+      function circularCorner(widget) {
+        const frame = widget?.frame;
+        if (!frame) return null;
+        const left = frame.x <= 22;
+        const right = frame.x + frame.width >= 183;
+        const top = frame.y <= 22;
+        const bottom = frame.y + frame.height >= 229;
+        if (top && left) return "top_left";
+        if (top && right) return "top_right";
+        if (bottom && left) return "bottom_left";
+        if (bottom && right) return "bottom_right";
+        return null;
+      }
+
+      function oppositeCorners(a, b) {
+        return (a === "top_left" && b === "bottom_right") ||
+          (a === "bottom_right" && b === "top_left") ||
+          (a === "top_right" && b === "bottom_left") ||
+          (a === "bottom_left" && b === "top_right");
+      }
+
+      function splitTimeRequiredForWidgets(widgets = []) {
+        const circularWidgets = widgets.filter((widget) => widget.shape === "circular");
+        const smallOrMedium = circularWidgets.filter((widget) => ["S", "M"].includes(widget.variant?.size));
+        const smallCircular = circularWidgets.filter((widget) => widget.variant?.size === "S");
+        if (smallOrMedium.length === 1) return true;
+        if (circularWidgets.length === 2 && smallCircular.length === 2) {
+          return oppositeCorners(circularCorner(circularWidgets[0]), circularCorner(circularWidgets[1]));
+        }
+        if (circularWidgets.length === 3 && smallCircular.length === 3) {
+          const sorted = [...smallCircular].sort((a, b) => a.frame.y - b.frame.y);
+          const centerX = sorted[0].frame.x + sorted[0].frame.width / 2;
+          return sorted.every((widget) => Math.abs(widget.frame.x + widget.frame.width / 2 - centerX) <= 12);
+        }
+        return false;
+      }
+
+      function textObjectsForLayout(layout) {
+        const timeObjects = Array.isArray(layout.time?.containers)
+          ? layout.time.containers.map((container, index) => [`time.containers[${index}]`, container])
+          : [["time", layout.time]];
+        return [...timeObjects, ["date", layout.date]];
       }
 
       function validateLocalLayout(layout) {
@@ -1536,7 +1815,43 @@
           }
         }
 
-        for (const [path, textObject] of [["time", layout.time], ["date", layout.date]]) {
+        if (layout.time?.style?.fontFamily !== "SF Compact") {
+          errors.push(makeValidationError("rule", "time_font_family", "time.style.fontFamily", "time must use SF Compact"));
+        }
+        if (!Array.isArray(layout.time?.containers) || layout.time.containers.length < 1) {
+          errors.push(makeValidationError("schema", "missing_time_containers", "time.containers", "time must include at least one time container"));
+        } else {
+          for (const [index, container] of layout.time.containers.entries()) {
+            const path = `time.containers[${index}]`;
+            const anchorEdges = String(container.anchor || "").split("_");
+            const isCornerAnchor = anchorEdges.some((edge) => ["top", "bottom"].includes(edge)) && anchorEdges.some((edge) => ["left", "right"].includes(edge));
+            if (layout.time.mode === "single_line" && isCornerAnchor && container.frame?.width !== 205) {
+              errors.push(makeValidationError("rule", "combined_time_corner_requires_full_width", `${path}.anchor`, "combined time may align to a corner only when its container is full width at 205px"));
+            }
+            if (layout.time.mode !== "single_line" && isCornerAnchor && container.frame?.width <= 110) {
+              errors.push(makeValidationError("rule", "split_time_corner_width", `${path}.frame.width`, "split time containers may align to a corner only when each corner-anchored container is wider than 110px"));
+            }
+          }
+          if (layout.time.mode === "single_line" && layout.time.containers.length === 1) {
+            const container = layout.time.containers[0];
+            const clearTimeRow = !hasWidgetOnSameRow(layout.widgets || [], container.frame);
+            const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
+            if (clearTimeRow && container.frame?.width === 205 && visuallyFilledWidth < 205 * 0.85) {
+              errors.push(makeValidationError("rule", "time_underfills_clear_full_width_row", "time.containers[0].style.fontSize", "when combined time sits on a clear full-width row, increase its font size so the digits visually fill at least 85% of the watch-face width"));
+            }
+          }
+        }
+        if (!/^[A-Z]{3} [0-9]{1,2}$/.test(layout.date?.value || "")) {
+          errors.push(makeValidationError("rule", "date_compact_format", "date.value", "date must use compact uppercase format like SUN 2"));
+        }
+        if (layout.date?.style?.fontFamily !== "SF Compact" || layout.date?.style?.fontSize !== 19 || layout.date?.style?.fontWeight !== 400) {
+          errors.push(makeValidationError("rule", "date_font_style", "date.style", "date must use SF Compact Regular 19pt"));
+        }
+        if (layout.date?.stackGap !== 0 || layout.date?.edgePaddingWhenStackedFromEdge !== 16 || typeof layout.date?.stackedWithTimeContainerId !== "string") {
+          errors.push(makeValidationError("rule", "date_time_stack_contract", "date", "date must declare stackedWithTimeContainerId, stackGap 0, and edgePaddingWhenStackedFromEdge 16"));
+        }
+
+        for (const [path, textObject] of textObjectsForLayout(layout)) {
           if (!textObject?.frame || !textObject?.style) {
             errors.push(makeValidationError("schema", "missing_text_contract", path, `${path} must include frame and style`));
             continue;
@@ -1549,21 +1864,50 @@
           }
         }
 
-        if (layout.date?.style?.fontSize > layout.time?.style?.fontSize * 0.45) {
+        const largestTimeFont = Math.max(...(layout.time?.containers || [layout.time]).map((item) => item?.style?.fontSize || 0));
+        const hasChecklistFullFace = layout.widgets?.some((widget) => widget.template === "checklist_full_face");
+        if (!hasChecklistFullFace && layout.date?.style?.fontSize > largestTimeFont * 0.45) {
           errors.push(makeValidationError("rule", "date_not_secondary", "date.style.fontSize", "date must remain visually secondary to time"));
         }
 
         if (Array.isArray(layout.widgets)) {
           const rectangularWidgetCount = layout.widgets.filter((widget) => widget.shape === "rectangular").length;
           const hasChecklistWidget = layout.widgets.some((widget) => widget.contentType === "checklist");
+          const contentTypeCounts = new Map();
+          for (const widget of layout.widgets) {
+            contentTypeCounts.set(widget.contentType, (contentTypeCounts.get(widget.contentType) || 0) + 1);
+          }
           if (hasChecklistWidget && layout.widgets.length !== 1) {
             errors.push(makeValidationError("rule", "checklist_must_be_only_widget", "widgets", "checklist layouts must contain exactly one widget"));
           } else if (rectangularWidgetCount > 0 && layout.widgets.length > 2) {
             errors.push(makeValidationError("rule", "rectangular_present_widget_cap", "widgets", "rectangular-present layouts must contain at most two widgets"));
           }
+          if (layout.widgets.length === 1 && layout.widgets[0].shape === "circular" && layout.widgets[0].variant?.size !== "L") {
+            errors.push(makeValidationError("rule", "focused_single_circular_uses_large", "widgets[0].variant.size", "when the watch face focuses on one circular-supported widget, use the L circular size"));
+          }
+          if (splitTimeRequiredForWidgets(layout.widgets)) {
+            if (layout.time?.mode !== "split_hour_minute" || layout.time?.containers?.length !== 2) {
+              errors.push(makeValidationError("rule", "split_time_required_for_circular_layout", "time.mode", "split hour and minute into two vertically stacked containers for this circular-widget layout"));
+            } else {
+              const hour = layout.time.containers.find((container) => container.role === "hour") || layout.time.containers[0];
+              const minute = layout.time.containers.find((container) => container.role === "minute") || layout.time.containers[1];
+              const stackGap = Math.max(0, Math.max(hour.frame.y, minute.frame.y) - Math.min(hour.frame.y + hour.frame.height, minute.frame.y + minute.frame.height));
+              if (horizontalOverlap(hour.frame, minute.frame) <= 0 || stackGap > 4) {
+                errors.push(makeValidationError("rule", "split_time_vertical_stack", "time.containers", "split hour and minute containers must stack vertically with horizontal overlap"));
+              }
+              const availableColumnWidth = Math.max(hour.frame.width, minute.frame.width);
+              const filledColumnWidth = Math.max(estimateTextWidth(hour.value, hour.style.fontSize), estimateTextWidth(minute.value, minute.style.fontSize));
+              if (filledColumnWidth < availableColumnWidth * 0.55) {
+                errors.push(makeValidationError("rule", "split_time_underfills_available_space", "time.containers", "when split time is required, increase hour and minute font sizes so they fill the remaining empty space"));
+              }
+            }
+          }
 
           for (const [index, widget] of layout.widgets.entries()) {
             const path = `widgets[${index}]`;
+            if (Array.isArray(layout.metadata?.selectedContentTypes) && !layout.metadata.selectedContentTypes.includes(widget.contentType)) {
+              errors.push(makeValidationError("rule", "rendered_content_not_selected", `${path}.contentType`, `${path}.contentType must be one of metadata.selectedContentTypes`));
+            }
             if (widget.frame?.x < 0 || widget.frame?.y < 0 || widget.frame?.x + widget.frame?.width > 205 || widget.frame?.y + widget.frame?.height > 251) {
               errors.push(makeValidationError("rule", "frame_outside_canvas", `${path}.frame`, `${path}.frame must fit inside the 205 x 251 canvas`));
             }
@@ -1573,6 +1917,49 @@
             if (widget.shape === "circular" && !["S", "M", "L"].includes(widget.variant?.size)) {
               errors.push(makeValidationError("schema", "invalid_circular_size", `${path}.variant.size`, `${path}.variant.size is invalid`));
             }
+            if (widget.shape === "circular") {
+              const expectedCircularSize = { S: 72, M: 90, L: 150 }[widget.variant?.size];
+              if (expectedCircularSize && (widget.frame?.width !== expectedCircularSize || widget.frame?.height !== expectedCircularSize)) {
+                errors.push(makeValidationError("rule", "circular_fixed_size", `${path}.frame`, `${path}.frame must be ${expectedCircularSize}x${expectedCircularSize} for size ${widget.variant.size}`));
+              }
+              if (widget.component === "close_gauge" && widget.variant?.property === "text" && widget.data?.label !== undefined) {
+                errors.push(makeValidationError("rule", "close_gauge_single_text", `${path}.data.label`, "close_gauge text widgets must render only one centered value"));
+              }
+              if (widget.component === "close_gauge" && widget.variant?.property === "text" && contentTypeCounts.get(widget.contentType) === 1) {
+                errors.push(makeValidationError("rule", "solo_close_gauge_prefers_icon", `${path}.variant.property`, "when close_gauge is the only widget for its content type, use the icon variant"));
+              }
+              if (widget.component === "close_gauge" && ["temperature", "current_temperature", "weather_temperature", "bpm", "heart_rate", "precipitation_probability", "rain_chance"].includes(widget.data?.metricKind)) {
+                errors.push(makeValidationError("rule", "open_metric_uses_close_gauge", `${path}.component`, `${path} must use open_gauge because the metric moves within a range`));
+              }
+              if (widget.component === "open_gauge" && ["timer", "countdown", "workout", "activity", "activity_progress", "goal_progress"].includes(widget.data?.metricKind)) {
+                errors.push(makeValidationError("rule", "close_metric_uses_open_gauge", `${path}.component`, `${path} must use close_gauge because the metric moves one direction`));
+              }
+              if (widget.component === "open_gauge") {
+                const bottomTextToken = {
+                  S: { fontSize: 15, width: 18 },
+                  M: { fontSize: 18, width: 21 },
+                  L: { fontSize: 32, width: 35 }
+                }[widget.variant?.size];
+                const validateBottomText = (value, fieldPath) => {
+                  if (isBlank(value)) {
+                    errors.push(makeValidationError("schema", "missing_required", fieldPath, `${fieldPath} is required for visible open_gauge bottom content`));
+                    return;
+                  }
+                  if (bottomTextToken && estimateTextWidth(value, bottomTextToken.fontSize) > bottomTextToken.width + 2) {
+                    errors.push(makeValidationError("rule", "open_gauge_bottom_text_overflow", fieldPath, `${fieldPath} must fit the ${widget.variant.size} open_gauge bottom text box at ${bottomTextToken.fontSize}pt without clipping`));
+                  }
+                };
+                if (widget.variant?.property === "text") validateBottomText(widget.data?.label, `${path}.data.label`);
+                if (widget.variant?.property === "range") {
+                  validateBottomText(widget.data?.lowLabel, `${path}.data.lowLabel`);
+                  validateBottomText(widget.data?.highLabel, `${path}.data.highLabel`);
+                }
+                if (widget.variant?.property === "offset") validateBottomText(widget.data?.referenceValue, `${path}.data.referenceValue`);
+                if (widget.variant?.property === "icon" && isBlank(widget.data?.icon)) {
+                  errors.push(makeValidationError("schema", "missing_required", `${path}.data.icon`, `${path}.data.icon is required for visible open_gauge icon content`));
+                }
+              }
+            }
             if (widget.shape === "rectangular") {
               if (!["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"].includes(widget.template)) {
                 errors.push(makeValidationError("schema", "unknown_rectangular_template", `${path}.template`, `${path}.template is invalid`));
@@ -1580,15 +1967,49 @@
               if (widget.frame?.x !== 0 || widget.frame?.width !== 205) {
                 errors.push(makeValidationError("rule", "rectangular_full_width", `${path}.frame`, `${path}.frame must be x=0 and width=205`));
               }
-              if (widget.frame?.height < 80 || widget.frame?.height > 251) {
-                errors.push(makeValidationError("rule", "rectangular_height_range", `${path}.frame.height`, `${path}.frame.height must be between 80 and 251`));
+              if (widget.frame?.height < 108 || widget.frame?.height > 251) {
+                errors.push(makeValidationError("rule", "rectangular_height_range", `${path}.frame.height`, `${path}.frame.height must be between 108 and 251`));
+              }
+              if (widget.cornerRadius !== 54 || widget.cornerSmoothing !== 100) {
+                errors.push(makeValidationError("rule", "rectangular_corner_treatment", path, `${path} must use cornerRadius 54 and cornerSmoothing 100`));
               }
             }
           }
 
-          for (const [path, textObject] of [["time", layout.time], ["date", layout.date]]) {
+          for (let index = 0; index < layout.widgets.length; index += 1) {
+            for (let nextIndex = index + 1; nextIndex < layout.widgets.length; nextIndex += 1) {
+              const a = layout.widgets[index];
+              const b = layout.widgets[nextIndex];
+              if (a.template === "checklist_full_face" || b.template === "checklist_full_face") continue;
+              const xOverlap = Math.max(0, Math.min(a.frame.x + a.frame.width, b.frame.x + b.frame.width) - Math.max(a.frame.x, b.frame.x));
+              const yOverlap = Math.max(0, Math.min(a.frame.y + a.frame.height, b.frame.y + b.frame.height) - Math.max(a.frame.y, b.frame.y));
+              if (xOverlap > 0 && yOverlap > 0) {
+                errors.push(makeValidationError("rule", "widget_widget_overlap", `widgets[${nextIndex}].frame`, `${a.id} and ${b.id} overlap; only time/widget overlap is allowed`));
+              }
+            }
+          }
+
+          const circularWidgets = layout.widgets.filter((widget) => widget.shape === "circular");
+          if (layout.widgets.length === 3 && circularWidgets.length === 3) {
+            const sorted = [...circularWidgets].sort((a, b) => a.frame.y - b.frame.y);
+            const centerX = sorted[0].frame.x + sorted[0].frame.width / 2;
+            for (const widget of sorted) {
+              if (Math.abs(widget.frame.x + widget.frame.width / 2 - centerX) > 12) {
+                errors.push(makeValidationError("rule", "three_circular_vertical_stack", `${widget.id}.frame.x`, "three circular widgets must stack vertically in one column"));
+              }
+            }
+          }
+
+          for (const [path, textObject] of textObjectsForLayout(layout)) {
             if (!textObject?.frame) continue;
             for (const widget of layout.widgets) {
+              if (widget.template === "checklist_full_face") continue;
+              const xOverlap = Math.max(0, Math.min(textObject.frame.x + textObject.frame.width, widget.frame.x + widget.frame.width) - Math.max(textObject.frame.x, widget.frame.x));
+              const yOverlap = Math.max(0, Math.min(textObject.frame.y + textObject.frame.height, widget.frame.y + widget.frame.height) - Math.max(textObject.frame.y, widget.frame.y));
+              if (path === "date" && xOverlap > 0 && yOverlap > 0) {
+                errors.push(makeValidationError("rule", "widget_date_overlap", `${path}.frame`, `date overlaps ${widget.id}; only time/widget overlap is allowed`));
+                continue;
+              }
               const overlapDepth = rectOverlapDepth(textObject.frame, widget.frame);
               if (overlapDepth > 10) {
                 errors.push(makeValidationError("rule", "widget_text_overlap_exceeds_limit", `${path}.frame`, `${path} overlaps ${widget.id} by ${Math.round(overlapDepth)}px`));
@@ -1615,8 +2036,9 @@
         ];
         const selectedContentTypes = inferSelectedContentTypes(context);
         const fallbackReason = fallbackReasonFromContext(context);
-        const fallbackId = chooseFallbackId(selectedContentTypes);
-        const widgets = buildFallbackWidgets(fallbackId, context);
+        const widgetSelection = chooseWidgets(selectedContentTypes, context);
+        const widgets = widgetSelection.widgets;
+        const fallbackId = fallbackIdFromWidgets(widgets);
         const layout = buildMockLayout(context, selectedContentTypes, widgets, {
           fallbackUsed: true,
           fallbackId,
@@ -1625,7 +2047,7 @@
         const elapsedMs = Math.round(performance.now() - startedAt);
         const widgetDecisions = widgets.map((widget) => widget.decision);
         const renderedContentTypes = new Set(widgets.map((widget) => widget.contentType));
-        for (const contentType of selectedContentTypes) {
+        for (const contentType of widgetSelection.omittedContentTypes || selectedContentTypes) {
           if (!renderedContentTypes.has(contentType)) {
             const omittedByComposition = selectedContentTypes.some((type) => widgets.some((widget) => widget.contentType === type && widget.shape === "rectangular"));
             widgetDecisions.push(omittedByComposition ? omittedByCompositionDecision(contentType) : deferredWidgetDecision(contentType));
@@ -1662,6 +2084,7 @@
           layout,
           validation,
           model,
+          validationAttempts: [],
           pipelineSteps
         };
       }
@@ -1684,27 +2107,51 @@
             latencyMs: 0,
             estimatedCost: "n/a"
           },
+          validationAttempts: result.validationAttempts || [],
           pipelineSteps: result.logs || []
         };
       }
 
       async function requestBackendGeneration(context) {
-        const response = await fetch("/api/generate-watch-ui", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json"
-          },
-          body: JSON.stringify({
-            context,
-            currentTime: new Date().toISOString(),
-            currentDate: new Date().toLocaleDateString("en-US"),
-            preferences: {}
-          })
-        });
-        const result = await response.json();
+        let response;
+        try {
+          response = await fetch("/api/generate-watch-ui", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({
+              context,
+              currentTime: new Date().toISOString(),
+              currentDate: new Date().toLocaleDateString("en-US"),
+              preferences: {}
+            })
+          });
+        } catch (error) {
+          const networkError = new Error(error.message || "Could not connect to backend endpoint");
+          networkError.kind = "network";
+          throw networkError;
+        }
+
+        let result;
+        try {
+          result = await response.json();
+        } catch (error) {
+          result = null;
+        }
         if (!response.ok) {
-          const summary = result.validation?.summary || `backend returned ${response.status}`;
-          throw new Error(summary);
+          const summary = result?.validation?.summary || `backend returned ${response.status}`;
+          const backendError = new Error(summary);
+          backendError.kind = result?.validation?.ok === false ? "validation" : response.status >= 500 ? "server" : "request";
+          backendError.status = response.status;
+          backendError.result = result;
+          throw backendError;
+        }
+        if (!result) {
+          const parseError = new Error("backend returned a non-JSON response");
+          parseError.kind = "server";
+          parseError.status = response.status;
+          throw parseError;
         }
         return result;
       }
@@ -1740,6 +2187,7 @@
           layout,
           validation,
           model,
+          validationAttempts: [],
           pipelineSteps: [
             { id: "load-sample-layouts", status: "complete", detail: "Fetched design-pack/sample-layouts.json as a static asset." },
             { id: "select-sample-layout", status: "complete", detail: `Selected sample layout ${index + 1}.` },
@@ -1898,9 +2346,7 @@
 
         const value = createElement("div", "gauge-text gauge-value", widget.data.value);
         applyTextBox(value, sizeToken.closeText.value, color);
-        const label = createElement("div", "gauge-text gauge-label", widget.data.label);
-        applyTextBox(label, sizeToken.closeText.label, color);
-        container.append(value, label);
+        container.append(value);
       }
 
       function appendOpenGaugeContent(container, widget, sizeToken, colors, normalized) {
@@ -2321,11 +2767,24 @@
 
       function validateWidgetTextOverlap(layout, textObject, path) {
         for (const widget of layout.widgets) {
+          if (widget.template === "checklist_full_face") continue;
+          const xOverlap = Math.max(0, Math.min(textObject.frame.x + textObject.frame.width, widget.frame.x + widget.frame.width) - Math.max(textObject.frame.x, widget.frame.x));
+          const yOverlap = Math.max(0, Math.min(textObject.frame.y + textObject.frame.height, widget.frame.y + widget.frame.height) - Math.max(textObject.frame.y, widget.frame.y));
+          if (path === "date" && xOverlap > 0 && yOverlap > 0) {
+            throw new Error(`date overlaps ${widget.id}; only time/widget overlap is allowed`);
+          }
           const overlapDepth = rectOverlapDepth(textObject.frame, widget.frame);
           if (overlapDepth > 10) {
             throw new Error(`${path} overlaps ${widget.id} by ${Math.round(overlapDepth)}px; maximum controlled overlap is 10px`);
           }
         }
+      }
+
+      function renderableTextObjects(layout) {
+        const timeObjects = Array.isArray(layout.time?.containers)
+          ? layout.time.containers.map((container, index) => [`time.containers[${index}]`, container])
+          : [["time", layout.time]];
+        return [...timeObjects, ["date", layout.date]];
       }
 
       function validateRenderableLayout(layout) {
@@ -2345,12 +2804,57 @@
           if (widget.shape === "circular" && !["close_gauge", "open_gauge"].includes(widget.component)) {
             throw new Error(`Renderer rejected unknown circular component ${widget.component}`);
           }
+          if (widget.shape === "circular") {
+            const expectedCircularSize = { S: 72, M: 90, L: 150 }[widget.variant?.size];
+            if (!expectedCircularSize || widget.frame?.width !== expectedCircularSize || widget.frame?.height !== expectedCircularSize) {
+              throw new Error(`Renderer rejected ${widget.id}; circular size ${widget.variant?.size} must render at its fixed Figma size`);
+            }
+            if (widget.component === "close_gauge" && widget.variant?.property === "text" && widget.data?.label !== undefined) {
+              throw new Error(`Renderer rejected ${widget.id}; close_gauge text supports only one centered value`);
+            }
+            if (widget.component === "open_gauge") {
+              const bottomTextToken = {
+                S: { fontSize: 15, width: 18 },
+                M: { fontSize: 18, width: 21 },
+                L: { fontSize: 32, width: 35 }
+              }[widget.variant?.size];
+              const assertBottomText = (value, fieldName) => {
+                if (isBlank(value)) {
+                  throw new Error(`Renderer rejected ${widget.id}; ${fieldName} is required for visible open_gauge bottom content`);
+                }
+                if (bottomTextToken && estimateTextWidth(value, bottomTextToken.fontSize) > bottomTextToken.width + 2) {
+                  throw new Error(`Renderer rejected ${widget.id}; ${fieldName} must fit the ${widget.variant.size} bottom text box at ${bottomTextToken.fontSize}pt`);
+                }
+              };
+              if (widget.variant?.property === "text") assertBottomText(widget.data?.label, "data.label");
+              if (widget.variant?.property === "range") {
+                assertBottomText(widget.data?.lowLabel, "data.lowLabel");
+                assertBottomText(widget.data?.highLabel, "data.highLabel");
+              }
+              if (widget.variant?.property === "offset") assertBottomText(widget.data?.referenceValue, "data.referenceValue");
+              if (widget.variant?.property === "icon" && isBlank(widget.data?.icon)) {
+                throw new Error(`Renderer rejected ${widget.id}; data.icon is required for visible open_gauge icon content`);
+              }
+            }
+          }
           if (widget.shape === "rectangular" && !["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"].includes(widget.template)) {
             throw new Error(`Renderer rejected unknown rectangular template ${widget.template}`);
           }
         }
-        validateWidgetTextOverlap(layout, layout.time, "time");
-        validateWidgetTextOverlap(layout, layout.date, "date");
+        for (let index = 0; index < layout.widgets.length; index += 1) {
+          for (let nextIndex = index + 1; nextIndex < layout.widgets.length; nextIndex += 1) {
+            const a = layout.widgets[index];
+            const b = layout.widgets[nextIndex];
+            const xOverlap = Math.max(0, Math.min(a.frame.x + a.frame.width, b.frame.x + b.frame.width) - Math.max(a.frame.x, b.frame.x));
+            const yOverlap = Math.max(0, Math.min(a.frame.y + a.frame.height, b.frame.y + b.frame.height) - Math.max(a.frame.y, b.frame.y));
+            if (xOverlap > 0 && yOverlap > 0) {
+              throw new Error(`Renderer rejected ${a.id} and ${b.id}; widgets must not overlap`);
+            }
+          }
+        }
+        for (const [path, textObject] of renderableTextObjects(layout)) {
+          validateWidgetTextOverlap(layout, textObject, path);
+        }
       }
 
       function renderWatchFace(layout) {
@@ -2358,19 +2862,30 @@
         genWatchFace.replaceChildren();
         const root = createElement("div", "watch-face-render");
 
-        const time = createElement("div", "watch-el watch-time", layout.time.value);
-        applyFrame(time, layout.time.frame);
-        time.style.color = layout.time.style?.color || "#fff";
-        time.style.fontSize = `${layout.time.style?.fontSize || 64}px`;
-        time.style.fontWeight = layout.time.style?.fontWeight || 760;
+        const timeElements = (Array.isArray(layout.time?.containers) ? layout.time.containers : [layout.time]).map((container) => {
+          const time = createElement("div", "watch-el watch-time", container.value);
+          applyFrame(time, container.frame);
+          time.style.fontFamily = `"${container.style?.fontFamily || "SF Compact"}", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif`;
+          time.style.color = container.style?.color || "#fff";
+          time.style.fontSize = `${container.style?.fontSize || 64}px`;
+          time.style.fontWeight = container.style?.fontWeight || 760;
+          time.style.letterSpacing = `${container.style?.letterSpacing || 0}px`;
+          if (container.style?.treatment === "outline_stroke") {
+            time.style.color = "transparent";
+            time.style.webkitTextStroke = `1.5px ${container.style.color || "#fff"}`;
+          }
+          return time;
+        });
 
         const date = createElement("div", "watch-el watch-date", layout.date.value);
         applyFrame(date, layout.date.frame);
+        date.style.fontFamily = `"${layout.date.style?.fontFamily || "SF Compact"}", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif`;
         date.style.color = layout.date.style?.color || "rgba(255, 255, 255, 0.62)";
-        date.style.fontSize = `${layout.date.style?.fontSize || 12}px`;
-        date.style.fontWeight = layout.date.style?.fontWeight || 600;
+        date.style.fontSize = `${layout.date.style?.fontSize || 19}px`;
+        date.style.fontWeight = layout.date.style?.fontWeight || 400;
+        date.style.letterSpacing = `${layout.date.style?.letterSpacing || 0}px`;
 
-        root.append(time, date);
+        root.append(...timeElements, date);
         for (const widget of layout.widgets) {
           root.append(widget.shape === "circular" ? renderCircularWidget(widget, layout) : renderRectangularWidget(widget, layout));
         }
@@ -2430,6 +2945,11 @@
           JSON.stringify(run.validation, null, 2),
           "```",
           "",
+          "### Validation Attempts",
+          "```json",
+          JSON.stringify(run.validationAttempts || [], null, 2),
+          "```",
+          "",
           "### Renderer Logs",
           "```txt",
           formatLogs(run),
@@ -2472,6 +2992,60 @@
         latestDebugBundle = buildDebugBundle(run);
       }
 
+      function showDebugPanel(panelId) {
+        tabButtons.forEach((tab) => tab.setAttribute("aria-selected", String(tab.getAttribute("aria-controls") === panelId)));
+        tabPanels.forEach((panel) => {
+          panel.hidden = panel.id !== panelId;
+        });
+      }
+
+      function renderWorkingState() {
+        const loadingFace = createElement("div", "watch-face-render watch-loading");
+        const spinner = createElement("div", "watch-loading-spinner");
+        spinner.setAttribute("aria-hidden", "true");
+        const label = createElement("div", "watch-loading-label", "Working...");
+        loadingFace.append(spinner, label);
+        genWatchFace.setAttribute("aria-busy", "true");
+        genWatchFace.replaceChildren(loadingFace);
+      }
+
+      function setGenerateWorkingState(context) {
+        isGenerating = true;
+        generateButton.disabled = true;
+        generateButton.setAttribute("aria-busy", "true");
+        generateButton.textContent = "Generating...";
+        showDebugPanel("logs-panel");
+        layoutJson.textContent = "{}";
+        latestDebugBundle = "";
+        logs.textContent = [
+          "[generate] Pipeline started.",
+          "[generate] Cleared previous run logs.",
+          `[generate] Context submitted: time=${context.timeOfDay}; location=${context.location}; activity=${context.activity}; goal=${context.goal || "none"}.`,
+          "[generate] Pipeline is working. Please wait for an update."
+        ].join("\n");
+        renderWorkingState();
+      }
+
+      function clearGenerateWorkingState() {
+        isGenerating = false;
+        generateButton.disabled = false;
+        generateButton.removeAttribute("aria-busy");
+        generateButton.textContent = "Generate";
+        genWatchFace.removeAttribute("aria-busy");
+      }
+
+      function setCopyDebugState(state, label) {
+        window.clearTimeout(copyDebugResetTimer);
+        copyDebugButton.dataset.copyState = state;
+        copyDebugButton.textContent = label;
+        if (state === "copied" || state === "failed") {
+          copyDebugResetTimer = window.setTimeout(() => {
+            delete copyDebugButton.dataset.copyState;
+            copyDebugButton.textContent = "Copy Debug Bundle";
+          }, 1600);
+        }
+      }
+
       function refreshStaticOutput(reason) {
         const run = buildPipelineRun(reason);
         setPipelineOutput(run);
@@ -2510,9 +3084,12 @@
 
       async function copyDebugBundle() {
         if (!latestDebugBundle) {
+          setCopyDebugState("failed", "Nothing to copy");
+          logs.textContent = `${logs.textContent}\n[copy-debug-bundle] Nothing to copy yet. Generate or load a layout first.`;
           return;
         }
 
+        setCopyDebugState("copying", "Copying...");
         if (navigator.clipboard?.writeText) {
           try {
             await navigator.clipboard.writeText(latestDebugBundle);
@@ -2524,30 +3101,47 @@
         }
 
         logs.textContent = `${logs.textContent}\n[copy-debug-bundle] Copied debug bundle to clipboard.`;
+        setCopyDebugState("copied", "Debug bundle copied");
       }
 
       timeField.value = currentTimeLabel();
       refreshStaticOutput("Default context rendered.");
 
       async function handleGenerate() {
+        if (isGenerating) {
+          return;
+        }
         const context = readContext();
+        setGenerateWorkingState(context);
         try {
           const result = await requestBackendGeneration(context);
           setPipelineOutput(buildRunFromApiResponse(result, context, "Generate clicked; backend Phase 8 endpoint returned deterministic fallback layout."));
         } catch (error) {
-          const run = buildPipelineRun("Generate clicked; backend endpoint unavailable, so browser-local deterministic fallback was used.");
+          const reasonByKind = {
+            validation: "Generate clicked; backend generation failed validation, so browser-local deterministic fallback was used.",
+            request: "Generate clicked; backend rejected the generation request, so browser-local deterministic fallback was used.",
+            server: "Generate clicked; backend returned a server error, so browser-local deterministic fallback was used.",
+            network: "Generate clicked; backend endpoint unavailable, so browser-local deterministic fallback was used."
+          };
+          const run = buildPipelineRun(reasonByKind[error.kind] || reasonByKind.network);
+          const validationDetails = error.result?.validation?.errors?.length
+            ? `; ${error.result.validation.errors.map((item) => `${item.path}: ${item.message}`).join(" | ")}`
+            : "";
           run.pipelineSteps.unshift({
             id: "call-backend-endpoint",
             status: "failed",
-            detail: `/api/generate-watch-ui failed: ${error.message}`
+            detail: `/api/generate-watch-ui ${error.kind || "network"} failure${error.status ? ` (${error.status})` : ""}: ${error.message}${validationDetails}`
           });
           setPipelineOutput(run);
+        } finally {
+          clearGenerateWorkingState();
         }
       }
 
       copyDebugButton.addEventListener("click", () => {
         copyDebugBundle().catch((error) => {
           logs.textContent = `${logs.textContent}\n[copy-debug-bundle] Failed to copy: ${error.message}`;
+          setCopyDebugState("failed", "Copy failed");
         });
       });
 
@@ -2562,10 +3156,7 @@
 
       tabButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          tabButtons.forEach((tab) => tab.setAttribute("aria-selected", String(tab === button)));
-          tabPanels.forEach((panel) => {
-            panel.hidden = panel.id !== button.getAttribute("aria-controls");
-          });
+          showDebugPanel(button.getAttribute("aria-controls"));
         });
       });
     </script>

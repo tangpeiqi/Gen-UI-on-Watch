@@ -23,7 +23,7 @@
     {
       "id": "rectangular-full-width-corner-contract",
       "strictness": "must",
-      "rule": "Regular rectangular widgets must be 205pt wide, use 54pt corner radius, and use 60% corner smoothing. Height may vary by template or layout need."
+      "rule": "Regular rectangular widgets must be 205pt wide, use 54pt corner radius, and use 100% corner smoothing. Height may vary by template or layout need."
     },
     {
       "id": "rectangular-padding-and-clipping-contract",

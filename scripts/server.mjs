@@ -1,13 +1,44 @@
 import http from "node:http";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateFallbackWatchUi, loadDesignPack } from "./fallback-generator.mjs";
+import { createLayoutValidator } from "./layout-validator.mjs";
+import { generateOpenAiWatchUi, openAiConfigured, openAiModel } from "./openai-provider.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
+
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) continue;
+    const [, key, rawValue] = match;
+    if (process.env[key] !== undefined) continue;
+    process.env[key] = rawValue.replace(/^["']|["']$/g, "");
+  }
+}
+
+loadEnvFile(path.join(rootDir, ".env"));
+
 const port = Number(process.env.PORT || 8787);
 const designPack = loadDesignPack(rootDir);
+const validator = createLayoutValidator(designPack);
+const designPackHash = crypto
+  .createHash("sha256")
+  .update(JSON.stringify({
+    schema: designPack.schema,
+    materialSymbolsRegistry: designPack.materialSymbolsRegistry,
+    widgetSelectionPolicy: designPack.widgetSelectionPolicy,
+    generatedRectangularWidgetSchema: designPack.generatedRectangularWidgetSchema
+  }))
+  .digest("hex")
+  .slice(0, 12);
 
 const contentTypeByExtension = {
   ".html": "text/html; charset=utf-8",
@@ -57,39 +88,352 @@ function safeFilePath(urlPath) {
   return absolutePath;
 }
 
+function classifyGenerationFailure(error) {
+  const message = String(error.message || error).toLowerCase();
+  if (/timeout|timed out|abort/.test(message)) return "timeout";
+  if (/quota|billing|budget|limit/.test(message)) return "budget_exhausted";
+  return "api_failure";
+}
+
+function validationFeedbackFrom(validation) {
+  const errors = validation.errors?.length ? validation.errors : [];
+  return errors.slice(0, 5).map((error) => ({
+    code: error.code,
+    path: error.path,
+    message: error.message
+  }));
+}
+
+function validationSummaryForLog(validation) {
+  const details = validationFeedbackFrom(validation)
+    .map((error) => `${error.path}: ${error.message}`)
+    .join(" | ");
+  return details ? `${validation.summary}: ${details}` : validation.summary;
+}
+
+function openAiValidationRetryCount() {
+  const configuredRetries = Number(process.env.OPENAI_VALIDATION_RETRIES || 1);
+  if (!Number.isFinite(configuredRetries)) return 1;
+  return Math.max(0, Math.floor(configuredRetries));
+}
+
+function anonymizedContextSummary(context = {}) {
+  const combinedText = `${context.activity || ""} ${context.goal || ""}`.toLowerCase();
+  const keywordGroups = {
+    workout: /(run|running|walk|workout|gym|exercise|mobility|hike|strength)/,
+    weather: /(rain|weather|outside|outdoors|temperature|wind|snow|cloud)/,
+    timer: /(timer|countdown|pause|cancel|start|reset)/,
+    event: /(dinner|meeting|appointment|pickup|commute|schedule|call|leave)/,
+    reminder: /(remind|reminder|todo|to-do|task)/,
+    music: /(music|song|playlist|audio|podcast|playback)/,
+    checklist: /(checklist|shopping list|task list|packing list)/
+  };
+  return {
+    contextHash: crypto.createHash("sha256").update(JSON.stringify(context)).digest("hex").slice(0, 12),
+    hasTimeOfDay: Boolean(context.timeOfDay),
+    locationProvided: Boolean(context.location),
+    activityLength: String(context.activity || "").length,
+    goalLength: String(context.goal || "").length,
+    inferredKeywordGroups: Object.entries(keywordGroups)
+      .filter(([, pattern]) => pattern.test(combinedText))
+      .map(([key]) => key)
+  };
+}
+
+function selectedWidgetSummary(layout) {
+  if (!Array.isArray(layout?.widgets)) return [];
+  return layout.widgets.map((widget) => ({
+    id: widget.id,
+    contentType: widget.contentType,
+    shape: widget.shape,
+    component: widget.component || null,
+    variant: widget.variant || null,
+    template: widget.template || null,
+    frame: widget.frame
+  }));
+}
+
+function generationRecordFromResult({ context, result, status, validationAttempts = [], aiValidation = null, failureKind = null }) {
+  const layout = result?.layout || null;
+  const model = result?.model || {};
+  const validation = result?.validation || {};
+  return {
+    recordVersion: "1.0.0",
+    createdAt: new Date().toISOString(),
+    endpoint: "/api/generate-watch-ui",
+    httpStatus: status,
+    provider: layout?.metadata?.provider || model.provider || "unknown",
+    model: layout?.metadata?.model || model.model || "unknown",
+    promptVersion: layout?.metadata?.promptVersion || model.promptVersion || "unknown",
+    schemaVersion: layout?.schemaVersion || model.schemaVersion || designPack.schema.properties.schemaVersion.const,
+    designPackHash,
+    liveContextSummary: anonymizedContextSummary(context),
+    selectedContentTypes: result?.selectedContentTypes || layout?.metadata?.selectedContentTypes || [],
+    selectedWidgets: selectedWidgetSummary(layout),
+    validation: {
+      ok: Boolean(validation.ok),
+      stage: validation.stage || "unknown",
+      summary: validation.summary || "",
+      errors: validation.errors || [],
+      warnings: validation.warnings || []
+    },
+    aiValidation,
+    validationAttempts: validationAttempts.map((attempt) => ({
+      attempt: attempt.attempt,
+      maxAttempts: attempt.maxAttempts,
+      responseId: attempt.responseId,
+      repairedFromPreviousValidation: attempt.repairedFromPreviousValidation,
+      validation: attempt.validation,
+      selectedContentTypes: attempt.selectedContentTypes,
+      widgetDecisions: attempt.widgetDecisions
+    })),
+    retryCount: layout?.metadata?.retryCount ?? model.retryCount ?? 0,
+    fallback: {
+      used: Boolean(layout?.metadata?.fallbackUsed),
+      id: layout?.metadata?.fallbackId || null,
+      reason: layout?.metadata?.fallbackReason || model.fallbackReason || failureKind || null,
+      provider: model.fallbackProvider || null,
+      model: model.fallbackModel || null
+    },
+    acceptedLayout: validation.ok ? layout : null,
+    latencyMs: model.latencyMs ?? null,
+    estimatedCost: model.estimatedCost || "not-calculated",
+    userFeedback: null
+  };
+}
+
+function appendGenerationRecord(record) {
+  if (process.env.DISABLE_GENERATION_RECORDS === "1") return;
+  const recordsPath = path.resolve(rootDir, process.env.GENERATION_RECORDS_PATH || "logs/generation-records.jsonl");
+  try {
+    fs.mkdirSync(path.dirname(recordsPath), { recursive: true });
+    fs.appendFileSync(recordsPath, `${JSON.stringify(record)}\n`, "utf8");
+  } catch (error) {
+    console.warn(`Could not write generation record: ${error.message}`);
+  }
+}
+
+function sendGenerationResult(response, status, result, options = {}) {
+  appendGenerationRecord(generationRecordFromResult({
+    context: options.context || {},
+    result,
+    status,
+    validationAttempts: options.validationAttempts || result?.validationAttempts || [],
+    aiValidation: options.aiValidation || result?.aiValidation || null,
+    failureKind: options.failureKind || null
+  }));
+  sendJson(response, status, result);
+}
+
 async function handleGenerateWatchUi(request, response) {
   try {
     const rawBody = await readBody(request);
     const body = rawBody ? JSON.parse(rawBody) : {};
-    const result = generateFallbackWatchUi({
-      context: body.context || {},
-      preferences: body.preferences || {},
-      designPack
-    });
-    sendJson(response, result.validation.ok ? 200 : 422, result);
-  } catch (error) {
-    sendJson(response, 400, {
-      layout: null,
-      logs: [
-        { id: "read-request", status: "failed", detail: error.message },
-        { id: "fallback", status: "blocked", detail: "Request could not be parsed, so no fallback layout was generated." }
-      ],
-      validation: {
-        ok: false,
-        stage: "request",
-        summary: error.message,
-        errors: [
-          {
-            severity: "error",
-            stage: "request",
-            code: "invalid_request",
-            path: "request.body",
-            message: error.message
+    const context = body.context || {};
+    const preferences = body.preferences || {};
+    const currentTime = body.currentTime || new Date().toISOString();
+    if (!openAiConfigured()) {
+      const fallbackResult = generateFallbackWatchUi({
+        context,
+        preferences,
+        designPack
+      });
+      sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, fallbackResult, { context });
+      return;
+    }
+
+    const openAiLogs = [
+      { id: "read-live-context", status: "complete", detail: `time=${context.timeOfDay || "runtime"}; location=${context.location || "unknown"}; activity=${context.activity || "none"}; goal=${context.goal || "none"}` },
+      { id: "load-pseudo-context", status: "complete", detail: `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"} and prompt markdown (${designPack.pseudoContextMarkdown.length} characters).` }
+    ];
+
+    let aiResult;
+    let validation;
+    let selectedContentTypes = [];
+    let widgetDecisions = [];
+    const maxValidationRetries = openAiValidationRetryCount();
+    let validationFeedback = [];
+    const attemptLogs = [];
+    const validationAttempts = [];
+
+    for (let attempt = 0; attempt <= maxValidationRetries; attempt += 1) {
+      try {
+        attemptLogs.push({
+          id: "call-openai",
+          status: "started",
+          detail: `Attempt ${attempt + 1}/${maxValidationRetries + 1}: calling OpenAI Responses API with model=${openAiModel()} and promptVersion=watch-face-phase-9-openai-v1.`
+        });
+        aiResult = await generateOpenAiWatchUi({
+          context,
+          preferences,
+          designPack,
+          currentTime,
+          validationFeedback,
+          retryCount: attempt
+        });
+      } catch (error) {
+        const fallbackReason = classifyGenerationFailure(error);
+        const fallbackResult = generateFallbackWatchUi({
+          context,
+          preferences: { ...preferences, fallbackReason },
+          designPack
+        });
+        const logs = [
+          ...openAiLogs,
+          ...attemptLogs,
+          { id: "call-openai", status: "failed", detail: error.message },
+          { id: "fallback", status: "complete", detail: "OpenAI generation failed, so the deterministic backend fallback is returned." },
+          ...fallbackResult.logs
+        ];
+        const result = {
+          ...fallbackResult,
+          logs,
+          model: {
+            ...fallbackResult.model,
+            attemptedProvider: "openai",
+            attemptedModel: openAiModel(),
+            promptVersion: "watch-face-phase-9-openai-v1"
           }
-        ],
-        warnings: []
+        };
+        sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, result, { context, failureKind: fallbackReason });
+        return;
       }
-    });
+
+      validation = validator.validateLayout(aiResult.layout);
+      selectedContentTypes = aiResult.selectedContentTypes.length > 0
+        ? aiResult.selectedContentTypes
+        : aiResult.layout.metadata.selectedContentTypes;
+      widgetDecisions = aiResult.widgetDecisions.length > 0
+        ? aiResult.widgetDecisions
+        : aiResult.layout.widgets.map((widget) => `${widget.contentType} -> ${widget.shape}`);
+
+      attemptLogs.push(
+        { id: "call-openai", status: "complete", detail: `Attempt ${attempt + 1}/${maxValidationRetries + 1}: OpenAI returned response ${aiResult.responseId || "without response id"}.` },
+        { id: "validate", status: validation.ok ? "accepted" : "failed", detail: `Attempt ${attempt + 1}/${maxValidationRetries + 1}: ${validationSummaryForLog(validation)}` }
+      );
+      validationAttempts.push({
+        attempt: attempt + 1,
+        maxAttempts: maxValidationRetries + 1,
+        responseId: aiResult.responseId,
+        validation,
+        selectedContentTypes,
+        widgetDecisions,
+        repairedFromPreviousValidation: attempt > 0
+      });
+
+      if (validation.ok) break;
+      validationFeedback = validationFeedbackFrom(validation);
+      if (attempt < maxValidationRetries) {
+        attemptLogs.push({
+          id: "retry-openai",
+          status: "started",
+          detail: `Retrying OpenAI generation with validation feedback: ${validationFeedback.map((error) => `${error.path}: ${error.message}`).join(" | ")}`
+        });
+      }
+    }
+
+    if (!validation.ok) {
+      const fallbackResult = generateFallbackWatchUi({
+        context,
+        preferences: { ...preferences, fallbackReason: "invalid_output" },
+        designPack
+      });
+      const logs = [
+        ...openAiLogs,
+        ...attemptLogs,
+        { id: "select-content-types", status: "complete", detail: selectedContentTypes.join(", ") },
+        { id: "choose-widgets", status: "complete", detail: widgetDecisions.join(" | ") },
+        { id: "fallback", status: "complete", detail: "OpenAI layouts failed validation after retry; deterministic backend fallback is returned." },
+        ...fallbackResult.logs
+      ];
+      const result = {
+        ...fallbackResult,
+        logs,
+        model: {
+          ...aiResult.model,
+          retryCount: maxValidationRetries,
+          fallbackProvider: fallbackResult.model.provider,
+          fallbackModel: fallbackResult.model.model,
+          fallbackReason: "invalid_output"
+        },
+        aiValidation: validation,
+        validationAttempts
+      };
+      sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, result, { context, validationAttempts, aiValidation: validation, failureKind: "invalid_output" });
+      return;
+    }
+
+    const logs = [
+      ...openAiLogs,
+      ...attemptLogs,
+      { id: "select-content-types", status: "complete", detail: selectedContentTypes.join(", ") },
+      { id: "choose-widgets", status: "complete", detail: widgetDecisions.join(" | ") },
+      { id: "populate-widgets", status: "complete", detail: "OpenAI populated widget data and semantic icon tokens from live context plus pseudo-context data." },
+      { id: "generate-layout-json", status: "complete", detail: "OpenAI returned strict structured layout JSON." },
+      { id: "validate", status: "accepted", detail: validation.summary },
+      { id: "fallback", status: "skipped", detail: "Accepted OpenAI layout; deterministic fallback was not used." },
+      { id: "render", status: "pending", detail: "Frontend may render accepted OpenAI layout." }
+    ];
+
+    const result = {
+      layout: aiResult.layout,
+      logs,
+      validation,
+      selectedContentTypes,
+      widgetDecisions,
+      pseudoContextSummary: [
+        `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"}.`,
+        `Loaded pseudo context markdown (${designPack.pseudoContextMarkdown.length} characters) for prompt assembly.`
+      ],
+      model: {
+        ...aiResult.model,
+        retryCount: aiResult.layout.metadata.retryCount
+      },
+      validationAttempts
+    };
+
+    sendGenerationResult(response, 200, result, { context, validationAttempts });
+  } catch (error) {
+    try {
+      const result = generateFallbackWatchUi({
+        context: {},
+        preferences: { fallbackReason: "api_failure" },
+        designPack
+      });
+      const responseBody = {
+        ...result,
+        logs: [
+          { id: "request", status: "failed", detail: error.message },
+          { id: "fallback", status: "complete", detail: "Unexpected request handling error; deterministic fallback layout is returned when possible." },
+          ...result.logs
+        ]
+      };
+      sendGenerationResult(response, result.validation.ok ? 200 : 422, responseBody, { failureKind: "api_failure" });
+    } catch {
+      const responseBody = {
+        layout: null,
+        logs: [
+          { id: "read-request", status: "failed", detail: error.message },
+          { id: "fallback", status: "blocked", detail: "Request could not be parsed, so no fallback layout was generated." }
+        ],
+        validation: {
+          ok: false,
+          stage: "request",
+          summary: error.message,
+          errors: [
+            {
+              severity: "error",
+              stage: "request",
+              code: "invalid_request",
+              path: "request.body",
+              message: error.message
+            }
+          ],
+          warnings: []
+        }
+      };
+      sendGenerationResult(response, 400, responseBody, { failureKind: "invalid_request" });
+    }
   }
 }
 
@@ -130,5 +474,7 @@ const server = http.createServer((request, response) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`Gen UI on Watch simulator: http://127.0.0.1:${port}/`);
-  console.log("POST /api/generate-watch-ui is available without OPENAI_API_KEY.");
+  console.log(openAiConfigured()
+    ? `POST /api/generate-watch-ui will try OpenAI model ${openAiModel()} and fall back if needed.`
+    : "POST /api/generate-watch-ui is available without OPENAI_API_KEY.");
 });

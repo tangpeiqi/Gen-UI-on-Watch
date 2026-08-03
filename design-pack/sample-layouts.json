@@ -43,38 +43,63 @@
         "value": "5:42",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 169,
-          "width": 150,
-          "height": 58
+          "x": 0,
+          "y": 175,
+          "width": 205,
+          "height": 76
         },
         "style": {
-          "fontFamily": "SF Pro Display",
-          "fontSize": 64,
+          "fontFamily": "SF Compact",
+          "fontSize": 84,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#FFFFFF",
           "treatment": "fill"
-        }
+        },
+        "containers": [
+          {
+            "id": "time-combined",
+            "role": "combined",
+            "value": "5:42",
+            "frame": {
+              "x": 0,
+              "y": 175,
+              "width": 205,
+              "height": 76
+            },
+            "style": {
+              "fontFamily": "SF Compact",
+              "fontSize": 84,
+              "fontWeight": 760,
+              "letterSpacing": 0,
+              "color": "#FFFFFF",
+              "treatment": "fill"
+            },
+            "anchor": "bottom_left"
+          }
+        ]
       },
       "date": {
-        "value": "Thu 30",
+        "value": "THU 30",
         "priority": "secondary",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 18,
-          "width": 62,
-          "height": 18
+          "x": 0,
+          "y": 153,
+          "width": 70,
+          "height": 22
         },
         "style": {
-          "fontFamily": "SF Pro Text",
-          "fontSize": 12,
-          "fontWeight": 600,
+          "fontFamily": "SF Compact",
+          "fontSize": 19,
+          "fontWeight": 400,
           "letterSpacing": 0,
           "color": "#FFFFFF",
           "treatment": "fill"
-        }
+        },
+        "stackedWithTimeContainerId": "time-combined",
+        "stackGap": 0,
+        "edgePaddingWhenStackedFromEdge": 16
       },
       "widgets": [
         {
@@ -83,12 +108,11 @@
           "shape": "circular",
           "component": "close_gauge",
           "variant": {
-            "property": "text",
+            "property": "icon",
             "size": "S"
           },
           "data": {
-            "value": "42",
-            "label": "run",
+            "icon": "workout_running",
             "progress": 0.42,
             "metricKind": "workout"
           },
@@ -117,7 +141,7 @@
           },
           "frame": {
             "x": 18,
-            "y": 88,
+            "y": 76,
             "width": 72,
             "height": 72
           },
@@ -175,38 +199,63 @@
         "value": "6:08",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 28,
-          "width": 150,
-          "height": 58
+          "x": 0,
+          "y": 0,
+          "width": 205,
+          "height": 76
         },
         "style": {
-          "fontFamily": "SF Pro Display",
-          "fontSize": 64,
+          "fontFamily": "SF Compact",
+          "fontSize": 84,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#F2F4FC",
           "treatment": "fill"
-        }
+        },
+        "containers": [
+          {
+            "id": "time-combined",
+            "role": "combined",
+            "value": "6:08",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "width": 205,
+              "height": 76
+            },
+            "style": {
+              "fontFamily": "SF Compact",
+              "fontSize": 84,
+              "fontWeight": 760,
+              "letterSpacing": 0,
+              "color": "#F2F4FC",
+              "treatment": "fill"
+            },
+            "anchor": "top_left"
+          }
+        ]
       },
       "date": {
-        "value": "Thu 30",
+        "value": "THU 30",
         "priority": "secondary",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 94,
-          "width": 62,
-          "height": 18
+          "x": 0,
+          "y": 76,
+          "width": 70,
+          "height": 22
         },
         "style": {
-          "fontFamily": "SF Pro Text",
-          "fontSize": 12,
-          "fontWeight": 600,
+          "fontFamily": "SF Compact",
+          "fontSize": 19,
+          "fontWeight": 400,
           "letterSpacing": 0,
           "color": "#F2F4FC",
           "treatment": "fill"
-        }
+        },
+        "stackedWithTimeContainerId": "time-combined",
+        "stackGap": 0,
+        "edgePaddingWhenStackedFromEdge": 16
       },
       "widgets": [
         {
@@ -227,6 +276,7 @@
           },
           "layer": "top",
           "cornerRadius": 54,
+          "cornerSmoothing": 100,
           "verticalAlignment": "bottom"
         }
       ],
@@ -281,38 +331,63 @@
         "value": "6:42",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 28,
-          "width": 150,
-          "height": 58
+          "x": 0,
+          "y": 0,
+          "width": 205,
+          "height": 76
         },
         "style": {
-          "fontFamily": "SF Pro Display",
-          "fontSize": 64,
+          "fontFamily": "SF Compact",
+          "fontSize": 84,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#7DD3FC",
           "treatment": "fill"
-        }
+        },
+        "containers": [
+          {
+            "id": "time-combined",
+            "role": "combined",
+            "value": "6:42",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "width": 205,
+              "height": 76
+            },
+            "style": {
+              "fontFamily": "SF Compact",
+              "fontSize": 84,
+              "fontWeight": 760,
+              "letterSpacing": 0,
+              "color": "#7DD3FC",
+              "treatment": "fill"
+            },
+            "anchor": "top_left"
+          }
+        ]
       },
       "date": {
-        "value": "Thu 30",
+        "value": "THU 30",
         "priority": "secondary",
         "layer": "bottom",
         "frame": {
-          "x": 18,
-          "y": 94,
-          "width": 62,
-          "height": 18
+          "x": 0,
+          "y": 76,
+          "width": 70,
+          "height": 22
         },
         "style": {
-          "fontFamily": "SF Pro Text",
-          "fontSize": 12,
-          "fontWeight": 600,
+          "fontFamily": "SF Compact",
+          "fontSize": 19,
+          "fontWeight": 400,
           "letterSpacing": 0,
           "color": "#7DD3FC",
           "treatment": "fill"
-        }
+        },
+        "stackedWithTimeContainerId": "time-combined",
+        "stackGap": 0,
+        "edgePaddingWhenStackedFromEdge": 16
       },
       "widgets": [
         {
@@ -359,6 +434,7 @@
           },
           "layer": "top",
           "cornerRadius": 54,
+          "cornerSmoothing": 100,
           "verticalAlignment": "bottom"
         }
       ],

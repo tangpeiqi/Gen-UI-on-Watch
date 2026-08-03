@@ -36,6 +36,12 @@ Use it as the decision layer:
 - `open_gauge.range`: current value relative to meaningful min/max bounds.
 - `open_gauge.offset`: current value compared with a target, baseline, previous value, or reference.
 
+Variant content rules:
+- If `close_gauge` is the only widget for its content type, choose `property=icon`, not `property=text`, so the widget communicates what the data represents.
+- `open_gauge.text` must include a short visible bottom `label`; `open_gauge.icon` must include a valid semantic `icon`.
+- `open_gauge.range` must include `lowLabel` and `highLabel`; `open_gauge.offset` must include `referenceValue`.
+- Open Gauge bottom text uses fixed Figma font sizes: `S=15pt`, `M=18pt`, `L=32pt`. Keep bottom labels short enough to avoid clipping.
+
 ## Close Gauge
 
 ```tsx

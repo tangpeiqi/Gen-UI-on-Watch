@@ -69,6 +69,7 @@
   },
   "circularSelectionDelegation": {
     "rule": "For content types in circularEligibility.allowedContentTypes, choose the circular component, property variant, and size by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. Do not hardcode content-type-to-component mappings in this policy.",
+    "focusedOneWidgetRule": "When the context calls for a focused one-widget watch face and the selected content type supports circular rendering, select one L circular widget.",
     "mustUseApprovedComponents": [
       "close_gauge",
       "open_gauge"
@@ -119,7 +120,7 @@
       "allowedCircular": {
         "component": "close_gauge",
         "variant": {
-          "property": "text",
+          "property": "icon",
           "size": "S"
         },
         "useWhen": "Countdown is the only visible timer need and controls are not required."
@@ -144,10 +145,10 @@
           "shape": "circular",
           "component": "close_gauge",
           "variant": {
-            "property": "text",
-            "size": "S"
+            "property": "icon",
+            "size": "L"
           },
-          "reason": "Workout progress is glanceable as a bounded scalar."
+          "reason": "Focused one-widget circular layouts use L size, and a solo close_gauge uses icon to communicate the data type."
         }
       ]
     },
@@ -163,10 +164,10 @@
           "shape": "circular",
           "component": "close_gauge",
           "variant": {
-            "property": "text",
+            "property": "icon",
             "size": "S"
           },
-          "reason": "Workout uses compact progress."
+          "reason": "Workout uses compact progress, and a solo close_gauge for this content type uses icon to communicate the data type."
         },
         {
           "contentType": "weather",
@@ -253,20 +254,20 @@
           "shape": "circular",
           "component": "close_gauge",
           "variant": {
-            "property": "text",
+            "property": "icon",
             "size": "S"
           },
-          "reason": "Workout progress is compact."
+          "reason": "Workout progress is compact, and a solo close_gauge for this content type uses icon."
         },
         {
           "contentType": "timer",
           "shape": "circular",
           "component": "close_gauge",
           "variant": {
-            "property": "text",
+            "property": "icon",
             "size": "S"
           },
-          "reason": "A compact countdown can render as a circular close_gauge when timer controls are not needed."
+          "reason": "A compact countdown can render as a circular close_gauge when timer controls are not needed, and a solo close_gauge for this content type uses icon."
         },
         {
           "contentType": "weather",

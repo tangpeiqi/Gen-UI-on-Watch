@@ -26,7 +26,7 @@ export function loadDesignPack(cwd = process.cwd()) {
 }
 
 function currentDateLabel(now = new Date()) {
-  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(now);
+  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(now).slice(0, 3).toUpperCase();
   return `${weekday} ${now.getDate()}`;
 }
 
@@ -34,6 +34,12 @@ function timeForFace(value, now = new Date()) {
   const source = value || new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(now);
   const match = source.match(/(\d{1,2})(?::(\d{2}))?/);
   return match ? `${match[1]}:${match[2] || "00"}` : source;
+}
+
+function splitTimeForFace(value, now = new Date()) {
+  const combined = timeForFace(value, now);
+  const [hour, minute = "00"] = combined.split(":");
+  return { combined, hour, minute };
 }
 
 function inferSelectedContentTypes(context) {
@@ -91,6 +97,11 @@ function activityLabelFromContext(context) {
   return "run";
 }
 
+function shouldUseTimerRectangle(context) {
+  const text = `${context.activity || ""} ${context.goal || ""}`.toLowerCase();
+  return /(pause|cancel|start|control|action|reset|buttons|full timer)/.test(text);
+}
+
 function weatherProgress(pseudoContext) {
   const chance = pseudoContext.weather?.today?.rainChance ?? 68;
   return Math.max(0, Math.min(1, chance / 100));
@@ -102,10 +113,9 @@ function makeWorkoutWidget(context, frame, size = "S") {
     contentType: "workout",
     shape: "circular",
     component: "close_gauge",
-    variant: { property: "text", size },
+    variant: { property: "icon", size },
     data: {
-      value: "42",
-      label: activityLabelFromContext(context),
+      icon: "workout_running",
       progress: 0.42,
       metricKind: "workout"
     },
@@ -141,16 +151,133 @@ function makeTimerWidget(frame, size = "S") {
     contentType: "timer",
     shape: "circular",
     component: "close_gauge",
-    variant: { property: "text", size },
+    variant: { property: "icon", size },
     data: {
-      value: "3:40",
-      label: "tea",
+      icon: "timer",
       progress: 0.27,
       metricKind: "timer"
     },
     frame,
     layer: "top",
     decision: `fallback timer -> close_gauge ${size} because countdown is a safe deterministic fallback`
+  };
+}
+
+function makeHeartRateWidget(frame, size = "S") {
+  return {
+    id: "fallback-heart",
+    contentType: "heart_rate",
+    shape: "circular",
+    component: "open_gauge",
+    variant: { property: "text", size },
+    data: {
+      value: "92",
+      label: "HR",
+      progress: 0.46,
+      metricKind: "heart_rate"
+    },
+    frame,
+    layer: "top",
+    decision: `fallback heart_rate -> open_gauge ${size} because heart rate moves within a range`
+  };
+}
+
+function makeIotControlWidget(frame, size = "S") {
+  return {
+    id: "fallback-iot",
+    contentType: "iot_control",
+    shape: "circular",
+    component: "close_gauge",
+    variant: { property: "icon", size },
+    data: {
+      icon: "thermometer",
+      progress: 1,
+      metricKind: "completion"
+    },
+    frame,
+    layer: "top",
+    decision: `fallback iot_control -> close_gauge ${size} icon because device state is compact and glanceable`
+  };
+}
+
+function makeTimerRectangle(y = 112, height = 139) {
+  return {
+    id: "fallback-timer",
+    contentType: "timer",
+    shape: "rectangular",
+    template: "timer_rectangular",
+    data: {
+      countdown: "3:40",
+      timerLabel: "tea",
+      running: true
+    },
+    frame: { x: 0, y, width: 205, height },
+    layer: "top",
+    cornerRadius: 54,
+    cornerSmoothing: 100,
+    verticalAlignment: y === 0 ? "top" : "bottom",
+    decision: "fallback timer -> timer_rectangular because visible timer controls require the strict rectangular template"
+  };
+}
+
+function makeMusicWidget(y = 111, height = 140) {
+  return {
+    id: "fallback-music",
+    contentType: "music_control",
+    shape: "rectangular",
+    template: "music_control",
+    data: {
+      song: "Evening Focus",
+      artist: "Local Mix",
+      playPauseAction: "pause"
+    },
+    frame: { x: 0, y, width: 205, height },
+    layer: "top",
+    cornerRadius: 54,
+    cornerSmoothing: 100,
+    verticalAlignment: y === 0 ? "top" : "bottom",
+    decision: "fallback music_control -> music_control because playback controls require the strict rectangular template"
+  };
+}
+
+function makeReminderWidget(y = 124, height = 127) {
+  return {
+    id: "fallback-reminder",
+    contentType: "reminder",
+    shape: "rectangular",
+    template: "reminder",
+    data: {
+      content: "Bring umbrella",
+      dueDatetime: "before leaving",
+      label: "next"
+    },
+    frame: { x: 0, y, width: 205, height },
+    layer: "top",
+    cornerRadius: 54,
+    cornerSmoothing: 100,
+    verticalAlignment: y === 0 ? "top" : "bottom",
+    decision: "fallback reminder -> reminder because reminder is a strict rectangular template content type"
+  };
+}
+
+function makeChecklistWidget() {
+  return {
+    id: "fallback-checklist",
+    contentType: "checklist",
+    shape: "rectangular",
+    template: "checklist_full_face",
+    data: {
+      items: ["Keys", "Wallet", "Umbrella"],
+      completedItems: ["Keys"],
+      completedCount: 1,
+      label: "leaving"
+    },
+    frame: { x: 0, y: 0, width: 205, height: 251 },
+    layer: "top",
+    cornerRadius: 54,
+    cornerSmoothing: 100,
+    verticalAlignment: "top",
+    decision: "fallback checklist -> checklist_full_face because checklist is a strict full-face template and must be the only widget"
   };
 }
 
@@ -189,44 +316,183 @@ function makeEventRectangle(context, pseudoContext, y = 124, height = 127) {
     frame: { x: 0, y, width: 205, height },
     layer: "top",
     cornerRadius: 54,
+    cornerSmoothing: 100,
     verticalAlignment: y === 0 ? "top" : "bottom",
     decision: "fallback upcoming_event -> generated_rectangular_widget because event timing needs readable text"
   };
 }
 
-function chooseFallbackId(selectedContentTypes) {
-  const circularTypes = selectedContentTypes.filter((type) => ["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
-  const hasRectangularType = selectedContentTypes.some((type) => !["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
+function chooseFallbackId(selectedContentTypes, context = {}) {
   if (selectedContentTypes.includes("checklist")) return "one-rectangular-widget";
-  if (hasRectangularType && circularTypes.length > 0) return "mixed-circular-and-rectangular-layout";
+  const circularTypes = selectedContentTypes.filter((type) => ["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
+  const hasTimerRectangle = selectedContentTypes.includes("timer") && shouldUseTimerRectangle(context);
+  const hasRectangularType = hasTimerRectangle || selectedContentTypes.some((type) => !["workout", "timer", "heart_rate", "iot_control", "weather"].includes(type));
+  if (hasRectangularType && circularTypes.some((type) => type !== "timer" || !hasTimerRectangle)) return "mixed-circular-and-rectangular-layout";
   if (hasRectangularType) return "one-rectangular-widget";
   if (circularTypes.length >= 3) return "three-compact-widgets";
   if (circularTypes.length >= 2) return "two-circular-widgets-with-compact-time";
   return "one-circular-widget-with-large-time";
 }
 
-function buildFallbackWidgets(fallbackId, context, pseudoContext) {
-  if (fallbackId === "one-circular-widget-with-large-time") {
-    return [makeWeatherWidget(pseudoContext, { x: 118, y: 20, width: 72, height: 72 }, "S")];
+function widgetForContentType(type, context, pseudoContext, frame) {
+  if (type === "workout") return makeWorkoutWidget(context, frame, "S");
+  if (type === "weather") return makeWeatherWidget(pseudoContext, frame, "S");
+  if (type === "timer") return shouldUseTimerRectangle(context) ? makeTimerRectangle() : makeTimerWidget(frame, "S");
+  if (type === "heart_rate") return makeHeartRateWidget(frame, "S");
+  if (type === "iot_control") return makeIotControlWidget(frame, "S");
+  if (type === "upcoming_event") return makeEventRectangle(context, pseudoContext);
+  if (type === "music_control") return makeMusicWidget();
+  if (type === "reminder") return makeReminderWidget();
+  return null;
+}
+
+function positionCircularWidgets(widgets) {
+  if (widgets.length === 1) {
+    return widgets.map((widget) => ({
+      ...widget,
+      variant: { ...widget.variant, size: "L" },
+      frame: { x: 28, y: 6, width: 150, height: 150 }
+    }));
   }
-  if (fallbackId === "two-circular-widgets-with-compact-time") {
-    return [
-      makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
-      makeWeatherWidget(pseudoContext, { x: 18, y: 88, width: 72, height: 72 }, "S")
+  if (widgets.length >= 3) {
+    const verticalFrames = [
+      { x: 127, y: 6, width: 72, height: 72 },
+      { x: 127, y: 89.5, width: 72, height: 72 },
+      { x: 127, y: 173, width: 72, height: 72 }
     ];
+    return widgets.map((widget, index) => ({
+      ...widget,
+      frame: verticalFrames[index] || widget.frame
+    }));
   }
-  if (fallbackId === "one-rectangular-widget") return [makeEventRectangle(context, pseudoContext)];
-  if (fallbackId === "three-compact-widgets") {
-    return [
-      makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
-      makeWeatherWidget(pseudoContext, { x: 18, y: 88, width: 72, height: 72 }, "S"),
-      makeTimerWidget({ x: 118, y: 88, width: 72, height: 72 }, "S")
-    ];
-  }
-  return [
-    makeWorkoutWidget(context, { x: 118, y: 20, width: 72, height: 72 }, "S"),
-    makeEventRectangle(context, pseudoContext)
+  const frames = [
+    { x: 118, y: 20, width: 72, height: 72 },
+    { x: 18, y: 88, width: 72, height: 72 },
+    { x: 118, y: 88, width: 72, height: 72 }
   ];
+  return widgets.map((widget, index) => ({
+    ...widget,
+    frame: frames[index] || widget.frame
+  }));
+}
+
+function buildFallbackWidgets(selectedContentTypes, context, pseudoContext) {
+  if (selectedContentTypes.includes("checklist")) {
+    return {
+      widgets: [makeChecklistWidget()],
+      omittedContentTypes: selectedContentTypes.filter((type) => type !== "checklist")
+    };
+  }
+
+  const seedFrame = { x: 118, y: 20, width: 72, height: 72 };
+  const mappedWidgets = selectedContentTypes
+    .map((type) => widgetForContentType(type, context, pseudoContext, seedFrame))
+    .filter(Boolean);
+  const hasRectangularWidget = mappedWidgets.some((widget) => widget.shape === "rectangular");
+
+  if (!hasRectangularWidget) {
+    const widgets = positionCircularWidgets(mappedWidgets.slice(0, 3));
+    return {
+      widgets,
+      omittedContentTypes: mappedWidgets.slice(3).map((widget) => widget.contentType)
+    };
+  }
+
+  const firstRectangular = mappedWidgets.find((widget) => widget.shape === "rectangular");
+  const firstCircular = mappedWidgets.find((widget) => widget.shape === "circular");
+  const widgets = firstCircular
+    ? [
+        {
+          ...firstCircular,
+          frame: { x: 127, y: 16, width: 72, height: 72 }
+        },
+        firstRectangular
+      ]
+    : [firstRectangular];
+  const renderedContentTypes = new Set(widgets.map((widget) => widget.contentType));
+  return {
+    widgets,
+    omittedContentTypes: selectedContentTypes.filter((type) => !renderedContentTypes.has(type))
+  };
+}
+
+function fallbackIdFromWidgets(widgets) {
+  const circularCount = widgets.filter((widget) => widget.shape === "circular").length;
+  const rectangularCount = widgets.filter((widget) => widget.shape === "rectangular").length;
+  if (widgets.some((widget) => widget.template === "checklist_full_face")) return "one-rectangular-widget";
+  if (rectangularCount > 0 && circularCount > 0) return "mixed-circular-and-rectangular-layout";
+  if (rectangularCount > 0) return "one-rectangular-widget";
+  if (circularCount >= 3) return "three-compact-widgets";
+  if (circularCount >= 2) return "two-circular-widgets-with-compact-time";
+  return "one-circular-widget-with-large-time";
+}
+
+function resolveTimeDatePlacement(widgets) {
+  if (widgets.some((widget) => widget.template === "checklist_full_face")) {
+    return {
+      timeFrame: { x: 0, y: 0, width: 205, height: 22 },
+      dateFrame: { x: 0, y: 22, width: 70, height: 22 },
+      timeFontSize: 19,
+      timeAnchor: "top_left",
+      timeMode: "single_line"
+    };
+  }
+  const bottomRectangle = widgets.find((widget) => widget.shape === "rectangular" && widget.verticalAlignment === "bottom");
+  const topCircular = widgets.find((widget) => widget.shape === "circular" && widget.frame.y <= 32);
+  const circularCount = widgets.filter((widget) => widget.shape === "circular").length;
+  if (circularCount >= 3) {
+    return {
+      timeFrame: { x: 0, y: 54, width: 110, height: 152 },
+      dateFrame: { x: 0, y: 32, width: 70, height: 22 },
+      timeFontSize: 82,
+      timeAnchor: "left",
+      timeMode: "split_hour_minute",
+      timeContainers: [
+        { id: "time-hour", role: "hour", frame: { x: 0, y: 54, width: 110, height: 76 }, anchor: "left" },
+        { id: "time-minute", role: "minute", frame: { x: 0, y: 130, width: 110, height: 76 }, anchor: "left" }
+      ],
+      dateStackedWithTimeContainerId: "time-hour"
+    };
+  }
+  if (bottomRectangle && topCircular) {
+    return {
+      timeFrame: { x: 0, y: 0, width: 110, height: 102 },
+      dateFrame: { x: 0, y: 102, width: 70, height: 22 },
+      timeFontSize: 56,
+      timeAnchor: "left",
+      timeMode: "split_hour_minute",
+      timeContainers: [
+        { id: "time-hour", role: "hour", frame: { x: 0, y: 0, width: 110, height: 51 }, anchor: "left" },
+        { id: "time-minute", role: "minute", frame: { x: 0, y: 51, width: 110, height: 51 }, anchor: "left" }
+      ],
+      dateStackedWithTimeContainerId: "time-minute"
+    };
+  }
+  if (bottomRectangle) {
+    return {
+      timeFrame: { x: 0, y: 0, width: 205, height: 58 },
+      dateFrame: { x: 0, y: 58, width: 70, height: 22 },
+      timeFontSize: 64,
+      timeAnchor: "top_left",
+      timeMode: "single_line"
+    };
+  }
+  if (widgets.length === 1 && widgets[0].shape === "circular" && widgets[0].variant?.size === "L") {
+    return {
+      timeFrame: { x: 0, y: 178, width: 205, height: 73 },
+      dateFrame: { x: 0, y: 156, width: 70, height: 22 },
+      timeFontSize: 84,
+      timeAnchor: "bottom_left",
+      timeMode: "single_line"
+    };
+  }
+  return {
+    timeFrame: { x: 0, y: 175, width: 205, height: 76 },
+    dateFrame: { x: 0, y: 153, width: 70, height: 22 },
+    timeFontSize: 84,
+    timeAnchor: "bottom_left",
+    timeMode: "single_line"
+  };
 }
 
 function resolveColorSystem(widgets, selectedContentTypes) {
@@ -239,37 +505,35 @@ function resolveColorSystem(widgets, selectedContentTypes) {
   return { mode: "multicolor", accentColor, sourceRule: "three-content-types-flexible-color-mode" };
 }
 
-function resolveTimeDatePlacement(widgets) {
-  const bottomRectangle = widgets.find((widget) => widget.shape === "rectangular" && widget.verticalAlignment === "bottom");
-  const topCircular = widgets.find((widget) => widget.shape === "circular" && widget.frame.y <= 32);
-  if (bottomRectangle && topCircular) {
-    return {
-      timeFrame: { x: 18, y: 84, width: 130, height: 40 },
-      dateFrame: { x: 18, y: 62, width: 90, height: 18 },
-      timeFontSize: 44,
-      dateFontSize: 12
-    };
-  }
-  if (bottomRectangle) {
-    return {
-      timeFrame: { x: 18, y: 28, width: 150, height: 58 },
-      dateFrame: { x: 18, y: 94, width: 90, height: 18 },
-      timeFontSize: 64,
-      dateFontSize: 12
-    };
-  }
-  return {
-    timeFrame: { x: 18, y: 169, width: 150, height: 58 },
-    dateFrame: { x: 18, y: 18, width: 90, height: 18 },
-    timeFontSize: 64,
-    dateFontSize: 12
-  };
-}
-
 function buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallbackReason, now }) {
   const colorSystem = resolveColorSystem(widgets, selectedContentTypes);
   const timeAndDateColor = colorSystem.mode === "mono_tone" ? colorSystem.accentColor : "#FFFFFF";
   const placement = resolveTimeDatePlacement(widgets);
+  const splitTime = splitTimeForFace(context.timeOfDay, now);
+  const timeStyle = {
+    fontFamily: "SF Compact",
+    fontSize: placement.timeFontSize,
+    fontWeight: 760,
+    letterSpacing: 0,
+    color: timeAndDateColor,
+    treatment: "fill"
+  };
+  const timeContainers = placement.timeMode === "split_hour_minute"
+    ? placement.timeContainers.map((container) => ({
+        ...container,
+        value: container.role === "hour" ? splitTime.hour : splitTime.minute,
+        style: { ...timeStyle }
+      }))
+    : [
+        {
+          id: "time-combined",
+          role: "combined",
+          value: splitTime.combined,
+          frame: placement.timeFrame,
+          style: { ...timeStyle },
+          anchor: placement.timeAnchor
+        }
+      ];
   return {
     schemaVersion: "1.0.0",
     targetContainer: "Gen Watch Face",
@@ -300,18 +564,12 @@ function buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallb
     canvas: { width: 205, height: 251, borderRadius: 54, coordinateSystem: "fixed" },
     colorSystem,
     time: {
-      mode: "single_line",
-      value: timeForFace(context.timeOfDay, now),
+      mode: placement.timeMode,
+      value: splitTime.combined,
       layer: "bottom",
       frame: placement.timeFrame,
-      style: {
-        fontFamily: "SF Pro Display",
-        fontSize: placement.timeFontSize,
-        fontWeight: 760,
-        letterSpacing: 0,
-        color: timeAndDateColor,
-        treatment: "fill"
-      }
+      style: timeStyle,
+      containers: timeContainers
     },
     date: {
       value: currentDateLabel(now),
@@ -319,13 +577,16 @@ function buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallb
       layer: "bottom",
       frame: placement.dateFrame,
       style: {
-        fontFamily: "SF Pro Text",
-        fontSize: placement.dateFontSize,
-        fontWeight: 600,
+        fontFamily: "SF Compact",
+        fontSize: 19,
+        fontWeight: 400,
         letterSpacing: 0,
         color: timeAndDateColor,
         treatment: "fill"
-      }
+      },
+      stackedWithTimeContainerId: placement.dateStackedWithTimeContainerId || timeContainers[0].id,
+      stackGap: 0,
+      edgePaddingWhenStackedFromEdge: 16
     },
     widgets: widgets.map(({ decision, ...widget }) => widget),
     layers: { bottom: ["time", "date"], top: widgets.map((widget) => widget.id) }
@@ -337,17 +598,15 @@ export function generateFallbackWatchUi({ context = {}, preferences = {}, design
   const pseudoContext = designPack.pseudoContextJson;
   const selectedContentTypes = inferSelectedContentTypes(context);
   const fallbackReason = fallbackReasonFromRequest(context, preferences);
-  const fallbackId = preferences.fallbackId || chooseFallbackId(selectedContentTypes);
-  const widgets = buildFallbackWidgets(fallbackId, context, pseudoContext);
+  const fallbackSelection = buildFallbackWidgets(selectedContentTypes, context, pseudoContext);
+  const widgets = fallbackSelection.widgets;
+  const fallbackId = preferences.fallbackId || fallbackIdFromWidgets(widgets) || chooseFallbackId(selectedContentTypes, context);
   const layout = buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallbackReason, now });
   const validator = createLayoutValidator(designPack);
   const validation = validator.validateLayout(layout);
-  const renderedContentTypes = new Set(widgets.map((widget) => widget.contentType));
   const widgetDecisions = widgets.map((widget) => widget.decision);
-  for (const contentType of selectedContentTypes) {
-    if (!renderedContentTypes.has(contentType)) {
-      widgetDecisions.push(`${contentType} -> omitted because fallback ${fallbackId} cannot legally render every selected content type`);
-    }
+  for (const contentType of fallbackSelection.omittedContentTypes) {
+    widgetDecisions.push(`${contentType} -> omitted because fallback ${fallbackId} cannot legally render every selected content type while preserving validation`);
   }
   const pseudoContextSummary = [
     `Loaded pseudo context JSON snapshot for ${pseudoContext.snapshot?.location || "demo location"}.`,

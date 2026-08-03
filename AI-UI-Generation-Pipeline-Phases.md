@@ -56,7 +56,7 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 
 **Work:**
 - Add `design-pack/layout-schema.json`.
-- Define required top-level fields for schema version, canvas, metadata, time, date, widgets, and layers.
+- Define required top-level fields for schema version, canvas, metadata, time, date, widgets, and layers, including containerized time placement and date-to-time stack metadata.
 - Include metadata fields for selected content types and generation-step provenance.
 - Include compact debug metadata in `metadata`, such as `selectedContentTypes`, `retryCount`, `fallbackUsed`, `contextSource`, `provider`, `model`, `promptVersion`, and `schemaVersion`.
 - Cap visible widgets at three.
@@ -248,11 +248,15 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 - After repeated failure, switch to deterministic fallback.
 - Optionally add a quality-sensitive fallback attempt using the higher-quality model setting described in the plan.
 - Keep all accepted outputs behind the same validators.
+- Default to one validation repair retry. `OPENAI_VALIDATION_RETRIES` may override this locally, but the baseline Phase 10 contract is initial attempt plus one repair attempt.
+- Return `validationAttempts` from `/api/generate-watch-ui`, including the response id, selected content types, widget decisions, validation result, and whether the attempt was a repair.
+- Include `validationAttempts` in the copied debug bundle so Codex can diagnose the original invalid output and the repaired output from one paste.
 
 **Done when:**
 - Validation errors are visible in debug logs.
 - Repair attempts use the same schema and rule contract.
 - Exhausted retries reliably produce a deterministic fallback instead of a blank preview.
+- The frontend can copy the repair history back into Codex through the debug bundle.
 
 ## Phase 11: Logging And Evaluation
 
@@ -263,11 +267,16 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 - Include provider, model, prompt version, schema version, design-pack version or hash, live context summary, selected content types, selected widgets, validation errors, retry count, accepted layout, fallback usage, latency, estimated token cost, and optional user feedback.
 - Add a small eval set of representative Context panel inputs.
 - Compare pass rate, fallback rate, latency, cost, and subjective layout quality.
+- Store backend generation records locally as JSONL at `logs/generation-records.jsonl` by default. Keep `logs/` ignored by Git.
+- Add `evals/watch-ui-contexts.json` as the representative eval case set.
+- Add `scripts/run-evals.mjs`. It always runs fallback-only evals locally, and when a server is available at `EVAL_ENDPOINT` or `http://127.0.0.1:8787/api/generate-watch-ui`, it also runs backend/OpenAI evals through the real endpoint.
+- Write eval reports to ignored local files under `eval-results/`.
 
 **Done when:**
 - Each generation creates a structured local record.
 - Eval runs can compare fallback-only, OpenAI, and repaired generations.
 - The debug UI can expose enough metadata to understand why a layout was accepted or replaced.
+- Running `node scripts/run-evals.mjs` prints pass/fallback/repair/latency summaries and writes a JSON report.
 
 ## Phase 12: Experimental Provider And Public Demo Guardrails
 

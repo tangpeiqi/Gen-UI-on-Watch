@@ -192,7 +192,7 @@ rectangular_container:
     value: 54
     unit: pt
   corner_smoothing:
-    value: 60
+    value: 100
     unit: percent
   inner_padding:
     default:
@@ -384,7 +384,7 @@ composition_patterns:
 
 These templates are stricter than the general composition patterns. When `watch-face-generation-rules.md` maps a widget content type to one of these templates, the agent must preserve the template structure and only substitute content, selected icons, control state, progress values, and `widget_accent_color`.
 
-All regular rectangular widgets use the full watch-face width: 205pt wide, 54pt corner radius, and 60% corner smoothing. Regular rectangular widget content uses 16px inner padding on all sides. When a progress bar is attached to the top or bottom edge, that attached edge's padding is 0px. All regular rectangular widgets clip child content to their rounded bounds. Template dimensions below use watch-face points; in the web simulator, 1pt maps to 1 CSS px.
+All regular rectangular widgets use the full watch-face width: 205pt wide, 54pt corner radius, and 100% corner smoothing. Regular rectangular widget content uses 16px inner padding on all sides. When a progress bar is attached to the top or bottom edge, that attached edge's padding is 0px. All regular rectangular widgets clip child content to their rounded bounds. Template dimensions below use watch-face points; in the web simulator, 1pt maps to 1 CSS px.
 
 ```yaml
 rectangular_layout_templates:
@@ -395,7 +395,7 @@ rectangular_layout_templates:
       width: 205
       height: 140
       corner_radius: 54
-      corner_smoothing: 60
+      corner_smoothing: 100
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 0, left: 16 }
@@ -441,7 +441,7 @@ rectangular_layout_templates:
       width: 205
       height: 127
       corner_radius: 54
-      corner_smoothing: 60
+      corner_smoothing: 100
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 16, left: 16 }
@@ -479,7 +479,7 @@ rectangular_layout_templates:
       width: 205
       height: 139
       corner_radius: 54
-      corner_smoothing: 60
+      corner_smoothing: 100
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 16, left: 16 }

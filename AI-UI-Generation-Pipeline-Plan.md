@@ -71,7 +71,7 @@ The design pack should be compact enough to fit comfortably in the generation pr
 ## Structured Output
 Finalize `design-pack/layout-schema.json` as the only shape the model may return.
 
-The schema should include required canvas, time, date, widget, layer, and metadata fields. It should constrain widget types with enums, cap rendered widgets at three, require fixed circular size tokens, disallow arbitrary extra properties, and define `data.icon` as a semantic registry token rather than raw icon markup.
+The schema should include required canvas, time, date, widget, layer, and metadata fields. It should constrain widget types with enums, cap rendered widgets at three, require fixed circular size tokens, disallow arbitrary extra properties, and define `data.icon` as a semantic registry token rather than raw icon markup. Time must expose one or more `time.containers` so combined, split, and segmented time layouts can be independently centered or edge-anchored; date must use compact `EEE d` text and declare which time container it stacks with.
 
 Use OpenAI's Responses API with Structured Outputs and `strict: true` against `design-pack/layout-schema.json`. The prompt must instruct the model to return layout JSON only.
 

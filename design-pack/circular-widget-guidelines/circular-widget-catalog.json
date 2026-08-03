@@ -49,7 +49,7 @@
       },
       "type": "circular_widget",
       "shape": "closed_circular_gauge",
-      "semanticUse": "A compact circular progress widget for one metric with a single current value, such as activity progress, battery, hydration, focus, completion, calories, or any bounded scalar status.",
+      "semanticUse": "A compact circular progress widget for one metric that moves in one direction, such as countdown timer, activity progress, workout progress, battery, hydration, focus, completion, or calories.",
       "variantApi": {
         "component": "close_gauge",
         "properties": {
@@ -68,7 +68,7 @@
       "legalSizes": {
         "S": { "width": 72, "height": 72 },
         "M": { "width": 90, "height": 90 },
-        "L": { "width": 149, "height": 149 }
+        "L": { "width": 150, "height": 150 }
       },
       "dataProps": {
         "value": {
@@ -77,9 +77,9 @@
           "description": "Primary value displayed in the center of the gauge."
         },
         "label": {
-          "type": "string",
-          "requiredFor": ["property=text"],
-          "description": "Short secondary label below the value. Keep to one short word when possible."
+          "type": "never",
+          "requiredFor": [],
+          "description": "Do not provide label for close_gauge text. Close Gauge text renders exactly one centered value. Use open_gauge when a secondary label is needed."
         },
         "icon": {
           "type": "iconToken|string",
@@ -100,8 +100,12 @@
       },
       "selectionGuidance": [
         "Use when the user needs one glanceable metric rather than a comparison.",
+        "Use only for one-direction metrics such as countdown timer, activity or workout progress, battery, completion, hydration, or focus progress.",
         "Use property=text when the numeric value is important.",
+        "If this close_gauge is the only widget for its content type, use property=icon instead of property=text so the widget communicates what kind of data it represents.",
         "Use property=icon when the value can be represented by a familiar icon and space is tight.",
+        "Do not use close_gauge for temperature, heart rate/BPM, precipitation probability, UV, air quality, recovery, or pace because those move within a range.",
+        "Do not add a secondary label to close_gauge text; use open_gauge if the label is needed.",
         "Prefer size S or M for secondary widgets and size L for the main supporting widget."
       ],
       "webRenderingSpecId": "close_gauge",
@@ -111,7 +115,6 @@
           "variant": { "property": "text", "size": "M" },
           "data": {
             "value": "82",
-            "label": "move",
             "progress": 0.82,
             "metricKind": "activity"
           }
@@ -154,7 +157,7 @@
       },
       "type": "circular_widget",
       "shape": "open_arc_gauge",
-      "semanticUse": "An open-arc circular widget for metrics that benefit from range, threshold, comparison, or offset context, such as temperature, heart rate zone, UV index, air quality, recovery, pace, or high/low values.",
+      "semanticUse": "An open-arc circular widget for metrics that move back and forth within a range or benefit from threshold, comparison, or offset context, such as temperature, heart rate/BPM, precipitation probability, UV index, air quality, recovery, pace, or high/low values.",
       "variantApi": {
         "component": "open_gauge",
         "properties": {
@@ -173,7 +176,7 @@
       "legalSizes": {
         "S": { "width": 72, "height": 72 },
         "M": { "width": 90, "height": 90 },
-        "L": { "width": 149, "height": 149 }
+        "L": { "width": 150, "height": 150 }
       },
       "dataProps": {
         "value": {
@@ -233,10 +236,13 @@
         }
       },
       "selectionGuidance": [
+        "Use open_gauge for temperature, heart rate/BPM, precipitation probability, UV, air quality, recovery, and pace.",
         "Use property=range for metrics with a meaningful low/high span, such as today's temperature low and high.",
         "Use property=offset for current-versus-reference comparisons, such as current temperature versus feels-like, recovery versus baseline, or pace versus target.",
-        "Use property=text for a single expressive value when the open arc style better matches the composition.",
-        "Use property=icon only when the icon is immediately recognizable.",
+        "Use property=text for a single expressive value when the open arc style better matches the composition, and always include a short bottom label.",
+        "Use property=icon only when the icon is immediately recognizable, and always include the icon token.",
+        "Open gauge range must include lowLabel and highLabel; open gauge offset must include referenceValue.",
+        "Open gauge bottom text uses fixed font sizes: S=15pt, M=18pt, L=32pt. Keep bottom labels short enough to avoid clipping.",
         "Prefer size M or L for range and offset variants because they contain multiple text values."
       ],
       "measuredDotBehavior": {

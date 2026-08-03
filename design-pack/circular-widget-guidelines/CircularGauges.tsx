@@ -108,7 +108,6 @@ const closeSizes = {
     iconBox: { x: 20, y: 20, width: 32, height: 32 },
     text: {
       value: { fontSize: 22, lineHeight: 24.5, box: { x: 9.6, y: 24.8, width: 52.8, height: 22.4 } },
-      label: { fontSize: 10, lineHeight: 12.5, box: { x: 16, y: 47.2, width: 40, height: 9.6 } },
     },
   },
   M: {
@@ -119,18 +118,16 @@ const closeSizes = {
     iconBox: { x: 26, y: 26, width: 38, height: 38 },
     text: {
       value: { fontSize: 32, lineHeight: 34.5, box: { x: 12, y: 31, width: 66, height: 28 } },
-      label: { fontSize: 15, lineHeight: 17.5, box: { x: 20, y: 59, width: 50, height: 12 } },
     },
   },
   L: {
-    diameter: 149,
+    diameter: 150,
     strokeWidth: 15,
     radius: 66.5,
-    center: { x: 74.5, y: 74.5 },
+    center: { x: 75, y: 75 },
     iconBox: { x: 42, y: 43, width: 64, height: 64 },
     text: {
       value: { fontSize: 42, lineHeight: 44.5, box: { x: 41, y: 52, width: 67, height: 45 } },
-      label: { fontSize: 18, lineHeight: 20.5, box: { x: 57, y: 97, width: 35, height: 21 } },
     },
   },
 } as const;
@@ -165,10 +162,10 @@ const openSizes = {
     },
   },
   L: {
-    diameter: 149,
+    diameter: 150,
     strokeWidth: 15,
     radius: 66.5,
-    center: { x: 74.5, y: 74.5 },
+    center: { x: 75, y: 75 },
     measureDot: { diameter: 17, strokeWidth: 3 },
     iconBox: { x: 42, y: 43, width: 64, height: 64 },
     text: {
@@ -438,7 +435,6 @@ export function CloseGauge({
   size = "M",
   progress,
   value,
-  label,
   icon,
   metricKind = "default",
   colors: colorOverrides,
@@ -482,10 +478,7 @@ export function CloseGauge({
       {property === "icon" ? (
         <div style={iconBoxStyleWithColor(spec.iconBox, colors.widgetAccentColor)}>{icon}</div>
       ) : (
-        <>
-          <div style={textBoxStyle(spec.text.value, colors.widgetAccentColor)}>{value}</div>
-          <div style={textBoxStyle(spec.text.label, colors.widgetAccentColor)}>{label}</div>
-        </>
+        <div style={textBoxStyle(spec.text.value, colors.widgetAccentColor)}>{value}</div>
       )}
     </GaugeFrame>
   );
@@ -704,15 +697,16 @@ export const gaugeVariantGuidance = {
         ],
         preferOver: [
           "Prefer over icon when exact value recognition matters.",
-          "Prefer over open_gauge.text when the the value can only go on direction",
+          "Prefer over open_gauge.text when the value can only move in one direction.",
         ],
         dataRequirements: [
-          "Requires value, label, and progress.",
+          "Requires value and progress. Do not provide a label for close_gauge text.",
+          "Do not use this variant when the close_gauge is the only widget for its content type; use close_gauge.icon so the content type is communicated.",
           "Progress must be normalized from 0 to 1 before rendering.",
         ],
         examples: [
-          "Activity progress with value 82 and label move.",
-          "Battery percentage with value 64 and label batt.",
+          "Activity progress with value 82.",
+          "Battery percentage with value 64.",
         ],
       },
       icon: {
@@ -763,7 +757,8 @@ export const gaugeVariantGuidance = {
           "Prefer over icon when the the letter count can fit or an icon alone is not enough to communicate the meaning of the metadata.",
         ],
         dataRequirements: [
-          "Requires value and optional label.",
+          "Requires value and a short visible bottom label.",
+          "Bottom label font size is fixed by size token: S 15pt, M 18pt, L 32pt. Keep the label short enough to avoid clipping.",
         ],
         examples: [
           "Current UV index when no scale labels are shown.",
@@ -784,7 +779,7 @@ export const gaugeVariantGuidance = {
           "Prefer over text when the metadata of the metrics has too many letter count to fit or an icon alone is enough to communicate the meaning of the metadata.",
         ],
         dataRequirements: [
-          "Requires value icon.",
+          "Requires a visible icon.",
         ],
         examples: [
           "Small weather condition icon with the current temperature gauge.",
@@ -808,6 +803,7 @@ export const gaugeVariantGuidance = {
         ],
         dataRequirements: [
           "Requires value, min, max, lowLabel, highLabel, and measuredValue.",
+          "Bottom low/high labels use fixed font sizes by size token: S 15pt, M 18pt, L 32pt, and must not clip.",
           "The measured dot must use normalized = clamp((measuredValue - min) / (max - min), 0, 1).",
           "If measuredValue equals max, the dot must sit on the right/lower edge of the open gauge ring. Vice versa for min.",
         ],
@@ -832,6 +828,7 @@ export const gaugeVariantGuidance = {
         ],
         dataRequirements: [
           "Requires value, referenceValue, and optional min and max value.",
+          "Bottom reference text uses fixed font sizes by size token: S 15pt, M 18pt, L 32pt, and must not clip.",
           "Each measured dot must be positioned from its own normalized value within min and max.",
         ],
         examples: [

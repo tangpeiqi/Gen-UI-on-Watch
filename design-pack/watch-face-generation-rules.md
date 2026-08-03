@@ -67,6 +67,12 @@ layering:
     must_preserve_time_legibility: true
     must_preserve_widget_legibility: true
 
+  widget_date_overlap:
+    allowed: false
+
+  widget_widget_overlap:
+    allowed: false
+
   rules:
     - id: widgets-above-time
       strictness: must
@@ -74,7 +80,11 @@ layering:
 
     - id: controlled-overlap
       strictness: must
-      rule: Widgets may overlap time or date only when the overlap is 10px or less.
+      rule: Widgets may overlap time only when the overlap is 10px or less. Widgets must not overlap date.
+
+    - id: no-widget-widget-overlap
+      strictness: must
+      rule: Widgets must not overlap other widgets. The only allowed overlap on the watch face is controlled time/widget overlap.
 
     - id: overlap-for-composition
       strictness: should
@@ -88,6 +98,41 @@ date:
   priority: secondary
   height: 22
   preferred_width_range: [61, 65]
+  format:
+    pattern: "EEE d"
+    weekday:
+      length: 3
+      casing: uppercase
+      examples:
+        sunday: SUN
+        saturday: SAT
+        thursday: THU
+    day_of_month:
+      numeric: true
+      ordinal_suffix: false
+    examples:
+      - "SUN 2"
+      - "SAT 8"
+      - "THU 11"
+  typography:
+    font_family: SF Compact
+    font_weight: Regular
+    font_size: 19
+    font_size_unit: pt
+    letter_spacing: 0
+  relationship_to_time:
+    required: true
+    rule: Date must vertically stack with one time_container instead of being placed independently on the watch face.
+    stack_target: one_time_container
+    stack_gap: 0
+    stack_gap_unit: px
+    edge_padding_when_stack_starts_from_edge: 16
+    edge_padding_unit: px
+    applies_to:
+      - combined_time_single_container
+      - split_time_hour_container
+      - split_time_minute_container
+      - segmented_time_container
   allowed_positions:
     - top_left
     - top_right
@@ -102,6 +147,26 @@ date:
     - id: date-not-inside-time
       strictness: must
       rule: Date must not be grouped as part of the primary time object.
+
+    - id: date-compact-format
+      strictness: must
+      rule: Date must use a three-letter uppercase weekday followed by the numeric day of month with no ordinal suffix, such as SUN 2.
+
+    - id: date-font-style
+      strictness: must
+      rule: Date must use SF Compact, Regular, 19pt.
+
+    - id: date-stacks-with-time-container
+      strictness: must
+      rule: Date must vertically stack with one time_container and must not be placed elsewhere independently on the watch face.
+
+    - id: date-time-stack-zero-gap
+      strictness: must
+      rule: Date must use 0px vertical padding between itself and the time_container it stacks with.
+
+    - id: date-time-stack-edge-padding
+      strictness: must
+      rule: When the date/time stack starts from a watch-face edge, the date must keep 16px padding from that edge.
 ```
 
 ## Widget Types
@@ -127,16 +192,40 @@ widgets:
         width: 90
         height: 90
       large:
-        width: 149
-        height: 149
+        width: 150
+        height: 150
     rules:
       - id: circular-fixed-size
         strictness: must
-        rule: Circular widgets must use exactly one allowed size token.
+        rule: Circular widgets must use exactly one allowed size token: S is 72x72px, M is 90x90px, and L is 150x150px.
 
       - id: no-arbitrary-circle-scaling
         strictness: must
         rule: Circular widgets must not be stretched or scaled to arbitrary dimensions.
+
+      - id: close-gauge-one-centered-text
+        strictness: must
+        rule: Close Gauge text widgets must render exactly one centered value. Do not add a secondary label; use Open Gauge when a label is needed.
+
+      - id: solo-close-gauge-uses-icon
+        strictness: must
+        rule: When a Close Gauge is the only widget for its content type, use the icon variant instead of the text variant so the widget communicates what kind of data it represents.
+
+      - id: open-vs-close-gauge-selection
+        strictness: must
+        rule: Use Open Gauge for metrics that move back and forth within a range, such as temperature, heart rate/BPM, precipitation probability, UV, air quality, recovery, and pace. Use Close Gauge for one-direction metrics, such as countdown timer, workout/activity progress, battery, completion, hydration, and focus progress.
+
+      - id: open-gauge-bottom-content-required
+        strictness: must
+        rule: When Open Gauge uses the text or icon variant, fill the visible bottom content slot; text variant requires a short bottom label, and icon variant requires an icon. Range requires lowLabel and highLabel. Offset requires referenceValue.
+
+      - id: open-gauge-bottom-text-size
+        strictness: must
+        rule: Open Gauge bottom text must use the fixed Figma font size for the selected circular size and must not clip.
+        tokens:
+          S: 15pt
+          M: 18pt
+          L: 32pt
 
       - id: circular-edge-padding
         strictness: must
@@ -151,7 +240,7 @@ widgets:
       x: 0
     height:
       behavior: flexible
-      min: 80
+      min: 108
       max: remaining_available_space
     alignment:
       allowed_vertical_edges:
@@ -177,7 +266,7 @@ widgets:
       value: 54
       unit: pt
     corner_smoothing:
-      value: 60
+      value: 100
       unit: percent
       platform_intent: iOS continuous corner treatment
     resizing: vertical_only
@@ -196,11 +285,11 @@ widgets:
 
       - id: rectangular-min-height
         strictness: must
-        rule: Rectangular widget height must be at least 80px.
+        rule: Rectangular widget height must be at least 108px.
 
       - id: rectangular-ios-corners
         strictness: must
-        rule: Rectangular widgets must use 54pt corner radius with 60% corner smoothing.
+        rule: Rectangular widgets must use 54pt corner radius with 100% corner smoothing.
 
       - id: rectangular-inner-padding
         strictness: must
@@ -222,6 +311,11 @@ The time object may be one text layer, two text layers, or multiple segmented te
 ```yaml
 time:
   priority: primary
+  typography:
+    font_family: SF Compact
+    font_weight: layout_variable
+    font_size: layout_variable
+    letter_spacing: layout_variable
   allowed_modes:
     - single_line
     - split_hour_minute
@@ -252,6 +346,80 @@ time:
       - font_weight
       - letter_spacing
       - color_treatment
+
+  split_time_required_when:
+    - condition: one_S_or_M_circular_widget_on_watch_face
+      rule: Split the hour and minute into two containers and stack them vertically.
+    - condition: two_S_circular_widgets_occupy_opposite_corners
+      rule: Split the hour and minute into two containers and stack them vertically.
+    - condition: three_S_circular_widgets_stack_vertically_on_one_side
+      rule: Split the hour and minute into two containers and stack them vertically.
+    container_rule: The hour and minute containers must be vertically stacked with horizontal overlap, while preserving shared font family, weight, letter spacing, and color treatment.
+    fill_rule: When split time is required, increase the hour and minute font sizes so the two containers fill the remaining empty space on the watch face without violating mask fit or widget/time overlap limits.
+    min_visual_fill_ratio: 0.55
+
+  positioning:
+    time_container_definition: A time_container is the bounding box of one rendered time part. Combined time has one time_container. Split hour/minute time has separate hour and minute time_containers. Segmented digit time may have one container per digit group or per digit.
+    combined_time:
+      container_count: 1
+      allowed_anchor_modes:
+        - center
+        - top_edge
+        - left_edge
+        - right_edge
+        - bottom_edge
+      center:
+        rule: Center the single time_container within the watch face when no edge anchor creates a stronger layout.
+    split_or_segmented_time:
+      container_count: multiple
+      allowed_anchor_modes_per_container:
+        - top_edge
+        - left_edge
+        - right_edge
+        - bottom_edge
+      center_allowed: false
+      shared_alignment_required: false
+      rule: Each time_container must be independently anchored to at least one watch-face edge; multiple time_containers do not need to use the same edge alignment.
+      examples:
+        - hour_container: top_left
+          minute_container: bottom_right
+        - hour_container: top_left
+          minute_container: bottom_left
+    edge_alignment:
+      width_threshold: 105
+      corner_safe_split_width_threshold: 110
+      unit: px
+      narrow_time_container:
+        condition: individual_time_container_width < 105
+        edge_padding: 16
+      wide_time_container:
+        condition: individual_time_container_width >= 105
+        edge_padding: 0
+      formulas:
+        top_edge_y: edge_padding
+        left_edge_x: edge_padding
+        right_edge_x: canvas_width - individual_time_container_width - edge_padding
+        bottom_edge_y: canvas_height - individual_time_container_height - edge_padding
+    disallowed:
+      - arbitrary_midfield_positioning
+      - visually_unanchored_time_containers
+      - centered_split_time_container
+      - combined_time_corner_anchor_when_not_full_width
+      - split_time_corner_anchor_when_container_width_is_110px_or_less
+
+  sizing_goal:
+    rule: Time should fill the remaining empty space as much as possible after widgets and date are placed.
+    clear_row_fill:
+      condition: Combined time sits on a horizontal row where widgets do not block the available width.
+      full_width_container_min_visual_fill_ratio: 0.85
+      optimization_target_visual_fill_ratio: 0.95
+      rule: Increase the time font size so the digits visually fill the clear horizontal space, as long as the enlarged time stays inside the watch mask and does not overlap any widget by more than 10px.
+    constraints:
+      - preserve_time_legibility
+      - keep_required_widget_time_overlap_at_or_below_10px
+      - stay_inside_watch_mask
+      - preserve_required_edge_padding_when_edge_aligned
+      - preserve_split_time_style_consistency
 
   rendering_treatments:
     fill:
@@ -284,6 +452,30 @@ time:
     - id: time-primary
       strictness: should
       rule: Time should be the most prominent visual element unless user context explicitly prioritizes widgets.
+
+    - id: time-font-family
+      strictness: must
+      rule: Time must use SF Compact. Font weight, size, and letter spacing may vary based on layout.
+
+    - id: time-container-anchoring
+      strictness: must
+      rule: Combined time has one time_container that must be centered or aligned to the top, left, right, or bottom edge; split or segmented time has multiple time_containers, and each one must be anchored to at least one top, left, right, or bottom edge.
+
+    - id: time-edge-padding-by-width
+      strictness: must
+      rule: When any time_container is edge-aligned, use 16px edge padding if that individual container width is smaller than 105px, and 0px edge padding if that individual container width is 105px or wider.
+
+    - id: time-corner-mask-safety
+      strictness: must
+      rule: Avoid cutting time into the rounded watch mask. Combined time may align to a watch-face corner only when the time_container is full width at 205px. Split hour/minute containers may align to a corner only when each corner-anchored container is wider than 110px.
+
+    - id: date-corner-time-stack-fallback
+      strictness: should
+      rule: When combined time is not full width near a corner, place the date against the corner with its required 16px edge padding, then stack the time vertically next to the date so the time moves away from the rounded corner.
+
+    - id: time-fill-empty-space
+      strictness: should
+      rule: Increase time size or adjust split-time arrangement to fill remaining empty space when possible, without violating overlap, mask, edge-padding, or legibility rules.
 
     - id: split-time-consistency
       strictness: must
@@ -580,16 +772,20 @@ color_system:
       option_2_owner: more_important_rectangular_widget
       less_important_widget_treatment: option_1_black_surface
 
+    rectangular_present:
+      option_2_required_owner: most_important_rectangular_widget
+      rule: If multicolor mode is selected and at least one rectangular widget is present, the most important rectangular widget must use option_2_accent_surface.
+
     circular_widget_treatments:
       close_gauge:
         color_source: widget_content_type_accent_color
-        rule: Use the accent color of that widget content type for the close gauge.
+        rule: Use the accent color of that widget content type for the close gauge. Close Gauge is for one-direction metrics and may show one centered value only; it must not show a secondary label. If the close gauge is the only widget for its content type, choose the icon variant instead of text.
       open_gauge:
         color_source: widget_content_type_accent_color
         derived_colors:
           min_value_color: adjacent_hue_counterclockwise_from_accent
           max_value_color: adjacent_hue_clockwise_from_accent
-        rule: Pick two hue-adjacent colors from the accent color, one from each direction on the hue spectrum, and map them to the gauge ring's min and max values.
+        rule: Pick two hue-adjacent colors from the accent color, one from each direction on the hue spectrum, and map them to the gauge ring's min and max values. Open Gauge is required for range-like metrics such as temperature, heart rate/BPM, and precipitation probability. Open Gauge text/icon variants must not leave the bottom content empty; text bottom labels must use S=15pt, M=18pt, or L=32pt and fit without clipping.
         usage_reference:
           - Circular Widget Guidelines/circular-widget-catalog.json
           - Circular Widget Guidelines/circular-widget-visual-specs.json
@@ -610,6 +806,10 @@ color_system:
       - id: multicolor-rect-option-2
         strictness: may
         rule: A rectangular widget may use its content type accent color as the widget background, with white text and icons; secondary text uses white at 60% opacity.
+
+      - id: multicolor-primary-rectangle-accent-surface
+        strictness: must
+        rule: If multicolor mode is selected and at least one rectangular widget is present, the most important rectangular widget must use option_2_accent_surface.
 
       - id: multicolor-two-rectangles-one-accent-surface
         strictness: must
@@ -988,14 +1188,15 @@ layout_selection:
     - map_semantic_metadata_to_visual_components
     - choose_color_system_mode
     - resolve_widget_accent_color
+    - choose_circular_size_tokens
     - choose_time_mode
     - choose_time_color_treatment
-    - choose_circular_size_tokens
     - select_candidate_layout_family
     - reserve_date_space_if_needed
     - assign_rectangular_flexible_regions
     - place_widgets_on_top_layers
     - place_time_and_date_on_bottom_layers
+    - expand_time_to_fill_clear_horizontal_space
     - allow_controlled_widget_time_overlap_if_useful
     - validate_spacing_legibility_mask_and_overlap
     - score_candidates
@@ -1008,6 +1209,7 @@ layout_selection:
 one_widget:
   circular:
     rules:
+      - use_large_when_user_focuses_on_one_widget
       - use_large_when_widget_is_hero
       - use_medium_when_time_is_also_large
       - place_opposite_the_visual_weight_of_time
@@ -1037,6 +1239,7 @@ two_widgets:
       - prefer_medium_pair_when_space_allows
       - use_small_pair_when_time_needs_more_space
       - place_as_horizontal_pair_or_balanced_opposites
+      - split_hour_and_minute_vertically_when_two_small_circles_occupy_opposite_corners
     good_patterns:
       - time_top_two_circles_bottom
       - two_circles_top_time_middle
@@ -1069,12 +1272,14 @@ two_widgets:
 three_widgets:
   three_circular:
     rules:
-      - use_small_or_medium_circles
-      - avoid_large_circle_unless_other_widgets_are_minimal
-      - use_time_split_or_compact_mode
+      - use_small_circles_by_default
+      - stack_all_three_circles_vertically_in_one_column
+      - use_the_full_watch_face_height_for_the_circle_column
+      - do_not_arrange_three_circles_horizontally
+      - do_not_overlap_circular_widgets
+      - split_hour_and_minute_vertically
     good_patterns:
       - vertical_stack_on_one_side_split_time_on_other
-      - two_circles_top_one_circle_bottom
       - three_circles_side_column_time_left
 
   two_circular_one_rectangular:
@@ -1133,6 +1338,13 @@ rectangular_flexing:
 candidate_scoring:
   reward:
     - time_legibility
+    - time_uses_sf_compact
+    - time_containers_follow_mode_specific_anchoring
+    - time_fills_available_empty_space
+    - full_width_time_visually_fills_clear_row
+    - date_uses_compact_uppercase_format
+    - date_uses_sf_compact_regular_19pt
+    - date_vertically_stacks_with_time_container
     - useful_widget_content
     - balanced_visual_weight
     - circular_widgets_use_fixed_size_tokens
@@ -1151,6 +1363,14 @@ candidate_scoring:
 
   penalize:
     - time_too_small
+    - time_uses_non_sf_compact_font
+    - time_container_arbitrarily_positioned
+    - split_time_container_not_edge_anchored
+    - time_leaves_large_unused_empty_space
+    - date_uses_full_weekday_name
+    - date_uses_wrong_font_style
+    - date_floats_independently_from_time
+    - date_time_stack_has_gap
     - arbitrary_circular_widget_size
     - uncontrolled_overlap
     - cramped_date
@@ -1182,7 +1402,7 @@ validation:
     - rectangular_widgets_are_top_or_bottom_edge_aligned
     - rectangular_widgets_have_no_edge_padding
     - rectangular_widgets_use_54pt_radius
-    - rectangular_widgets_use_60_percent_corner_smoothing
+    - rectangular_widgets_use_100_percent_corner_smoothing
     - rectangular_widgets_use_16px_inner_padding
     - rectangular_progress_bar_edge_padding_is_zero
     - rectangular_widgets_clip_content
@@ -1191,6 +1411,16 @@ validation:
     - widget_time_overlap_does_not_exceed_10px
     - split_hour_minute_styles_are_consistent
     - outline_time_stroke_treatment_is_consistent_when_used
+    - time_uses_sf_compact
+    - time_containers_follow_mode_specific_anchoring
+    - time_edge_alignment_padding_matches_width_rule
+    - time_attempts_to_fill_remaining_empty_space_when_possible
+    - date_uses_three_letter_uppercase_weekday
+    - date_uses_numeric_day_without_ordinal_suffix
+    - date_uses_sf_compact_regular_19pt
+    - date_vertically_stacks_with_one_time_container
+    - date_time_stack_gap_is_0px
+    - date_time_stack_uses_16px_edge_padding_when_edge_started
     - time_remains_legible
     - date_remains_secondary
     - strict_content_templates_are_applied_when_required
@@ -1221,13 +1451,28 @@ validation:
     - rectangular_widget_x_is_not_0
     - rectangular_widget_is_not_top_or_bottom_aligned
     - rectangular_widget_has_padding_from_watch_face_edge
-    - rectangular_widget_height_below_80px
-    - rectangular_widget_missing_54pt_radius_or_60_percent_corner_smoothing
+    - rectangular_widget_height_below_108px
+    - rectangular_widget_missing_54pt_radius_or_100_percent_corner_smoothing
     - rectangular_widget_missing_16px_inner_padding
     - rectangular_progress_bar_has_inner_padding_on_attached_edge
     - rectangular_widget_content_bleeds_outside_bounds
     - widget_time_overlap_exceeds_10px
     - widget_overlap_makes_time_unreadable
+    - time_uses_font_other_than_sf_compact
+    - time_container_is_arbitrarily_positioned
+    - split_or_segmented_time_container_is_centered
+    - split_or_segmented_time_container_is_not_edge_anchored
+    - edge_aligned_time_uses_wrong_padding_for_width
+    - time_container_width_below_105px_touches_edge_without_16px_padding
+    - time_container_width_105px_or_above_has_edge_padding
+    - date_uses_full_weekday_name
+    - date_weekday_is_not_three_letter_uppercase
+    - date_uses_ordinal_suffix
+    - date_uses_font_other_than_sf_compact_regular_19pt
+    - date_is_placed_independently_from_time_containers
+    - date_does_not_vertically_stack_with_a_time_container
+    - date_time_stack_gap_is_not_0px
+    - edge_started_date_time_stack_missing_16px_date_edge_padding
     - split_hour_and_minute_have_different_weight
     - split_hour_and_minute_have_different_letter_spacing
     - split_hour_and_minute_have_different_font_family
@@ -1261,5 +1506,13 @@ validation:
 ## Agent Instruction Summary
 
 ```text
-Generate watch faces from constraints, not fixed templates, except when a strict content template override applies. First combine current context with pseudo context, then infer up to three semantic content types. Use widget-content-types.md or widget-content-types.json to extract metadata and identify primary values, splittable metrics, detail fields, controls, conditional fields, and strict rendering constraints. Apply strict overrides before generic layout selection: Music Control must use the music_control rectangular template, Reminder must use the reminder rectangular template, Timer may use a Close Gauge circular widget or the timer_rectangular template, and Checklist must be the only widget using the checklist_full_face template. Then choose the rendering strategy from layout constraints: one content type may use single, multi, or mixed rendering; two content types may render as two single widgets or three widgets where only one type expands; three content types must each render as one single widget unless Checklist is selected, in which case no other widget may render. Never render more than three widgets total. If a rectangular widget has more than 4 lines of body text, or 3 or more lines of text including numbers, treat it as dense: make it the only rectangular widget, add at most one circular companion widget, and never render a third widget. This dense rule is not a global ban on two rectangular widgets; it prevents adding a second rectangle when the first rectangle already needs extra space. After strategy selection, classify each rendered widget as circular or rectangular, choose mono-tone or multicolor, resolve the widget accent color, choose the time mode and time color treatment, choose circular size tokens, then select and validate a layout family. Prefer mono-tone when there is one widget content type, prefer multicolor when there are two widget content types, and choose either mode for three widget content types based on hierarchy, distinction, and visual balance. In mono-tone mode, use one chromatic accent with black, white, and opacity support; time numbers and date use the same accent color as the widget. If widgets occupy the majority of the screen, use solid-color time; if time occupies at least one third of the screen, time may use a gradient. Horizontal left-to-right opacity fades may use -12px letter spacing when the time is compact; vertical top-to-bottom fades must use regular letter spacing. In multicolor mode, assign each widget content type one accent color, while time numbers and date use white. Rectangular widgets may use black surface with accent text/icons, or accent surface with white text/icons; if two rectangular widgets are present, only the more important one may use the accent surface and the less important one must use black surface. Close gauges use the content type accent. Open gauges derive two hue-adjacent colors from that accent and map them to the gauge ring's min and max values. Circular widgets must use fixed size tokens and keep 6px padding from any watch-face edge they align to. Rectangular widgets are always full width at 205pt, x=0, top- or bottom-aligned to the watch face with no edge padding, flex vertically, use 54pt radius with 60% iOS-style corner smoothing, use 16px inner padding on all sides, and clip content to the rounded widget bounds. If a progress bar is attached to the top or bottom widget edge, that attached edge's inner padding must be 0px so the bar leans directly against the edge. Widgets sit above time and date, and may overlap time by up to 10px when it improves the composition. Split hour and minute text may differ in size and placement, but must share font family, weight, letter spacing, and color treatment. If time numbers use a heavy font weight, consider outline strokes instead of fill color, while preserving digit legibility and consistent stroke treatment across split time parts. Always validate mask fit, legibility, overlap, color-system compliance, widget usefulness, strict template compliance, dense rectangular constraints, and visual balance before returning a layout.
+Generate watch faces from constraints, not fixed templates, except when a strict content template override applies. First combine current context with pseudo context, then infer up to three semantic content types. Use widget-content-types.md or widget-content-types.json to extract metadata and identify primary values, splittable metrics, detail fields, controls, conditional fields, and strict rendering constraints. Apply strict overrides before generic layout selection: Music Control must use the music_control rectangular template, Reminder must use the reminder rectangular template, Timer may use a Close Gauge circular widget or the timer_rectangular template, and Checklist must be the only widget using the checklist_full_face template. Then choose the rendering strategy from layout constraints: one content type may use single, multi, or mixed rendering; two content types may render as two single widgets or three widgets where only one type expands; three content types must each render as one single widget unless Checklist is selected, in which case no other widget may render. Never render more than three widgets total. If a rectangular widget has more than 4 lines of body text, or 3 or more lines of text including numbers, treat it as dense: make it the only rectangular widget, add at most one circular companion widget, and never render a third widget. This dense rule is not a global ban on two rectangular widgets; it prevents adding a second rectangle when the first rectangle already needs extra space. After strategy selection, classify each rendered widget as circular or rectangular, choose mono-tone or multicolor, resolve the widget accent color, choose the time mode and time color treatment, choose circular size tokens, then select and validate a layout family. Date must use compact uppercase format such as SUN 2, with SF Compact Regular 19pt. Date must vertically stack with one time_container instead of floating independently; the gap between date and that time_container is 0px, and when the date/time stack starts from a watch-face edge, the date keeps 16px padding from that edge. Time must use SF Compact; weight, size, and letter spacing may vary by layout. Combined time uses one time_container that must be centered or anchored to top/left/right/bottom. Split or segmented time uses multiple time_containers; each container must be independently anchored to at least one top/left/right/bottom edge, and the containers do not need to share the same alignment. Edge-aligned time containers use 16px padding when that container width is below 105px and 0px padding when that container width is 105px or wider. Time should fill remaining empty space when possible without violating mask, edge-padding, legibility, or the 10px widget overlap limit. Prefer mono-tone when there is one widget content type, prefer multicolor when there are two widget content types, and choose either mode for three widget content types based on hierarchy, distinction, and visual balance. In mono-tone mode, use one chromatic accent with black, white, and opacity support; time numbers and date use the same accent color as the widget. If widgets occupy the majority of the screen, use solid-color time; if time occupies at least one third of the screen, time may use a gradient. Horizontal left-to-right opacity fades may use -12px letter spacing when the time is compact; vertical top-to-bottom fades must use regular letter spacing. In multicolor mode, assign each widget content type one accent color, while time numbers and date use white. Rectangular widgets may use black surface with accent text/icons, or accent surface with white text/icons; if two rectangular widgets are present, only the more important one may use the accent surface and the less important one must use black surface. Close gauges use the content type accent and are only for one-direction metrics; text close gauges show exactly one centered value with no label. Open gauges are required for range-like metrics such as temperature, heart rate/BPM, and precipitation probability; they derive two hue-adjacent colors from that accent and map them to the gauge ring's min and max values. Circular widgets must use fixed size tokens S=72x72px, M=90x90px, or L=150x150px, and keep 6px padding from any watch-face edge they align to. Rectangular widgets are always full width at 205pt, x=0, top- or bottom-aligned to the watch face with no edge padding, flex vertically, use 54pt radius with 100% iOS-style corner smoothing, use 16px inner padding on all sides, and clip content to the rounded widget bounds. If a progress bar is attached to the top or bottom widget edge, that attached edge's inner padding must be 0px so the bar leans directly against the edge. Widgets sit above time and date, and may overlap time by up to 10px when it improves the composition. Split hour and minute text may differ in size and placement, but must share font family, weight, letter spacing, and color treatment. If time numbers use a heavy font weight, consider outline strokes instead of fill color, while preserving digit legibility and consistent stroke treatment across split time parts. Always validate mask fit, legibility, overlap, color-system compliance, widget usefulness, strict template compliance, dense rectangular constraints, and visual balance before returning a layout.
 ```
+
+Latest layout addendum: widgets must never overlap other widgets or the date; the only allowed overlap is widget/time overlap up to 10px. Three circular widgets must stack vertically in one column and use the watch-face height instead of forming a horizontal row. Combined time may use a corner anchor only when its container is full width at 205px. Split hour/minute containers may use corner anchors only when each corner-anchored container is wider than 110px. If combined time is not full width near a corner, put the date at the corner with 16px edge padding and stack the time vertically next to it, away from the rounded mask.
+
+Latest time-fill addendum: after placing all widgets, inspect the horizontal row where time will sit. If that row has more available horizontal space, increase the time font size so the time uses the available width, as long as the enlarged time still fits the watch mask and does not overlap any widget by more than 10px. When a combined single-line time container is full width at 205px and no widget blocks that row, the rendered digits should visually fill at least 85% of the watch-face width; aim closer to 95% when optimizing or repairing. If the model chooses not to use full-width time near a bottom-left or bottom-right corner, place the date against the corner with its required 16px padding and stack the time above the date so the larger time stays away from the rounded corner.
+
+Latest circular addendum: if a close_gauge is the only widget for that content type, choose the icon variant instead of the text variant so the widget explains the data type. Open Gauge text and icon variants must fill their visible bottom content: text requires a short bottom label, icon requires a valid semantic icon, range requires lowLabel and highLabel, and offset requires referenceValue. Open Gauge bottom text uses fixed Figma sizes of L=32pt, M=18pt, and S=15pt; keep labels short enough that the bottom text box does not clip.
+
+Latest time and color addendum: choose circular size tokens before choosing time mode. Split hour and minute into two vertically stacked containers when there is only one S or M circular widget on the face, when two S circular widgets occupy opposite corners, or when three S circular widgets stack vertically on one side. When this split happens, increase the hour and minute font sizes so they fill the remaining empty space on the watch face while preserving mask fit and the widget/time overlap limit. When the user context calls for a focused one-widget face and circular rendering is supported, show one L circular widget. In multicolor mode, if any rectangular widget is present, the most important rectangular widget must use the accent color as its background with white text and icons; if two rectangular widgets are present, only that most important rectangle may use the accent background.
