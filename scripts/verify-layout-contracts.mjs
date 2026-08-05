@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { createLayoutValidator } from "./layout-validator.mjs";
+import { generateFallbackWatchUi } from "./fallback-generator.mjs";
 
 const schema = JSON.parse(fs.readFileSync("design-pack/layout-schema.json", "utf8"));
 const samples = JSON.parse(fs.readFileSync("design-pack/sample-layouts.json", "utf8"));
@@ -12,6 +13,14 @@ const layoutValidator = createLayoutValidator({
   widgetSelectionPolicy,
   generatedRectangularWidgetSchema
 });
+const fallbackDesignPack = {
+  schema,
+  materialSymbolsRegistry,
+  widgetSelectionPolicy,
+  generatedRectangularWidgetSchema,
+  pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+  pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+};
 
 const circularComponents = new Set(["close_gauge", "open_gauge"]);
 const rectangularTemplates = new Set(["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"]);
@@ -27,13 +36,28 @@ const circularSizeFrames = {
 };
 const openGaugeMetricKinds = new Set(["temperature", "current_temperature", "weather_temperature", "bpm", "heart_rate", "precipitation_probability", "rain_chance", "uv_index", "air_quality", "recovery", "pace"]);
 const closeGaugeMetricKinds = new Set(["timer", "countdown", "countdown_timer", "workout", "activity", "activity_progress", "goal_progress", "exercise_goal_progress", "battery", "completion", "hydration", "focus"]);
-const cornerSafeSplitTimeMinWidth = 110;
+const cornerSafeSplitTimeMinWidth = 105;
 const fullWidthTimeFillRatio = 0.85;
 const splitTimeFillRatio = 0.55;
 const openGaugeBottomText = {
-  S: { fontSize: 15, width: 18 },
-  M: { fontSize: 18, width: 21 },
-  L: { fontSize: 32, width: 35 }
+  S: { fontSize: 15, width: 48 },
+  M: { fontSize: 18, width: 60 },
+  L: { fontSize: 32, width: 96 }
+};
+const openGaugeCenterValueText = {
+  S: { fontSize: 22, width: 55 },
+  M: { fontSize: 32, width: 65 },
+  L: { fontSize: 48, width: 115 }
+};
+const closeGaugeCenterValueText = {
+  S: { fontSize: 22, width: 55 },
+  M: { fontSize: 32, width: 65 },
+  L: { fontSize: 42, width: 115 }
+};
+const closeGaugeFootnoteText = {
+  S: { fontSize: 10, width: 40 },
+  M: { fontSize: 15, width: 50 },
+  L: { fontSize: 18, width: 80 }
 };
 const contentTypes = new Set(schema.$defs.contentType.enum);
 const iconTokens = materialSymbolsRegistry.tokens;
@@ -46,6 +70,7 @@ const colorSystemSourceRules = new Set([
   "one-content-type-prefers-mono-tone",
   "two-content-types-prefers-multicolor",
   "three-content-types-flexible-color-mode",
+  "multi-content-balanced-color-mode",
   "user-context-explicit-color-mode"
 ]);
 const templateContentTypes = {
@@ -77,13 +102,14 @@ function validateFrame(frame, path) {
 
 function validateTextStyle(style, path) {
   assert(style && typeof style === "object", `${path} is required`);
-  assertOnlyKeys(style, new Set(["fontFamily", "fontSize", "fontWeight", "letterSpacing", "color", "treatment"]), path);
+  assertOnlyKeys(style, new Set(["fontFamily", "fontSize", "fontWeight", "letterSpacing", "color", "treatment", "textAlign"]), path);
   assert(typeof style.fontFamily === "string" && style.fontFamily.length > 0, `${path}.fontFamily is required`);
   assert(typeof style.fontSize === "number" && style.fontSize > 0, `${path}.fontSize must be positive`);
   assert(Number.isInteger(style.fontWeight) && style.fontWeight >= 100 && style.fontWeight <= 1000, `${path}.fontWeight is invalid`);
   assert(typeof style.letterSpacing === "number", `${path}.letterSpacing must be a number`);
   assert(/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(style.color), `${path}.color must be a hex color`);
   assert(["fill", "outline_stroke"].includes(style.treatment), `${path}.treatment is invalid`);
+  assert(style.textAlign === undefined || ["left", "center", "right"].includes(style.textAlign), `${path}.textAlign is invalid`);
 }
 
 function rectOverlapDepth(a, b) {
@@ -108,6 +134,43 @@ function isCornerAnchor(anchor) {
 
 function estimateTextWidth(text, fontSize) {
   return String(text).length * fontSize * 0.58;
+}
+
+function estimateWrappedTextHeight(text, fontSize, lineHeight, width) {
+  const safeWidth = Math.max(1, width);
+  const lines = Math.max(1, Math.ceil(estimateTextWidth(text, fontSize) / safeWidth));
+  return lines * lineHeight;
+}
+
+function estimateGeneratedRectangularBlockHeight(block, innerWidth) {
+  if (!block || typeof block !== "object") return 0;
+  if (block.type === "text") {
+    const isNumber = block.unit === "numbers";
+    return estimateWrappedTextHeight(block.text || "", isNumber ? 40 : 19, isNumber ? 42.5 : 21.5, innerWidth);
+  }
+  if (block.type === "inline_small_icon_text") {
+    return Math.max(24, estimateWrappedTextHeight(block.text || "", 19, 21.5, innerWidth - 28));
+  }
+  if (block.type === "big_icon_text_group") {
+    const textHeight = (block.textGroup || []).reduce((total, textBlock) => total + estimateGeneratedRectangularBlockHeight(textBlock, innerWidth - 56), 0);
+    return Math.max(48, textHeight);
+  }
+  if (block.type === "number_text_lockup") {
+    const secondaryHeight = block.secondaryText ? 4 + estimateWrappedTextHeight(block.secondaryText, 19, 21.5, innerWidth) : 0;
+    return 42.5 + secondaryHeight;
+  }
+  if (block.type === "edge_progress_bar") return 12;
+  return 0;
+}
+
+function estimateGeneratedRectangularContentHeight(widget) {
+  const composition = widget?.composition;
+  const blocks = Array.isArray(composition?.blocks) ? composition.blocks : [];
+  const padding = composition?.padding || {};
+  const innerWidth = 205 - (Number(padding.left) || 0) - (Number(padding.right) || 0);
+  const blocksHeight = blocks.reduce((total, block) => total + estimateGeneratedRectangularBlockHeight(block, innerWidth), 0);
+  const gap = Number(composition?.gap) || 0;
+  return Math.ceil((Number(padding.top) || 0) + (Number(padding.bottom) || 0) + blocksHeight + Math.max(0, blocks.length - 1) * gap);
 }
 
 function isBlank(value) {
@@ -190,6 +253,8 @@ function validateTimeObject(object) {
     } else {
       assert(!isCornerAnchor(container.anchor) || container.frame.width > cornerSafeSplitTimeMinWidth, `${path}.frame.width is too narrow for corner anchoring`);
     }
+    assert(container.frame.width !== 205 || container.frame.x === 0, `${path}.frame.x must be 0 when width is 205`);
+    assert(container.frame.width !== 205 || container.style.textAlign === undefined || container.style.textAlign === "center", `${path}.style.textAlign must be center when width is 205`);
     validateFrame(container.frame, `${path}.frame`);
     validateTextStyle(container.style, `${path}.style`);
     assert(container.style.fontFamily === "SF Compact", `${path}.style.fontFamily must be SF Compact`);
@@ -213,9 +278,10 @@ function validateDateObject(object, time) {
 
 function validateColorSystem(colorSystem) {
   assert(colorSystem && typeof colorSystem === "object", "colorSystem is required");
-  assertOnlyKeys(colorSystem, new Set(["mode", "accentColor", "sourceRule"]), "colorSystem");
+  assertOnlyKeys(colorSystem, new Set(["mode", "accentColor", "surfaceAccentColor", "sourceRule"]), "colorSystem");
   assert(colorSystemModes.has(colorSystem.mode), "colorSystem.mode is invalid");
   assert(/^#[0-9a-fA-F]{6}$/.test(colorSystem.accentColor), "colorSystem.accentColor must be a 6-digit hex color");
+  assert(/^#[0-9a-fA-F]{6}$/.test(colorSystem.surfaceAccentColor), "colorSystem.surfaceAccentColor must be a 6-digit hex color");
   assert(colorSystemSourceRules.has(colorSystem.sourceRule), "colorSystem.sourceRule is invalid");
 }
 
@@ -232,13 +298,25 @@ function validateCircularWidget(widget, index) {
   if (widget.component === "close_gauge") {
     assert(typeof widget.data.progress === "number", `${path}.data.progress is required for close_gauge`);
   }
-  if (widget.variant.property === "text") {
-    assert(widget.data.value !== undefined, `${path}.data.value is required for text variant`);
+  if (widget.variant.property === "text" || (widget.component === "open_gauge" && widget.variant.property === "icon")) {
+    const variantName = widget.component === "open_gauge" && widget.variant.property === "icon" ? "open_gauge icon" : "text";
+    assert(widget.data.value !== undefined && !(widget.component === "open_gauge" && widget.variant.property === "icon" && isBlank(widget.data.value)), `${path}.data.value is required for ${variantName} variant`);
   }
-  assert(!(widget.component === "close_gauge" && widget.variant.property === "text" && widget.data.label !== undefined), `${path}.data.label is not allowed for close_gauge text`);
+  if (widget.component === "close_gauge" && widget.variant.property === "text" && widget.data.value !== undefined) {
+    const centerValueToken = closeGaugeCenterValueText[widget.variant.size];
+    assert(!centerValueToken || estimateTextWidth(widget.data.value, centerValueToken.fontSize) <= centerValueToken.width + 2, `${path}.data.value must fit ${widget.variant.size} close_gauge center value text`);
+  }
+  if (widget.component === "close_gauge" && widget.variant.property === "text" && widget.data.label !== undefined) {
+    const footnoteToken = closeGaugeFootnoteText[widget.variant.size];
+    assert(!footnoteToken || estimateTextWidth(widget.data.label, footnoteToken.fontSize) <= footnoteToken.width + 2, `${path}.data.label must fit ${widget.variant.size} close_gauge footnote text`);
+  }
   assert(!(widget.component === "close_gauge" && openGaugeMetricKinds.has(widget.data.metricKind)), `${path}.component must be open_gauge for ${widget.data.metricKind}`);
   assert(!(widget.component === "open_gauge" && closeGaugeMetricKinds.has(widget.data.metricKind)), `${path}.component must be close_gauge for ${widget.data.metricKind}`);
   if (widget.component === "open_gauge") {
+    if (widget.data.value !== undefined) {
+      const centerValueToken = openGaugeCenterValueText[widget.variant.size];
+      assert(!centerValueToken || estimateTextWidth(widget.data.value, centerValueToken.fontSize) <= centerValueToken.width + 2, `${path}.data.value must fit ${widget.variant.size} open_gauge center value text`);
+    }
     const bottomTextToken = openGaugeBottomText[widget.variant.size];
     const assertBottomText = (value, fieldPath) => {
       assert(!isBlank(value), `${fieldPath} is required for visible open_gauge bottom content`);
@@ -274,12 +352,12 @@ function validateRectangularWidget(widget, index) {
   assert(widget.frame.width === 205, `${path}.frame.width must be 205`);
   assert(widget.frame.height >= 108 && widget.frame.height <= 251, `${path}.frame.height is invalid`);
   assert(widget.cornerRadius === 54, `${path}.cornerRadius must be 54`);
-  assert(widget.cornerSmoothing === 100, `${path}.cornerSmoothing must be 100`);
+  assert(widget.cornerSmoothing === 60, `${path}.cornerSmoothing must be 60`);
+  assert(["black_surface", "accent_surface"].includes(widget.surfaceMode), `${path}.surfaceMode must be black_surface or accent_surface`);
   assert(["top", "bottom"].includes(widget.verticalAlignment), `${path}.verticalAlignment is invalid`);
   assert(widget.data && typeof widget.data === "object", `${path}.data is required`);
   if (widget.template === "reminder") {
     assert(typeof widget.data.content === "string", `${path}.data.content is required for reminder`);
-    assert(typeof widget.data.dueDatetime === "string", `${path}.data.dueDatetime is required for reminder`);
   }
   if (widget.template === "timer_rectangular") {
     assert(typeof widget.data.countdown === "string", `${path}.data.countdown is required for timer_rectangular`);
@@ -290,9 +368,14 @@ function validateRectangularWidget(widget, index) {
   }
   if (widget.template === "checklist_full_face") {
     assert(Array.isArray(widget.data.items), `${path}.data.items is required for checklist_full_face`);
+    assert(widget.frame.x === 0 && widget.frame.y === 0 && widget.frame.width === 205 && widget.frame.height === 251, `${path}.frame must match the 205x251 ChecklistFace Figma component`);
+    assert(widget.verticalAlignment === "top", `${path}.verticalAlignment must be top for checklist_full_face`);
+    assert(widget.surfaceMode === "accent_surface", `${path}.surfaceMode must be accent_surface for checklist_full_face`);
   }
   if (widget.template === "generated_rectangular_widget") {
     validateGeneratedRectangularComposition(widget.composition, widget.contentType, `${path}.composition`);
+    const requiredHeight = Math.max(108, estimateGeneratedRectangularContentHeight(widget));
+    assert(widget.frame.height >= requiredHeight, `${path}.frame.height must be at least ${requiredHeight}px to fit generated rectangular content`);
   }
 }
 
@@ -300,7 +383,7 @@ function validateGeneratedTextBlock(block, path) {
   assert(generatedRectangularTextUnits.has(block.unit), `${path}.unit is invalid`);
   assert(typeof block.text === "string" && block.text.length > 0 && block.text.length <= 36, `${path}.text is invalid`);
   if (block.maxLines !== undefined) {
-    assert(Number.isInteger(block.maxLines) && block.maxLines >= 1 && block.maxLines <= 2, `${path}.maxLines is invalid`);
+    throw new Error(`${path}.maxLines is not allowed; rectangular text must wrap instead of truncating or clamping`);
   }
 }
 
@@ -357,6 +440,11 @@ function validateGeneratedRectangularComposition(composition, contentType, path)
   assert(Array.isArray(composition.blocks), `${path}.blocks must be an array`);
   assert(composition.blocks.length >= 1 && composition.blocks.length <= 4, `${path}.blocks length is invalid`);
   composition.blocks.forEach((block, index) => validateGeneratedRectangularBlock(block, contentType, `${path}.blocks[${index}]`));
+  if (contentType === "last_message") {
+    composition.blocks.forEach((block, index) => {
+      assert(block.type !== "inline_small_icon_text" || index === 0, `${path}.blocks[${index}] message content must not use an icon`);
+    });
+  }
 }
 
 function validateWidgetSelectionExample(example, index) {
@@ -441,14 +529,14 @@ function validateLayout(layout) {
   validateDateObject(layout.date, layout.time);
   if (layout.time.mode === "single_line" && layout.time.containers.length === 1) {
     const container = layout.time.containers[0];
-    const clearTimeRow = !hasWidgetOnSameRow(layout.widgets || [], container.frame);
     const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
-    assert(!clearTimeRow || container.frame.width !== 205 || visuallyFilledWidth >= 205 * fullWidthTimeFillRatio, "full-width time on a clear row must visually fill at least 85% of watch width");
+    assert(container.frame.width !== 205 || container.frame.height < 70 || visuallyFilledWidth >= 205 * fullWidthTimeFillRatio, "full-width time must visually fill at least 85% of watch width when it has enough vertical room");
   }
   assert(Array.isArray(layout.widgets), "widgets must be an array");
   assert(layout.widgets.length <= 3, "widgets must contain at most 3 items");
   const rectangularWidgetCount = layout.widgets.filter((widget) => widget.shape === "rectangular").length;
   const hasChecklistWidget = layout.widgets.some((widget) => widget.contentType === "checklist");
+  const hasChecklistFullFace = layout.widgets.some((widget) => widget.template === "checklist_full_face");
   if (hasChecklistWidget) {
     assert(layout.widgets.length === compositionRules.checklistOnly.maxWidgets, `checklist layouts must contain ${compositionRules.checklistOnly.maxWidgets} widget`);
   } else if (rectangularWidgetCount > 0) {
@@ -467,6 +555,20 @@ function validateLayout(layout) {
       throw new Error(`widgets[${index}].shape is invalid`);
     }
   });
+  if (hasChecklistFullFace) {
+    const timeContainer = layout.time.containers[0];
+    assert(layout.time.mode === "single_line" && layout.time.containers.length === 1, "checklist_full_face must use one compact time slot");
+    assert(layout.time.frame.x === 139 && layout.time.frame.y === 16 && layout.time.frame.width === 50 && layout.time.frame.height === 22, "checklist_full_face time.frame must match the Figma slot");
+    assert(timeContainer.frame.x === 139 && timeContainer.frame.y === 16 && timeContainer.frame.width === 50 && timeContainer.frame.height === 22, "checklist_full_face time container must match the Figma slot");
+    assert(timeContainer.style.fontSize === 19 && timeContainer.style.fontWeight === 400 && timeContainer.style.textAlign === "right", "checklist_full_face time style must be SF Compact Regular 19pt right-aligned");
+    assert(layout.date.frame.x === 16 && layout.date.frame.y === 16 && layout.date.frame.width === 70 && layout.date.frame.height === 22, "checklist_full_face date.frame must match the Figma slot");
+  }
+  const rectangularWidgets = layout.widgets.filter((widget) => widget.shape === "rectangular");
+  const accentSurfaceWidgets = rectangularWidgets.filter((widget) => widget.surfaceMode === "accent_surface");
+  assert(accentSurfaceWidgets.length <= 1, "only the most important rectangular widget may use accent_surface");
+  if (rectangularWidgets.length > 0) {
+    assert(rectangularWidgets[0].surfaceMode === "accent_surface", "primary rectangular widget must use accent_surface");
+  }
   const contentTypeCounts = new Map();
   for (const widget of layout.widgets) {
     contentTypeCounts.set(widget.contentType, (contentTypeCounts.get(widget.contentType) || 0) + 1);
@@ -510,6 +612,7 @@ function validateLayout(layout) {
   ];
   for (const [path, textObject] of textObjects) {
     for (const widget of layout.widgets) {
+      if (widget.template === "checklist_full_face") continue;
       const xOverlap = Math.max(0, Math.min(textObject.frame.x + textObject.frame.width, widget.frame.x + widget.frame.width) - Math.max(textObject.frame.x, widget.frame.x));
       const yOverlap = Math.max(0, Math.min(textObject.frame.y + textObject.frame.height, widget.frame.y + widget.frame.height) - Math.max(textObject.frame.y, widget.frame.y));
       assert(path !== "date" || xOverlap === 0 || yOverlap === 0, `date must not overlap ${widget.id}`);
@@ -540,16 +643,17 @@ function fallbackFixtures() {
   oneCircular.metadata.selectedContentTypes = ["workout"];
   oneCircular.colorSystem = {
     mode: "mono_tone",
-    accentColor: "#FF7A1A",
+    accentColor: "#FF375F",
+    surfaceAccentColor: "#590012",
     sourceRule: "one-content-type-prefers-mono-tone"
   };
-  oneCircular.time.style.color = "#FF7A1A";
+  oneCircular.time.style.color = "#FF375F";
   oneCircular.time.frame = { x: 0, y: 178, width: 205, height: 73 };
   oneCircular.time.style.fontSize = 84;
   oneCircular.time.containers[0].frame = { x: 0, y: 178, width: 205, height: 73 };
   oneCircular.time.containers[0].style.fontSize = 84;
-  oneCircular.time.containers[0].style.color = "#FF7A1A";
-  oneCircular.date.style.color = "#FF7A1A";
+  oneCircular.time.containers[0].style.color = "#FF375F";
+  oneCircular.date.style.color = "#FF375F";
   oneCircular.date.frame = { x: 0, y: 156, width: 70, height: 22 };
   oneCircular.widgets = [clone(samples.layouts[0].widgets[0])];
   oneCircular.widgets[0].variant.size = "L";
@@ -564,21 +668,22 @@ function fallbackFixtures() {
   mixed.metadata.selectedContentTypes = ["workout", "upcoming_event", "weather"];
   mixed.colorSystem = {
     mode: "multicolor",
-    accentColor: "#FF7A1A",
+    accentColor: "#FF375F",
+    surfaceAccentColor: "#590012",
     sourceRule: "two-content-types-prefers-multicolor"
   };
   mixed.time.style.color = "#FFFFFF";
   mixed.time.containers[0].style.color = "#FFFFFF";
   mixed.date.style.color = "#FFFFFF";
   mixed.time.mode = "split_hour_minute";
-  mixed.time.frame = { x: 0, y: 0, width: 110, height: 102 };
+  mixed.time.frame = { x: 0, y: 0, width: 110, height: 78 };
   mixed.time.style.fontSize = 56;
   mixed.time.containers = [
     {
       id: "time-hour",
       role: "hour",
       value: "6",
-      frame: { x: 0, y: 0, width: 110, height: 51 },
+      frame: { x: 0, y: 0, width: 110, height: 39 },
       style: { ...mixed.time.style, fontSize: 56 },
       anchor: "left"
     },
@@ -586,23 +691,24 @@ function fallbackFixtures() {
       id: "time-minute",
       role: "minute",
       value: "42",
-      frame: { x: 0, y: 51, width: 110, height: 51 },
+      frame: { x: 0, y: 39, width: 110, height: 39 },
       style: { ...mixed.time.style, fontSize: 56 },
       anchor: "left"
     }
   ];
-  mixed.date.frame = { x: 0, y: 102, width: 70, height: 22 };
+  mixed.date.frame = { x: 0, y: 78, width: 70, height: 22 };
   mixed.date.stackedWithTimeContainerId = "time-minute";
   mixed.widgets = [clone(samples.layouts[0].widgets[0]), clone(samples.layouts[2].widgets[0])];
   mixed.widgets[0].id = "fallback-workout";
-  mixed.widgets[0].frame = { x: 127, y: 52, width: 72, height: 72 };
+  mixed.widgets[0].frame = { x: 127, y: 16, width: 72, height: 72 };
   mixed.layers.top = mixed.widgets.map((widget) => widget.id);
 
   const threeCompact = markFallback(clone(samples.layouts[0]), "three-compact-widgets");
   threeCompact.metadata.selectedContentTypes = ["workout", "weather", "timer"];
   threeCompact.colorSystem = {
     mode: "multicolor",
-    accentColor: "#FF7A1A",
+    accentColor: "#FF375F",
+    surfaceAccentColor: "#590012",
     sourceRule: "three-content-types-flexible-color-mode"
   };
   threeCompact.widgets = [
@@ -702,7 +808,8 @@ for (const example of generatedRectangularWidgetSchema.examples) {
   assert(example.frame.width === 205, "generated rectangular example frame.width must be 205");
   assert(example.frame.height >= 108, "generated rectangular example frame.height must be at least 108");
   assert(example.cornerRadius === 54, "generated rectangular example cornerRadius must be 54");
-  assert(example.cornerSmoothing === 100, "generated rectangular example cornerSmoothing must be 100");
+  assert(example.cornerSmoothing === 60, "generated rectangular example cornerSmoothing must be 60");
+  assert(["black_surface", "accent_surface"].includes(example.surfaceMode), "generated rectangular example surfaceMode must be black_surface or accent_surface");
   assert(Array.isArray(example.composition.blocks), "generated rectangular example composition.blocks must be an array");
   validateGeneratedRectangularComposition(example.composition, example.contentType, "generatedRectangularWidgetSchema.examples[].composition");
 }
@@ -722,6 +829,184 @@ for (const [index, layout] of fallbackFixtures().entries()) {
   assert(typeof layout.metadata.fallbackReason === "string", `fallback ${layout.metadata.fallbackId} must include metadata.fallbackReason`);
   console.log(`fallback ${index + 1}: accepted (${layout.metadata.fallbackId}; ${layout.metadata.fallbackReason})`);
 }
+
+const messageFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "12:10AM",
+    location: "office",
+    activity: "lunch break",
+    goal: "what is my latest message?"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T11:18:18-07:00")
+});
+assert(messageFallback.selectedContentTypes.includes("last_message"), "latest message goal must select last_message");
+assert(messageFallback.layout.widgets[0]?.contentType === "last_message", "latest message fallback must render last_message");
+assert(messageFallback.layout.widgets[0].composition.blocks[1].type === "text", "latest message body must render as plain text");
+assert(messageFallback.validation.ok, `latest message fallback rejected: ${messageFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("latest message fallback: accepted");
+
+const checklistFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "6:20PM",
+    location: "home",
+    activity: "dinner prep",
+    goal: "show my checklist"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T18:20:00-07:00")
+});
+assert(checklistFallback.selectedContentTypes.includes("checklist"), "checklist goal must select checklist");
+assert(checklistFallback.layout.widgets.length === 1, "checklist fallback must render exactly one widget");
+assert(checklistFallback.layout.widgets[0].template === "checklist_full_face", "checklist fallback must use checklist_full_face");
+assert(checklistFallback.layout.widgets[0].frame.height === 251, "checklist fallback must use full component height");
+assert(checklistFallback.layout.time.frame.x === 139 && checklistFallback.layout.time.frame.y === 16, "checklist fallback time must use the Figma component slot");
+assert(checklistFallback.layout.date.frame.x === 16 && checklistFallback.layout.date.frame.y === 16, "checklist fallback date must use the Figma component slot");
+assert(checklistFallback.validation.ok, `checklist fallback rejected: ${checklistFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("checklist fallback: accepted");
+
+const workoutSummaryFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "6:58PM",
+    location: "outdoor",
+    activity: "finish running",
+    goal: "check my exercise summary"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T18:58:00-07:00")
+});
+assert(workoutSummaryFallback.selectedContentTypes.includes("workout"), "exercise summary goal must select workout");
+assert(workoutSummaryFallback.layout.widgets[0]?.contentType === "workout", "exercise summary fallback must render workout");
+assert(workoutSummaryFallback.layout.widgets[0].shape === "rectangular", "exercise summary fallback must use a rectangular workout widget");
+assert(workoutSummaryFallback.layout.widgets[0].template === "generated_rectangular_widget", "exercise summary fallback must use generated_rectangular_widget");
+assert(workoutSummaryFallback.validation.ok, `exercise summary fallback rejected: ${workoutSummaryFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("workout summary fallback: accepted");
+
+const timerSetupFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "7:30PM",
+    location: "kitchen",
+    activity: "cooking dinner",
+    goal: "set an 20 min timer for my salmon"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T19:30:00-07:00")
+});
+assert(timerSetupFallback.selectedContentTypes.includes("timer"), "timer setup goal must select timer");
+assert(timerSetupFallback.layout.widgets[0]?.contentType === "timer", "timer setup fallback must render timer");
+assert(timerSetupFallback.layout.widgets[0].shape === "rectangular", "timer setup fallback must use a rectangular timer widget");
+assert(timerSetupFallback.layout.widgets[0].template === "timer_rectangular", "timer setup fallback must use timer_rectangular");
+assert(timerSetupFallback.layout.widgets[0].data.countdown === "20:00", "timer setup fallback must preserve the requested duration");
+assert(timerSetupFallback.validation.ok, `timer setup fallback rejected: ${timerSetupFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("timer setup fallback: accepted");
+
+const iotControlFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "7:30PM",
+    location: "kitchen",
+    activity: "cooking dinner",
+    goal: "set the kitchen thermostat to 70 degrees"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T19:30:00-07:00")
+});
+assert(iotControlFallback.selectedContentTypes.includes("iot_control"), "iot control goal must select iot_control");
+assert(iotControlFallback.layout.widgets[0]?.contentType === "iot_control", "iot control fallback must render iot_control");
+assert(iotControlFallback.layout.widgets[0].shape === "rectangular", "iot control fallback must use a rectangular iot widget");
+assert(iotControlFallback.layout.widgets[0].template === "generated_rectangular_widget", "iot control fallback must use generated_rectangular_widget");
+assert(iotControlFallback.validation.ok, `iot control fallback rejected: ${iotControlFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("iot control fallback: accepted");
+
+const weatherOnlyFallback = generateFallbackWatchUi({
+  context: {
+    timeOfDay: "11PM",
+    location: "bedroom",
+    activity: "read to sleep",
+    goal: "what's tomorrow's weather?"
+  },
+  designPack: {
+    schema,
+    materialSymbolsRegistry,
+    widgetSelectionPolicy,
+    generatedRectangularWidgetSchema,
+    pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
+    pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
+  },
+  now: new Date("2026-08-04T23:00:00-07:00")
+});
+assert(weatherOnlyFallback.selectedContentTypes.length === 1 && weatherOnlyFallback.selectedContentTypes[0] === "weather", "weather-only goal must select only weather");
+assert(weatherOnlyFallback.layout.widgets.every((widget) => widget.contentType === "weather"), "weather-only fallback must render weather widgets");
+assert(
+  weatherOnlyFallback.layout.widgets.length === 3 && weatherOnlyFallback.layout.widgets.every((widget) => widget.shape === "circular" && widget.variant.size === "S") ||
+    weatherOnlyFallback.layout.widgets.length === 1 && weatherOnlyFallback.layout.widgets[0].shape === "rectangular",
+  "weather-only fallback must use either one rectangular weather summary or three S circular weather widgets"
+);
+assert(weatherOnlyFallback.layout.widgets.length !== 1 || weatherOnlyFallback.layout.widgets[0].variant?.size !== "L", "weather-only fallback must not use one L circular widget");
+assert(weatherOnlyFallback.validation.ok, `weather-only fallback rejected: ${weatherOnlyFallback.validation.errors.map((item) => item.message).join("; ")}`);
+console.log("weather-only fallback: accepted");
+
+const multiContentColorModes = new Set(
+  [
+    "meeting and weather",
+    "run and timer status",
+    "commute and rain",
+    "weather for commute"
+  ].map((goal) => {
+    const result = generateFallbackWatchUi({
+      context: {
+        timeOfDay: "8:12",
+        location: "San Francisco",
+        activity: "",
+        goal
+      },
+      designPack: fallbackDesignPack,
+      now: new Date("2026-08-04T08:12:00-07:00")
+    });
+    const renderedTypes = new Set(result.layout.widgets.map((widget) => widget.contentType));
+    assert(renderedTypes.size > 1, `${goal} must render multiple content types for color balancing coverage`);
+    assert(result.layout.colorSystem.sourceRule === "multi-content-balanced-color-mode", `${goal} must use balanced multi-content color source rule`);
+    assert(result.validation.ok, `${goal} color-balance fallback rejected: ${result.validation.errors.map((item) => item.message).join("; ")}`);
+    return result.layout.colorSystem.mode;
+  })
+);
+assert(multiContentColorModes.has("mono_tone"), "multi-content fallback balancing must include mono_tone cases");
+assert(multiContentColorModes.has("multicolor"), "multi-content fallback balancing must include multicolor cases");
+console.log("multi-content color balancing fallback: accepted");
 
 for (const [index, example] of widgetSelectionPolicy.deterministicExamples.entries()) {
   validateWidgetSelectionExample(example, index);
@@ -777,15 +1062,104 @@ const invalidCases = [
     }
   },
   {
-    name: "full-width time underfills clear row",
+    name: "full-width time underfills container",
     mutate(layout) {
       layout.time.value = "2:41";
       layout.time.style.fontSize = 64;
-      layout.time.frame = { x: 0, y: 193, width: 205, height: 58 };
+      layout.time.frame = { x: 0, y: 178, width: 205, height: 73 };
       layout.time.containers[0].value = "2:41";
       layout.time.containers[0].style.fontSize = 64;
-      layout.time.containers[0].frame = { x: 0, y: 193, width: 205, height: 58 };
-      layout.date.frame = { x: 0, y: 171, width: 70, height: 22 };
+      layout.time.containers[0].frame = { x: 0, y: 178, width: 205, height: 73 };
+      layout.date.frame = { x: 0, y: 156, width: 70, height: 22 };
+    }
+  },
+  {
+    name: "full-width time is not center aligned",
+    mutate(layout) {
+      layout.time.style.textAlign = "right";
+      layout.time.containers[0].style.textAlign = "right";
+    }
+  },
+  {
+    name: "last message content uses icon",
+    mutate(layout) {
+      layout.metadata.selectedContentTypes = ["last_message"];
+      layout.widgets = [clone(samples.layouts[2].widgets[0])];
+      layout.widgets[0].id = "latest-message";
+      layout.widgets[0].contentType = "last_message";
+      layout.widgets[0].data = { icon: "message", value: "Alex", label: "2:05 PM", metricKind: "latest_message" };
+      layout.widgets[0].composition = {
+        layout: "vertical",
+        padding: { top: 16, right: 16, bottom: 16, left: 16 },
+        gap: 8,
+        verticalAlignment: "center",
+        blocks: [
+          { type: "inline_small_icon_text", icon: "message", textUnit: "secondary", text: "Alex · 2:05 PM" },
+          { type: "inline_small_icon_text", icon: "message", textUnit: "body_emphasis", text: "Board games and extra cups" }
+        ]
+      };
+      layout.widgets[0].frame = { x: 0, y: 0, width: 205, height: 108 };
+      layout.widgets[0].surfaceMode = "accent_surface";
+      layout.layers.top = ["latest-message"];
+    }
+  },
+  {
+    name: "checklist invented partial watch face",
+    mutate(layout) {
+      layout.metadata.selectedContentTypes = ["checklist"];
+      layout.time.value = "6:20";
+      layout.time.frame = { x: 0, y: 0, width: 205, height: 73 };
+      layout.time.style.fontSize = 84;
+      layout.time.containers[0].value = "6:20";
+      layout.time.containers[0].frame = { x: 0, y: 0, width: 205, height: 73 };
+      layout.time.containers[0].style.fontSize = 84;
+      layout.time.containers[0].anchor = "top_left";
+      layout.date.frame = { x: 16, y: 73, width: 70, height: 22 };
+      layout.widgets = [
+        {
+          id: "invented-checklist",
+          contentType: "checklist",
+          shape: "rectangular",
+          template: "checklist_full_face",
+          data: {
+            title: "Checklist",
+            items: [{ text: "Board games", checked: false }]
+          },
+          frame: { x: 0, y: 94, width: 205, height: 157 },
+          layer: "top",
+          cornerRadius: 54,
+          cornerSmoothing: 60,
+          surfaceMode: "accent_surface",
+          verticalAlignment: "bottom"
+        }
+      ];
+      layout.layers.top = ["invented-checklist"];
+    }
+  },
+  {
+    name: "top-corner date followed by time in wrong direction",
+    mutate(layout) {
+      layout.time.value = "5:42";
+      layout.time.style.fontSize = 84;
+      layout.time.frame = { x: 0, y: 0, width: 205, height: 16 };
+      layout.time.containers[0].value = "5:42";
+      layout.time.containers[0].style.fontSize = 84;
+      layout.time.containers[0].frame = { x: 0, y: 0, width: 205, height: 16 };
+      layout.time.containers[0].anchor = "top_left";
+      layout.date.frame = { x: 16, y: 16, width: 70, height: 22 };
+    }
+  },
+  {
+    name: "bottom-corner date followed by time in wrong direction",
+    mutate(layout) {
+      layout.time.value = "5:42";
+      layout.time.style.fontSize = 84;
+      layout.time.frame = { x: 0, y: 235, width: 205, height: 16 };
+      layout.time.containers[0].value = "5:42";
+      layout.time.containers[0].style.fontSize = 84;
+      layout.time.containers[0].frame = { x: 0, y: 235, width: 205, height: 16 };
+      layout.time.containers[0].anchor = "bottom_left";
+      layout.date.frame = { x: 16, y: 213, width: 70, height: 22 };
     }
   },
   {
@@ -807,11 +1181,18 @@ const invalidCases = [
     }
   },
   {
-    name: "closed gauge text has secondary label",
+    name: "closed gauge footnote text too long",
     mutate(layout) {
       layout.widgets[0].variant.property = "text";
       layout.widgets[0].data.value = "42";
-      layout.widgets[0].data.label = "run";
+      layout.widgets[0].data.label = "minutes remaining";
+    }
+  },
+  {
+    name: "closed gauge center value text too long",
+    mutate(layout) {
+      layout.widgets[0].variant.property = "text";
+      layout.widgets[0].data.value = "123456789";
     }
   },
   {
@@ -834,10 +1215,26 @@ const invalidCases = [
     }
   },
   {
+    name: "open gauge icon missing center value",
+    mutate(layout) {
+      layout.widgets[1].variant.property = "icon";
+      layout.widgets[1].data.icon = "weather_rain";
+      delete layout.widgets[1].data.value;
+    }
+  },
+  {
+    name: "open gauge center value text too long",
+    mutate(layout) {
+      layout.widgets[1].variant.property = "text";
+      layout.widgets[1].data.value = "123456789";
+      layout.widgets[1].data.label = "bpm";
+    }
+  },
+  {
     name: "open gauge bottom text too long",
     mutate(layout) {
       layout.widgets[1].variant.property = "text";
-      layout.widgets[1].data.label = "rain";
+      layout.widgets[1].data.label = "precipitation probability";
     }
   },
   {
@@ -903,6 +1300,18 @@ const invalidCases = [
     baseLayoutIndex: 1,
     mutate(layout) {
       layout.widgets[0].frame.width = 180;
+    }
+  },
+  {
+    name: "generated rectangular text attempts line clamp",
+    baseLayoutIndex: 2,
+    mutate(layout) {
+      layout.widgets[0].composition.blocks.unshift({
+        type: "text",
+        unit: "secondary",
+        text: "Long status wraps",
+        maxLines: 1
+      });
     }
   },
   {

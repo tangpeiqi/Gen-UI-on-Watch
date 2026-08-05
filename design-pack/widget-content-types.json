@@ -89,7 +89,11 @@
           "calorie_goal",
           "past_week_average"
         ]
-      }
+      },
+      "rules": [
+        "Compact workout progress/status may use a circular Close Gauge.",
+        "Workout or exercise summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use generated_rectangular_widget so the summary text and numbers remain readable."
+      ]
     },
     {
       "id": "activity_summary",
@@ -190,6 +194,8 @@
       },
       "rules": [
         "Visible controls require rectangular rendering.",
+        "Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use rectangular_layout_templates.timer_rectangular.",
+        "Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.",
         "Timer may render as a Close Gauge circular widget, or as a rectangular widget using rectangular_layout_templates.timer_rectangular."
       ]
     },
@@ -284,7 +290,9 @@
         ]
       },
       "rules": [
-        "Visible controls require rectangular rendering."
+        "Visible controls require rectangular rendering.",
+        "Device control, toggle, turn on/off, setpoint, room, thermostat, temperature, light, fan, heater, AC, lock/unlock, or adjustment requests should use generated_rectangular_widget so device name, state, and action remain readable.",
+        "Passive compact device status may use a circular widget only when no control action or setpoint/detail text is needed."
       ]
     },
     {
@@ -396,11 +404,10 @@
     {
       "id": "reminder",
       "displayName": "Reminder",
-      "purpose": "Show a reminder and due time.",
+      "purpose": "Show a reminder to-do item with a completion affordance.",
       "metadata": {
         "required": {
-          "content": "string",
-          "due_datetime": "datetime"
+          "content": "string"
         },
         "optional": {
           "mark_complete_action": "action",
@@ -409,9 +416,8 @@
         }
       },
       "presentationAffordances": {
-        "primary": "content_and_due_time",
+        "primary": "content",
         "splittableMetrics": [
-          "due_datetime",
           "priority"
         ],
         "detailFields": [
@@ -467,7 +473,12 @@
           "rain_chance": "Show when condition includes rain.",
           "wind": "Show only when specifically requested from context input."
         }
-      }
+      },
+      "rules": [
+        "When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.",
+        "The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.",
+        "Do not render Weather-only as one L circular widget unless the user explicitly asks for one compact weather metric."
+      ]
     },
     {
       "id": "checklist",
@@ -505,9 +516,11 @@
         "mustBeOnlyWidget": true
       },
       "rules": [
-        "The checklist list itself must be rectangular and scrollable.",
+        "Checklist is a locked full-face Figma component; fill content only.",
         "Must use rectangular_layout_templates.checklist_full_face.",
-        "Must be the only widget on the watch face."
+        "Must be the only widget on the watch face.",
+        "Must preserve widget frame x=0 y=0 width=205 height=251; date slot x=16 y=16 width=70 height=22; time slot x=139 y=16 width=50 height=22 right-aligned SF Compact Regular 19pt; title slot x=16 y=42; list region x=6 y=71 width=193.",
+        "Do not generate a separate large watch-face time/date stack or any extra widgets around checklist."
       ]
     }
   ]

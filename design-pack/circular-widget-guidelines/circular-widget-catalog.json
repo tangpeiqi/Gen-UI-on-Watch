@@ -77,9 +77,9 @@
           "description": "Primary value displayed in the center of the gauge."
         },
         "label": {
-          "type": "never",
+          "type": "string",
           "requiredFor": [],
-          "description": "Do not provide label for close_gauge text. Close Gauge text renders exactly one centered value. Use open_gauge when a secondary label is needed."
+          "description": "Optional footnote or unit label for close_gauge text. If provided, it must fit the fixed footnote box width for the selected size token."
         },
         "icon": {
           "type": "iconToken|string",
@@ -105,7 +105,8 @@
         "If this close_gauge is the only widget for its content type, use property=icon instead of property=text so the widget communicates what kind of data it represents.",
         "Use property=icon when the value can be represented by a familiar icon and space is tight.",
         "Do not use close_gauge for temperature, heart rate/BPM, precipitation probability, UV, air quality, recovery, or pace because those move within a range.",
-        "Do not add a secondary label to close_gauge text; use open_gauge if the label is needed.",
+        "Only add a close_gauge text footnote when it is needed for unit metadata and can fit the fixed footnote box width.",
+        "Close gauge text center values use fixed box widths: S=55px, M=65px, L=115px. Keep displayed values short enough to avoid clipping.",
         "Prefer size S or M for secondary widgets and size L for the main supporting widget."
       ],
       "webRenderingSpecId": "close_gauge",
@@ -181,8 +182,8 @@
       "dataProps": {
         "value": {
           "type": "number|string",
-          "requiredFor": ["property=text", "property=range", "property=offset"],
-          "description": "Current or primary value displayed in the center."
+          "requiredFor": ["property=text", "property=icon", "property=range", "property=offset"],
+          "description": "Current or primary value displayed in the center. Required for open_gauge icon because the icon renders in the bottom slot."
         },
         "label": {
           "type": "string",
@@ -192,7 +193,7 @@
         "icon": {
           "type": "iconToken|string",
           "requiredFor": ["property=icon"],
-          "description": "Icon rendered in the center."
+          "description": "Icon rendered in the bottom icon slot for open_gauge icon. Do not render it in the center."
         },
         "min": {
           "type": "number",
@@ -240,9 +241,11 @@
         "Use property=range for metrics with a meaningful low/high span, such as today's temperature low and high.",
         "Use property=offset for current-versus-reference comparisons, such as current temperature versus feels-like, recovery versus baseline, or pace versus target.",
         "Use property=text for a single expressive value when the open arc style better matches the composition, and always include a short bottom label.",
-        "Use property=icon only when the icon is immediately recognizable, and always include the icon token.",
+        "Use property=icon only when the icon is immediately recognizable, and always include both the center value and the bottom icon token.",
         "Open gauge range must include lowLabel and highLabel; open gauge offset must include referenceValue.",
-        "Open gauge bottom text uses fixed font sizes: S=15pt, M=18pt, L=32pt. Keep bottom labels short enough to avoid clipping.",
+        "Open gauge center values use fixed box widths: S=55px, M=65px, L=115px. Keep displayed values short enough to avoid clipping.",
+        "Open gauge bottom text uses fixed font sizes: S=15pt, M=18pt, L=32pt, and fixed bottom text box widths: S=48px, M=60px, L=96px. Keep bottom labels short enough to avoid clipping.",
+        "Close gauge text footnotes use fixed text box widths: S=40px, M=50px, L=80px. Omit the footnote or use a shorter unit label if it would clip.",
         "Prefer size M or L for range and offset variants because they contain multiple text values."
       ],
       "measuredDotBehavior": {

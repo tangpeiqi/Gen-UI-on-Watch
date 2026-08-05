@@ -86,7 +86,7 @@ atomic_units:
       kind: circle
       corner_radius: 24
     fill: none
-    symbol_color: widget_accent_color
+    symbol_color: resolved by surfaceMode
 
   icon_small:
     type: icon_container
@@ -99,7 +99,7 @@ atomic_units:
       kind: circle
       corner_radius: 24
     fill: none
-    symbol_color: widget_accent_color
+    symbol_color: resolved by surfaceMode
 
   progress_bar:
     type: progress_indicator
@@ -116,7 +116,7 @@ atomic_units:
         width: 173
         height: 12
       value:
-        color: widget_accent_color
+        color: resolved by surfaceMode
         height: 12
         width_behavior: proportional_to_progress
     data:
@@ -153,6 +153,9 @@ atomic_units:
 - Use SF Compact for all rectangular-widget text.
 - Use 0 letter spacing.
 - Let text width and height be determined by the actual text content and the widget layout.
+- Never truncate, ellipsize, or line-clamp rectangular-widget text. If text does not fit on the current line, wrap it to the next line below.
+- Choose short enough text, fewer blocks, a vertical composition, or a taller rectangular frame so every wrapped line remains visible inside the widget bounds.
+- Do not use `maxLines` or any equivalent clamping hint in `generated_rectangular_widget` composition.
 - Keep text vertically centered in its layout region.
 - Do not synthesize additional text styles unless a future guideline explicitly adds them.
 - Preserve the distinction between regular, semibold, and muted secondary text.
@@ -161,20 +164,30 @@ atomic_units:
 
 ```yaml
 colors:
-  primary_text: "#FFFFFF"
-  secondary_text: "rgba(242, 244, 252, 0.6)"
+  surface_mode:
+    black_surface:
+      widget_background: "#000000"
+      primary_text: widget_accent_color.light
+      secondary_text: widget_accent_color.light at 60% opacity
+      material_symbol_icon: widget_accent_color.light
+      progress_bar_value: widget_accent_color.light
+    accent_surface:
+      widget_background: widget_accent_color.dark
+      primary_text: "#FFFFFF"
+      secondary_text: "rgba(242, 244, 252, 0.6)"
+      material_symbol_icon: "#FFFFFF"
+      progress_bar_value: "#FFFFFF"
   icon_container: none
-  material_symbol_icon: widget_accent_color
   progress_bar_base: "rgba(242, 244, 252, 0.1)"
-  progress_bar_value: widget_accent_color
   radio_unselected_stroke: "#9BA0AA"
   radio_selected: "#F2F4FC"
 ```
 
-- Primary values and emphasized text use white.
-- Secondary text uses the muted secondary color.
+- Every rectangular widget must declare `surfaceMode` as `black_surface` or `accent_surface`.
+- The primary rectangular widget should use `accent_surface`; if two rectangular widgets render, only the more important one may use `accent_surface` and the other must use `black_surface`.
+- On `black_surface`, text, Material Symbols icons, and progress-bar values use the light role of `widget_accent_color`; secondary text uses the same light accent at 60% opacity.
+- On `accent_surface`, the widget background uses the dark role of `widget_accent_color`; text, Material Symbols icons, and progress-bar values use white; secondary text uses white or light grey at 60% opacity.
 - Icon containers have no fill.
-- Material Symbols icons render in `widget_accent_color`.
 - `widget_accent_color` is resolved by `watch-face-generation-rules.md` using `widget-content-types.md`, `widget-content-types.json`, and other layout or context factors.
 - Progress bars use a muted base layer and a value layer that aligns with the widget's chosen accent color.
 - Radio buttons use a muted stroke when unselected and a full-opacity stroke plus inner dot when selected.
@@ -192,7 +205,7 @@ rectangular_container:
     value: 54
     unit: pt
   corner_smoothing:
-    value: 100
+    value: 60
     unit: percent
   inner_padding:
     default:
@@ -228,7 +241,7 @@ rectangular_container:
 ```yaml
 icon_color_contract:
   icon_source: Material Symbols
-  symbol_color: widget_accent_color
+  symbol_color: resolved by surfaceMode
   accent_source:
     owner: watch-face-generation-rules.md
     semantic_inputs:
@@ -241,7 +254,7 @@ icon_color_contract:
       rule: When an icon is needed, choose a symbol from Material Symbols.
     - id: symbol-uses-widget-accent
       strictness: must
-      rule: Render the selected Material Symbols icon in the widget_accent_color.
+      rule: Render the selected Material Symbols icon in the light widget_accent_color on black_surface, and in white on accent_surface.
     - id: accent-owned-by-content-type
       strictness: must
       rule: Use widget_accent_color resolved by watch-face-generation-rules.md; do not determine it inside the local composition pattern.
@@ -294,6 +307,9 @@ composition_patterns:
       - id: icon-small-text-only
         strictness: must
         rule: Icon Small must not be paired directly with Numbers, Progress Bar, Radio Button, or Icon Big.
+      - id: icon-small-text-wraps
+        strictness: must
+        rule: Paired text must wrap below within the available text column when needed; do not truncate with an ellipsis.
 
   big_icon_text_group:
     purpose: Pair a primary icon with a stacked text group.
@@ -345,6 +361,9 @@ composition_patterns:
       - id: number-lockup-baseline
         strictness: should
         rule: Text units in the lockup should align to the baseline of the number.
+      - id: number-lockup-wraps-secondary
+        strictness: must
+        rule: If the unit label or qualifier cannot fit on the number's baseline, wrap the qualifier to a new line below instead of truncating.
 
   edge_progress_bar:
     purpose: Show progress as a structural edge of the rectangular widget.
@@ -384,7 +403,7 @@ composition_patterns:
 
 These templates are stricter than the general composition patterns. When `watch-face-generation-rules.md` maps a widget content type to one of these templates, the agent must preserve the template structure and only substitute content, selected icons, control state, progress values, and `widget_accent_color`.
 
-All regular rectangular widgets use the full watch-face width: 205pt wide, 54pt corner radius, and 100% corner smoothing. Regular rectangular widget content uses 16px inner padding on all sides. When a progress bar is attached to the top or bottom edge, that attached edge's padding is 0px. All regular rectangular widgets clip child content to their rounded bounds. Template dimensions below use watch-face points; in the web simulator, 1pt maps to 1 CSS px.
+All regular rectangular widgets use the full watch-face width: 205pt wide, 54pt corner radius, and 60% corner smoothing. Regular rectangular widget content uses 16px inner padding on all sides. When a progress bar is attached to the top or bottom edge, that attached edge's padding is 0px. All regular rectangular widgets clip child content to their rounded bounds. Template dimensions below use watch-face points; in the web simulator, 1pt maps to 1 CSS px.
 
 ```yaml
 rectangular_layout_templates:
@@ -395,7 +414,7 @@ rectangular_layout_templates:
       width: 205
       height: 140
       corner_radius: 54
-      corner_smoothing: 100
+      corner_smoothing: 60
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 0, left: 16 }
@@ -441,7 +460,7 @@ rectangular_layout_templates:
       width: 205
       height: 127
       corner_radius: 54
-      corner_smoothing: 100
+      corner_smoothing: 60
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 16, left: 16 }
@@ -453,7 +472,7 @@ rectangular_layout_templates:
         left_reserved_space: 32
         text:
           unit: secondary
-          content: reminder_label_or_due_context
+          content: Reminder
       task_row:
         width: 173
         layout: horizontal
@@ -471,6 +490,9 @@ rectangular_layout_templates:
       - id: reminder-content-emphasis
         strictness: must
         rule: The main reminder content must use Body Emphasis.
+      - id: reminder-no-time
+        strictness: must
+        rule: Do not render due time, date, or timestamp text inside the reminder widget.
 
   timer_rectangular:
     applies_to_content_type: timer
@@ -479,7 +501,7 @@ rectangular_layout_templates:
       width: 205
       height: 139
       corner_radius: 54
-      corner_smoothing: 100
+      corner_smoothing: 60
       clip_content: true
       layout: vertical
       padding: { top: 16, right: 16, bottom: 16, left: 16 }
@@ -526,11 +548,15 @@ rectangular_layout_templates:
       current_time:
         x: 139
         y: 16
+        width: 50
+        height: 22
         unit: body
         align: right
+        font: SF Compact Regular 19pt
       title:
         x: 16
         y: 42
+        width: 173
         unit: body_emphasis
       list:
         x: 6
@@ -556,6 +582,12 @@ rectangular_layout_templates:
       - id: checklist-full-face-template
         strictness: must
         rule: Checklist must use this full-face checklist template, not a normal rectangular widget mixed with other widgets.
+      - id: checklist-locked-figma-component
+        strictness: must
+        rule: Preserve the Figma component geometry exactly: widget x=0 y=0 width=205 height=251, date x=16 y=16 width=70 height=22, time x=139 y=16 width=50 height=22, title x=16 y=42, list x=6 y=71 width=193.
+      - id: checklist-fill-content-only
+        strictness: must
+        rule: The AI may fill title, items, and checked/completed state only. It must not invent a separate watch-face time/date layout around the checklist.
       - id: checklist-list-items
         strictness: must
         rule: Render checklist items as rows with radio buttons on the left and Body text on the right.

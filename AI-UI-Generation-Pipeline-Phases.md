@@ -245,7 +245,7 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 **Work:**
 - On first validation failure, send structured validation errors back for one repair attempt.
 - Keep the repair prompt aligned to the same step contract and schema.
-- After repeated failure, switch to deterministic fallback.
+- After repeated validation failure, return and render the latest model layout for debugging instead of replacing it with deterministic fallback. Keep deterministic fallback for API failures, missing provider/key, timeouts, budget exhaustion, and malformed requests.
 - Optionally add a quality-sensitive fallback attempt using the higher-quality model setting described in the plan.
 - Keep all accepted outputs behind the same validators.
 - Default to one validation repair retry. `OPENAI_VALIDATION_RETRIES` may override this locally, but the baseline Phase 10 contract is initial attempt plus one repair attempt.
@@ -255,7 +255,7 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 **Done when:**
 - Validation errors are visible in debug logs.
 - Repair attempts use the same schema and rule contract.
-- Exhausted retries reliably produce a deterministic fallback instead of a blank preview.
+- Exhausted validation retries render the latest model result with validation failure details instead of a blank preview.
 - The frontend can copy the repair history back into Codex through the debug bundle.
 
 ## Phase 11: Logging And Evaluation

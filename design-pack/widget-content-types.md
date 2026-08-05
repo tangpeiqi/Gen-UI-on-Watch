@@ -66,9 +66,9 @@ Use the following terms in the content type table:
 | `map_navigation` | `destination`, `traffic_condition`, `travel_time` | `time_to_leave`, `distance`, `next_step` | destination and travel time | `travel_time`, `time_to_leave`, `distance` | Destination, traffic, and next step need detail space. |
 | `sleep_summary` | `quality_rating`, `score`, `hours_asleep` | `trend`, `sleep_goal`, `previous_average` | sleep score or summary | `quality_rating`, `score`, `hours_asleep` | Trend and comparison fields need detail space. |
 | `music_control` | `song`, `play_pause_action` | `album`, `artist`, `next_action`, `previous_action`, `artwork` | song and playback state | playback state | Playback controls require rectangular rendering. |
-| `reminder` | `content`, `due_datetime` | `mark_complete_action`, `priority`, `list_name` | reminder content and due time | `due_datetime`, `priority` | Mark complete requires rectangular rendering. |
+| `reminder` | `content` | `mark_complete_action`, `priority`, `list_name` | reminder content | `priority` | Reminder renders as a title plus radio-button to-do row. |
 | `weather` | `condition`, `current_temperature`, `high_temperature`, `low_temperature` | `rain_chance`, `wind`, `location` | current temperature and condition | `current_temperature`, `high_temperature`, `low_temperature`, `rain_chance` | Show rain chance when condition includes rain. Show wind only when specifically requested. |
-| `checklist` | `items` | `completed_items`, `title`, `progress`, `due_datetime` | checklist items | `progress`, `due_datetime` | The checklist list itself must be rectangular and scrollable. |
+| `checklist` | `items` | `completed_items`, `title`, `progress`, `due_datetime` | checklist items | `progress`, `due_datetime` | Checklist is a locked full-face component; fill content only. |
 
 ## Content Type Definitions
 
@@ -99,6 +99,9 @@ content_types:
         - workout_type
         - calorie_goal
         - past_week_average
+    rules:
+      - Compact workout progress/status may use a circular Close Gauge.
+      - Workout or exercise summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use `generated_rectangular_widget` so the summary text and numbers remain readable.
 
   activity_summary:
     purpose: Compare sitting, standing, and walking time to recent behavior.
@@ -165,6 +168,8 @@ content_types:
         - cancel_action
     rules:
       - Visible controls require rectangular rendering.
+      - Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use `rectangular_layout_templates.timer_rectangular`.
+      - Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.
       - Timer may render as a Close Gauge circular widget from `Circular Widget Guidelines/circular-widget-catalog.json`, or as a rectangular widget using `rectangular_layout_templates.timer_rectangular` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
 
   heart_rate:
@@ -208,6 +213,8 @@ content_types:
         - app
     rules:
       - Message previews need rectangular text space unless reduced to unread count.
+      - Sender and timestamp may use an optional message icon.
+      - Message content must render as text without an icon.
 
   iot_control:
     purpose: Show smart device status and optional setpoint or control state.
@@ -233,6 +240,8 @@ content_types:
         - control_action
     rules:
       - Visible controls require rectangular rendering.
+      - Device control, toggle, turn on/off, setpoint, room, thermostat, temperature, light, fan, heater, AC, lock/unlock, or adjustment requests should use `generated_rectangular_widget` so device name, state, and action remain readable.
+      - Passive compact device status may use a circular widget only when no control action or setpoint/detail text is needed.
 
   map_navigation:
     purpose: Show navigation timing and travel conditions.
@@ -308,19 +317,17 @@ content_types:
       - Must use `rectangular_layout_templates.music_control` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json` when rendered.
 
   reminder:
-    purpose: Show a reminder and due time.
+    purpose: Show a reminder to-do item with a completion affordance.
     metadata:
       required:
         content: string
-        due_datetime: datetime
       optional:
         mark_complete_action: action
         priority: string
         list_name: string
     presentation_affordances:
-      primary: content_and_due_time
+      primary: content
       splittable_metrics:
-        - due_datetime
         - priority
       detail_fields:
         - content
@@ -353,9 +360,13 @@ content_types:
       detail_fields:
         - condition
         - location
-      conditional_fields:
-        rain_chance: Show when condition includes rain.
-        wind: Show only when specifically requested from context input.
+    conditional_fields:
+      rain_chance: Show when condition includes rain.
+      wind: Show only when specifically requested from context input.
+    rules:
+      - When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.
+      - The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.
+      - Do not render Weather-only as one L circular widget unless the user explicitly asks for one compact weather metric.
 
   checklist:
     purpose: Show a scrollable list of checklist items.
@@ -377,7 +388,9 @@ content_types:
         - items
         - completed_items
     rules:
-      - The checklist list itself must be rectangular and scrollable.
+      - Checklist is a locked full-face component; fill content only.
       - Must use `rectangular_layout_templates.checklist_full_face` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
       - Must be the only widget on the watch face.
+      - Must preserve the Figma component frame and slots: widget x=0 y=0 width=205 height=251; date x=16 y=16 width=70 height=22; time x=139 y=16 width=50 height=22, right-aligned SF Compact Regular 19pt; title x=16 y=42; list x=6 y=71 width=193.
+      - Do not generate a separate large time/date stack or any extra watch-face widgets around checklist.
 ```

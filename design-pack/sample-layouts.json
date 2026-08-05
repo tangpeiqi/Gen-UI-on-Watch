@@ -35,7 +35,8 @@
       },
       "colorSystem": {
         "mode": "multicolor",
-        "accentColor": "#FF7A1A",
+        "accentColor": "#FF375F",
+        "surfaceAccentColor": "#590012",
         "sourceRule": "two-content-types-prefers-multicolor"
       },
       "time": {
@@ -191,7 +192,8 @@
       },
       "colorSystem": {
         "mode": "mono_tone",
-        "accentColor": "#F2F4FC",
+        "accentColor": "#FFD600",
+        "surfaceAccentColor": "#594B00",
         "sourceRule": "one-content-type-prefers-mono-tone"
       },
       "time": {
@@ -265,18 +267,18 @@
           "template": "reminder",
           "data": {
             "content": "Dinner in Redmond",
-            "dueDatetime": "7:30 PM",
-            "label": "next"
+            "label": "Reminder"
           },
           "frame": {
             "x": 0,
-            "y": 124,
+            "y": 100,
             "width": 205,
-            "height": 127
+            "height": 151
           },
           "layer": "top",
           "cornerRadius": 54,
-          "cornerSmoothing": 100,
+          "cornerSmoothing": 60,
+          "surfaceMode": "accent_surface",
           "verticalAlignment": "bottom"
         }
       ],
@@ -323,7 +325,8 @@
       },
       "colorSystem": {
         "mode": "mono_tone",
-        "accentColor": "#7DD3FC",
+        "accentColor": "#00D2E0",
+        "surfaceAccentColor": "#005459",
         "sourceRule": "one-content-type-prefers-mono-tone"
       },
       "time": {
@@ -428,13 +431,14 @@
           },
           "frame": {
             "x": 0,
-            "y": 124,
+            "y": 100,
             "width": 205,
-            "height": 127
+            "height": 151
           },
           "layer": "top",
           "cornerRadius": 54,
-          "cornerSmoothing": 100,
+          "cornerSmoothing": 60,
+          "surfaceMode": "accent_surface",
           "verticalAlignment": "bottom"
         }
       ],

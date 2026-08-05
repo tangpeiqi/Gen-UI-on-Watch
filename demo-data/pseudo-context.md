@@ -25,15 +25,6 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Optional evening run if rain stays light
 - Video call with family later tonight
 
-### Active Timer Context
-- Timer label: Tea steeping timer
-- Countdown: 3 min 40 sec remaining
-- Total duration: 5 min
-- Remaining seconds: 220
-- Timer inferred from context: The persona started tea during a short break before the 3:00 PM one-on-one
-- Available actions: pause, cancel
-- Watch-friendly summary: Tea timer has less than 4 minutes left
-
 ### Calendar Events
 #### Today
 - 8:30 AM: Commute to office — Location: Kirkland to Bellevue
@@ -84,16 +75,6 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Three hours ago, runtime time offset -2 to -3 hr: 68-106 bpm, meeting wrap-up followed by lunch walk
 - Current range note: Heart rate has settled into a low seated-work range after the lunch walk
 
-#### Seven-Day Average Ranges
-- Today, runtime date offset 0: resting 57-62 bpm, sleeping 49-56 bpm, walking 86-108 bpm, workout 118-146 bpm
-- Yesterday, runtime date offset -1: resting 58-64 bpm, sleeping 50-57 bpm, walking 84-104 bpm, workout 110-132 bpm
-- 2 days ago, runtime date offset -2: resting 56-61 bpm, sleeping 48-55 bpm, walking 88-112 bpm, workout 124-152 bpm
-- 3 days ago, runtime date offset -3: resting 59-65 bpm, sleeping 51-58 bpm, walking 82-101 bpm, workout 116-139 bpm
-- 4 days ago, runtime date offset -4: resting 60-66 bpm, sleeping 52-59 bpm, walking 90-118 bpm, workout 132-166 bpm
-- 5 days ago, runtime date offset -5: resting 58-63 bpm, sleeping 50-57 bpm, walking 84-106 bpm, workout 104-126 bpm
-- 6 days ago, runtime date offset -6: resting 57-62 bpm, sleeping 49-56 bpm, walking 86-109 bpm, workout 120-148 bpm
-- Trend: Resting and sleeping ranges are steady; workout ranges peak on Saturday's trail run and Monday's strength session
-
 ### Sleep Quality From The Past Few Days
 - Last night, runtime night offset -1: 6 hr 28 min, fair quality, 71 sleep score
 - 2 nights ago, runtime night offset -2: 7 hr 05 min, good quality, 80 sleep score
@@ -127,42 +108,6 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Progress toward exercise calorie goal: 322 of 300 calories, 107%
 - Activity summary: Goal reached, but sitting time is high; a short walk before the 3:00 PM meeting would rebalance the afternoon
 
-#### Yesterday, runtime date offset -1
-- Observed activities:
-  - Sitting: 6 hr 10 min, 72 calories
-  - Standing: 1 hr 42 min, 61 calories
-  - Walking: 58 min, 214 calories, 6,210 steps
-  - Strength training: 32 min, 238 calories
-- Total active calories burned: 585 calories
-- Time mix: moving 12%, exercising 7%, standing 20%, sitting 61%
-- Exercise calorie goal: 300 calories
-- Progress toward exercise calorie goal: 238 of 300 calories, 79%
-- Activity summary: Strong total activity day, but dedicated exercise came in slightly under goal
-
-#### 2 days ago, runtime date offset -2
-- Observed activities:
-  - Sitting: 5 hr 40 min, 66 calories
-  - Standing: 1 hr 55 min, 69 calories
-  - Walking: 1 hr 12 min, 268 calories, 7,860 steps
-  - Easy run: 28 min, 286 calories
-- Total active calories burned: 689 calories
-- Time mix: moving 15%, exercising 6%, standing 22%, sitting 57%
-- Exercise calorie goal: 300 calories
-- Progress toward exercise calorie goal: 286 of 300 calories, 95%
-- Activity summary: Balanced day with strong walking volume and a near-goal easy run
-
-#### 3 days ago, runtime date offset -3
-- Observed activities:
-  - Sitting: 4 hr 50 min, 56 calories
-  - Standing: 2 hr 05 min, 75 calories
-  - Walking: 1 hr 06 min, 244 calories, 7,080 steps
-  - Trail run: 48 min, 512 calories
-- Total active calories burned: 887 calories
-- Time mix: moving 14%, exercising 10%, standing 25%, sitting 51%
-- Exercise calorie goal: 300 calories
-- Progress toward exercise calorie goal: 512 of 300 calories, 171%
-- Activity summary: Highest-output day in the recent window; recovery should stay easy today
-
 ### Weather
 #### Today
 - Condition: Cloudy with light rain
@@ -184,16 +129,6 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Wind: 6 mph west
 - Watch-friendly summary: Better outdoor window after lunch
 
-#### Day After Tomorrow
-- Condition: Sunny
-- Current temperature: Not applicable
-- High: 72°F
-- Low: 54°F
-- Temperature range: 54-72°F
-- Rain chance: 8%
-- Wind: 5 mph northwest
-- Watch-friendly summary: Best day this week for an outdoor workout
-
 ### Grocery Checklist
 - Checklist title: Grocery pickup list
 - Checklist progress: 0 of 10 completed
@@ -210,17 +145,27 @@ Outside of work, he spends spare time connecting with family and friends, gettin
 - Trail mix
 
 ### Reminders
+- Choose podcast for morning commute — Reminder service time: today, morning — Due: today, 8:10 AM
+- Refill water bottle before planning sync — Reminder service time: today, morning — Due: today, 9:05 AM
+- Review project proposal notes — Reminder service time: today, late morning — Due: today, 10:15 AM
+- Take a lunch walk if rain is light — Reminder service time: today, midday — Due: today, 12:10 PM
 - Review notes before one-on-one — Reminder service time: today, afternoon — Due: today, 2:45 PM — Mark complete action: available
-- Pick up groceries after work — Reminder service time: today, evening — Due: today, 6:15 PM
+- Send dinner timing poll to friends — Reminder service time: today, late afternoon — Due: today, 4:45 PM
+- Pick up groceries after work — Reminder service time: today, early evening — Due: today, 6:15 PM
 - Reply to family group chat — Reminder service time: today, evening — Due: today, 8:00 PM
-- Prep lunch for tomorrow — Reminder service time: today, 9 PM — Due: today, 10:00 PM
-- Charge watch before bed — Reminder service time: today, 10 PM — Due: today, before bedtime
-- Choose podcast for tomorrow commute — Reminder service time: tomorrow, morning — Due: tomorrow, 8:15 AM
-- Stretch for 10 minutes if evening run is skipped — Reminder service time: today, evening — Due: today, 9:30 PM
+- Stretch for 10 minutes if evening run is skipped — Reminder service time: today, night — Due: today, 9:30 PM
+- Charge watch before bed — Reminder service time: today, bedtime — Due: today, before bedtime
 - Confirm dental appointment paperwork — Reminder service time: tomorrow, morning — Due: tomorrow, 8:45 AM
-- Text friends about dinner plan — Reminder service time: tomorrow, afternoon — Due: tomorrow, 5:00 PM
 - Buy coffee beans if running low — Reminder service time: the day after tomorrow, morning — Due: the day after tomorrow, afternoon
-- Plan weekend trail route — Reminder service time: four days later, evening — Due: four days later, 9 PM
+
+### Timer Context
+- Timer behavior rule: No timer is active by default. If a timer widget is shown, the AI should choose one timer opportunity that fits the live context, explain the choice in generation logs, and set the countdown from that opportunity's suggested duration.
+- Timer opportunities:
+  - Lunch prep timer — Suggested duration: 20 minutes — Best context: evening meal prep or preparing lunch for tomorrow — Source context: reminder to prep lunch and grocery checklist — Watch-friendly label: Prep lunch
+  - Mobility stretch timer — Suggested duration: 10 minutes — Best context: evening recovery, skipped run, or high sitting time — Source context: stretch reminder, activity summary, and recovery note — Watch-friendly label: Stretch
+  - Salmon cook timer — Suggested duration: 18 minutes — Best context: cooking dinner after grocery pickup — Source context: grocery item salmon and healthy eating persona — Watch-friendly label: Salmon
+  - Laundry transfer timer — Suggested duration: 35 minutes — Best context: at home in the evening between chores — Source context: balanced-life routine and evening home context — Watch-friendly label: Laundry
+  - Focus sprint timer — Suggested duration: 25 minutes — Best context: focus block, quiet work block, or inbox triage — Source context: calendar focus blocks and full-time work schedule — Watch-friendly label: Focus
 
 ### Music Playlist
 #### Now Playing

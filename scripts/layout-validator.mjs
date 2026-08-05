@@ -17,13 +17,28 @@ export function createLayoutValidator({
   };
   const openGaugeMetricKinds = new Set(["temperature", "current_temperature", "weather_temperature", "bpm", "heart_rate", "precipitation_probability", "rain_chance", "uv_index", "air_quality", "recovery", "pace"]);
   const closeGaugeMetricKinds = new Set(["timer", "countdown", "countdown_timer", "workout", "activity", "activity_progress", "goal_progress", "exercise_goal_progress", "battery", "completion", "hydration", "focus"]);
-  const cornerSafeSplitTimeMinWidth = 110;
+  const cornerSafeSplitTimeMinWidth = 105;
   const fullWidthTimeFillRatio = 0.85;
   const splitTimeFillRatio = 0.55;
   const openGaugeBottomText = {
-    S: { fontSize: 15, width: 18 },
-    M: { fontSize: 18, width: 21 },
-    L: { fontSize: 32, width: 35 }
+    S: { fontSize: 15, width: 48 },
+    M: { fontSize: 18, width: 60 },
+    L: { fontSize: 32, width: 96 }
+  };
+  const openGaugeCenterValueText = {
+    S: { fontSize: 22, width: 55 },
+    M: { fontSize: 32, width: 65 },
+    L: { fontSize: 48, width: 115 }
+  };
+  const closeGaugeCenterValueText = {
+    S: { fontSize: 22, width: 55 },
+    M: { fontSize: 32, width: 65 },
+    L: { fontSize: 42, width: 115 }
+  };
+  const closeGaugeFootnoteText = {
+    S: { fontSize: 10, width: 40 },
+    M: { fontSize: 15, width: 50 },
+    L: { fontSize: 18, width: 80 }
   };
   const contentTypes = new Set(schema.$defs.contentType.enum);
   const iconTokens = materialSymbolsRegistry.tokens;
@@ -35,6 +50,7 @@ export function createLayoutValidator({
     "one-content-type-prefers-mono-tone",
     "two-content-types-prefers-multicolor",
     "three-content-types-flexible-color-mode",
+    "multi-content-balanced-color-mode",
     "user-context-explicit-color-mode"
   ]);
   const fallbackReasons = new Set(["no_ai_provider", "api_failure", "timeout", "invalid_output", "budget_exhausted"]);
@@ -110,7 +126,7 @@ export function createLayoutValidator({
   }
 
   function validateTextStyle(style, path, errors) {
-    if (!hasOnlyKeys(style, new Set(["fontFamily", "fontSize", "fontWeight", "letterSpacing", "color", "treatment"]), path, errors)) {
+    if (!hasOnlyKeys(style, new Set(["fontFamily", "fontSize", "fontWeight", "letterSpacing", "color", "treatment", "textAlign"]), path, errors)) {
       return;
     }
     requireKeys(style, ["fontFamily", "fontSize", "fontWeight", "letterSpacing", "color", "treatment"], path, errors);
@@ -120,6 +136,7 @@ export function createLayoutValidator({
     if (typeof style.letterSpacing !== "number") errors.push(error("schema", "invalid_type", `${path}.letterSpacing`, `${path}.letterSpacing must be a number`));
     if (!/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(style.color || "")) errors.push(error("schema", "invalid_color", `${path}.color`, `${path}.color must be a hex color`));
     if (!["fill", "outline_stroke"].includes(style.treatment)) errors.push(error("schema", "invalid_enum", `${path}.treatment`, `${path}.treatment is invalid`));
+    if (style.textAlign !== undefined && !["left", "center", "right"].includes(style.textAlign)) errors.push(error("schema", "invalid_enum", `${path}.textAlign`, `${path}.textAlign is invalid`));
   }
 
   function validateTimeContainer(container, path, errors) {
@@ -199,12 +216,13 @@ export function createLayoutValidator({
   }
 
   function validateColorSystem(colorSystem, errors) {
-    if (!hasOnlyKeys(colorSystem, new Set(["mode", "accentColor", "sourceRule"]), "colorSystem", errors)) {
+    if (!hasOnlyKeys(colorSystem, new Set(["mode", "accentColor", "surfaceAccentColor", "sourceRule"]), "colorSystem", errors)) {
       return;
     }
-    requireKeys(colorSystem, ["mode", "accentColor", "sourceRule"], "colorSystem", errors);
+    requireKeys(colorSystem, ["mode", "accentColor", "surfaceAccentColor", "sourceRule"], "colorSystem", errors);
     if (!colorSystemModes.has(colorSystem.mode)) errors.push(error("schema", "invalid_enum", "colorSystem.mode", "colorSystem.mode is invalid"));
     if (!/^#[0-9a-fA-F]{6}$/.test(colorSystem.accentColor || "")) errors.push(error("schema", "invalid_color", "colorSystem.accentColor", "colorSystem.accentColor must be a 6-digit hex color"));
+    if (!/^#[0-9a-fA-F]{6}$/.test(colorSystem.surfaceAccentColor || "")) errors.push(error("schema", "invalid_color", "colorSystem.surfaceAccentColor", "colorSystem.surfaceAccentColor must be a 6-digit hex color"));
     if (!colorSystemSourceRules.has(colorSystem.sourceRule)) errors.push(error("schema", "invalid_enum", "colorSystem.sourceRule", "colorSystem.sourceRule is invalid"));
   }
 
@@ -221,7 +239,7 @@ export function createLayoutValidator({
   function validateGeneratedTextBlock(block, path, errors) {
     if (!generatedRectangularTextUnits.has(block.unit)) errors.push(error("schema", "invalid_enum", `${path}.unit`, `${path}.unit is invalid`));
     if (typeof block.text !== "string" || block.text.length === 0 || block.text.length > 36) errors.push(error("rule", "text_length_out_of_range", `${path}.text`, `${path}.text must be 1-36 characters`));
-    if (block.maxLines !== undefined && (!Number.isInteger(block.maxLines) || block.maxLines < 1 || block.maxLines > 2)) errors.push(error("schema", "invalid_range", `${path}.maxLines`, `${path}.maxLines is invalid`));
+    if (block.maxLines !== undefined) errors.push(error("schema", "unsupported_property", `${path}.maxLines`, `${path}.maxLines is not allowed; rectangular text must wrap instead of truncating or clamping`));
   }
 
   function validateGeneratedRectangularBlock(block, contentType, path, errors) {
@@ -280,6 +298,16 @@ export function createLayoutValidator({
       errors.push(error("schema", "invalid_array_length", `${path}.blocks`, `${path}.blocks length is invalid`));
     } else {
       composition.blocks.forEach((block, index) => validateGeneratedRectangularBlock(block, contentType, `${path}.blocks[${index}]`, errors));
+      if (contentType === "last_message") {
+        const iconBlocks = composition.blocks
+          .map((block, index) => ({ block, index }))
+          .filter(({ block }) => block?.type === "inline_small_icon_text");
+        for (const { index } of iconBlocks) {
+          if (index !== 0) {
+            errors.push(error("rule", "last_message_content_has_icon", `${path}.blocks[${index}]`, "message content must render as plain text without an icon; only sender metadata may use an optional icon"));
+          }
+        }
+      }
     }
   }
 
@@ -299,11 +327,23 @@ export function createLayoutValidator({
       errors.push(error("rule", "circular_fixed_size", `${path}.frame`, `${path}.frame must be ${expectedFrame.width}x${expectedFrame.height} for size ${widget.variant.size}`));
     }
     if (widget.component === "close_gauge" && typeof widget.data?.progress !== "number") errors.push(error("schema", "missing_required", `${path}.data.progress`, `${path}.data.progress is required for close_gauge`));
-    if (widget.variant.property === "text") {
-      if (widget.data?.value === undefined) errors.push(error("schema", "missing_required", `${path}.data.value`, `${path}.data.value is required for text variant`));
+    if (widget.variant.property === "text" || (widget.component === "open_gauge" && widget.variant.property === "icon")) {
+      const variantName = widget.component === "open_gauge" && widget.variant.property === "icon" ? "open_gauge icon" : "text";
+      if (widget.data?.value === undefined || (widget.component === "open_gauge" && widget.variant.property === "icon" && isBlank(widget.data.value))) {
+        errors.push(error("schema", "missing_required", `${path}.data.value`, `${path}.data.value is required for ${variantName} variant`));
+      }
+    }
+    if (widget.component === "close_gauge" && widget.variant.property === "text" && widget.data?.value !== undefined) {
+      const centerValueToken = closeGaugeCenterValueText[widget.variant.size];
+      if (centerValueToken && estimateTextWidth(widget.data.value, centerValueToken.fontSize) > centerValueToken.width + 2) {
+        errors.push(error("rule", "close_gauge_center_value_text_overflow", `${path}.data.value`, `${path}.data.value must fit the ${widget.variant.size} close_gauge center value text box without clipping`));
+      }
     }
     if (widget.component === "close_gauge" && widget.variant.property === "text" && widget.data?.label !== undefined) {
-      errors.push(error("rule", "close_gauge_single_text", `${path}.data.label`, "close_gauge text widgets must render only one centered value; use open_gauge when a secondary label is needed"));
+      const footnoteToken = closeGaugeFootnoteText[widget.variant.size];
+      if (footnoteToken && estimateTextWidth(widget.data.label, footnoteToken.fontSize) > footnoteToken.width + 2) {
+        errors.push(error("rule", "close_gauge_footnote_text_overflow", `${path}.data.label`, `${path}.data.label must fit the ${widget.variant.size} close_gauge footnote text box without clipping`));
+      }
     }
     if (widget.component === "close_gauge" && openGaugeMetricKinds.has(widget.data?.metricKind)) {
       errors.push(error("rule", "open_metric_uses_close_gauge", `${path}.component`, `${path} must use open_gauge because ${widget.data.metricKind} moves within a range`));
@@ -312,6 +352,12 @@ export function createLayoutValidator({
       errors.push(error("rule", "close_metric_uses_open_gauge", `${path}.component`, `${path} must use close_gauge because ${widget.data.metricKind} moves one direction`));
     }
     if (widget.component === "open_gauge") {
+      if (widget.data?.value !== undefined) {
+        const centerValueToken = openGaugeCenterValueText[widget.variant.size];
+        if (centerValueToken && estimateTextWidth(widget.data.value, centerValueToken.fontSize) > centerValueToken.width + 2) {
+          errors.push(error("rule", "open_gauge_center_value_text_overflow", `${path}.data.value`, `${path}.data.value must fit the ${widget.variant.size} open_gauge center value text box without clipping`));
+        }
+      }
       const bottomTextToken = openGaugeBottomText[widget.variant.size];
       const validateBottomText = (value, fieldPath) => {
         if (isBlank(value)) {
@@ -357,12 +403,12 @@ export function createLayoutValidator({
     }
     validateFrame(widget.frame, `${path}.frame`, errors, { rectangular: true });
     if (widget.cornerRadius !== 54) errors.push(error("rule", "rectangular_corner_radius", `${path}.cornerRadius`, `${path}.cornerRadius must be 54`));
-    if (widget.cornerSmoothing !== 100) errors.push(error("rule", "rectangular_corner_smoothing", `${path}.cornerSmoothing`, `${path}.cornerSmoothing must be 100`));
+    if (widget.cornerSmoothing !== 60) errors.push(error("rule", "rectangular_corner_smoothing", `${path}.cornerSmoothing`, `${path}.cornerSmoothing must be 60`));
+    if (!["black_surface", "accent_surface"].includes(widget.surfaceMode)) errors.push(error("schema", "invalid_rectangular_surface_mode", `${path}.surfaceMode`, `${path}.surfaceMode must be black_surface or accent_surface`));
     if (!["top", "bottom"].includes(widget.verticalAlignment)) errors.push(error("schema", "invalid_enum", `${path}.verticalAlignment`, `${path}.verticalAlignment is invalid`));
     if (!isObject(widget.data)) errors.push(error("schema", "missing_required", `${path}.data`, `${path}.data is required`));
     if (widget.template === "reminder") {
       if (typeof widget.data?.content !== "string") errors.push(error("schema", "missing_required", `${path}.data.content`, `${path}.data.content is required for reminder`));
-      if (typeof widget.data?.dueDatetime !== "string") errors.push(error("schema", "missing_required", `${path}.data.dueDatetime`, `${path}.data.dueDatetime is required for reminder`));
     }
     if (widget.template === "timer_rectangular" && typeof widget.data?.countdown !== "string") errors.push(error("schema", "missing_required", `${path}.data.countdown`, `${path}.data.countdown is required for timer_rectangular`));
     if (widget.template === "music_control") {
@@ -370,7 +416,13 @@ export function createLayoutValidator({
       if (typeof widget.data?.playPauseAction !== "string") errors.push(error("schema", "missing_required", `${path}.data.playPauseAction`, `${path}.data.playPauseAction is required for music_control`));
     }
     if (widget.template === "checklist_full_face" && !Array.isArray(widget.data?.items)) errors.push(error("schema", "missing_required", `${path}.data.items`, `${path}.data.items is required for checklist_full_face`));
-    if (widget.template === "generated_rectangular_widget") validateGeneratedRectangularComposition(widget.composition, widget.contentType, `${path}.composition`, errors);
+    if (widget.template === "generated_rectangular_widget") {
+      validateGeneratedRectangularComposition(widget.composition, widget.contentType, `${path}.composition`, errors);
+      const requiredHeight = Math.max(108, estimateGeneratedRectangularContentHeight(widget));
+      if (widget.frame?.height < requiredHeight) {
+        errors.push(error("rule", "rectangular_content_height", `${path}.frame.height`, `${path}.frame.height must be at least ${requiredHeight}px to fit generated rectangular content`));
+      }
+    }
   }
 
   function rectOverlapDepth(a, b) {
@@ -391,6 +443,43 @@ export function createLayoutValidator({
     return String(text).length * fontSize * 0.58;
   }
 
+  function estimateWrappedTextHeight(text, fontSize, lineHeight, width) {
+    const safeWidth = Math.max(1, width);
+    const lines = Math.max(1, Math.ceil(estimateTextWidth(text, fontSize) / safeWidth));
+    return lines * lineHeight;
+  }
+
+  function estimateGeneratedRectangularBlockHeight(block, innerWidth) {
+    if (!block || typeof block !== "object") return 0;
+    if (block.type === "text") {
+      const isNumber = block.unit === "numbers";
+      return estimateWrappedTextHeight(block.text || "", isNumber ? 40 : 19, isNumber ? 42.5 : 21.5, innerWidth);
+    }
+    if (block.type === "inline_small_icon_text") {
+      return Math.max(24, estimateWrappedTextHeight(block.text || "", 19, 21.5, innerWidth - 28));
+    }
+    if (block.type === "big_icon_text_group") {
+      const textHeight = (block.textGroup || []).reduce((total, textBlock) => total + estimateGeneratedRectangularBlockHeight(textBlock, innerWidth - 56), 0);
+      return Math.max(48, textHeight);
+    }
+    if (block.type === "number_text_lockup") {
+      const secondaryHeight = block.secondaryText ? 4 + estimateWrappedTextHeight(block.secondaryText, 19, 21.5, innerWidth) : 0;
+      return 42.5 + secondaryHeight;
+    }
+    if (block.type === "edge_progress_bar") return 12;
+    return 0;
+  }
+
+  function estimateGeneratedRectangularContentHeight(widget) {
+    const composition = widget?.composition;
+    const blocks = Array.isArray(composition?.blocks) ? composition.blocks : [];
+    const padding = composition?.padding || {};
+    const innerWidth = 205 - (Number(padding.left) || 0) - (Number(padding.right) || 0);
+    const blocksHeight = blocks.reduce((total, block) => total + estimateGeneratedRectangularBlockHeight(block, innerWidth), 0);
+    const gap = Number(composition?.gap) || 0;
+    return Math.ceil((Number(padding.top) || 0) + (Number(padding.bottom) || 0) + blocksHeight + Math.max(0, blocks.length - 1) * gap);
+  }
+
   function isBlank(value) {
     return value === undefined || value === null || String(value).trim() === "";
   }
@@ -403,6 +492,7 @@ export function createLayoutValidator({
   }
 
   function validateTextOverflow(layout, errors, warnings) {
+    if (hasChecklistFullFace(layout)) return;
     const textObjects = [
       ...(Array.isArray(layout.time?.containers)
         ? layout.time.containers.map((container, index) => [`time.containers[${index}]`, container])
@@ -456,7 +546,7 @@ export function createLayoutValidator({
           errors.push(error("rule", "single_time_container_required", "time.containers", "single_line time must use exactly one combined time container"));
         }
         if (isCornerAnchor(container.anchor) && container.frame.width !== 205) {
-          errors.push(error("rule", "combined_time_corner_requires_full_width", `${path}.anchor`, "combined time may align to a watch-face corner only when its container is full width at 205px; otherwise stack date at the corner and place time away from the rounded mask"));
+          errors.push(error("rule", "combined_time_corner_requires_full_width", `${path}.anchor`, "combined time may align to a watch-face corner only when its container is full width at 205px"));
         }
       } else if (container.anchor === "center") {
         errors.push(error("rule", "split_time_container_centered", `${path}.anchor`, "split or segmented time containers must be edge-anchored, not centered"));
@@ -464,6 +554,14 @@ export function createLayoutValidator({
         errors.push(error("rule", "split_time_corner_width", `${path}.frame.width`, `split time containers may align to a watch-face corner only when each corner-anchored container is wider than ${cornerSafeSplitTimeMinWidth}px`));
       }
       const padding = container.frame.width < 105 ? 16 : 0;
+      if (approxEqual(container.frame.width, 205)) {
+        if (!approxEqual(container.frame.x, 0)) {
+          errors.push(error("rule", "full_width_time_spans_canvas", `${path}.frame.x`, `${path} with 205px width must span the watch-face width from x=0`));
+        }
+        if (container.style.textAlign !== undefined && container.style.textAlign !== "center") {
+          errors.push(error("rule", "full_width_time_center_aligned", `${path}.style.textAlign`, `${path} with 205px width must center-align text`));
+        }
+      }
       if (edges.includes("top") && !approxEqual(container.frame.y, padding)) {
         errors.push(error("rule", "time_edge_padding", `${path}.frame.y`, `${path} top edge padding must be ${padding}px`));
       }
@@ -501,10 +599,9 @@ export function createLayoutValidator({
     }
     if (time.mode === "single_line" && containers.length === 1) {
       const container = containers[0];
-      const clearTimeRow = !hasWidgetOnSameRow(layout.widgets || [], container.frame);
       const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
-      if (clearTimeRow && approxEqual(container.frame.width, 205) && visuallyFilledWidth < 205 * fullWidthTimeFillRatio) {
-        errors.push(error("rule", "time_underfills_clear_full_width_row", "time.containers[0].style.fontSize", "when combined time sits on a clear full-width row, increase its font size so the digits visually fill at least 85% of the watch-face width without violating overlap rules"));
+      if (approxEqual(container.frame.width, 205) && container.frame.height >= 70 && visuallyFilledWidth < 205 * fullWidthTimeFillRatio) {
+        errors.push(error("rule", "time_underfills_full_width_container", "time.containers[0].style.fontSize", "when combined time uses a 205px container, center-align it and increase its font size so the digits visually fill at least 85% of the watch-face width without violating overlap rules"));
       }
     }
   }
@@ -585,16 +682,64 @@ export function createLayoutValidator({
       errors.push(error("rule", "date_time_stack", "date.frame", "date must vertically stack with its referenced time container with 0px gap"));
     }
     const targetEdges = anchorEdges(target.anchor);
-    if (dateAbove && targetEdges.includes("top") && !approxEqual(date.frame.y, 16)) {
-      errors.push(error("rule", "date_edge_padding", "date.frame.y", "date must keep 16px padding when the date/time stack starts from the top edge"));
+    if (isCornerAnchor(target.anchor) && targetEdges.includes("top") && !dateBelow) {
+      errors.push(error("rule", "date_follows_corner_time", "date.frame.y", "when time is placed on a top corner, date must stack vertically after the time, away from the corner"));
     }
-    if (dateBelow && targetEdges.includes("bottom") && !approxEqual(date.frame.y + date.frame.height, 251 - 16)) {
-      errors.push(error("rule", "date_edge_padding", "date.frame.y", "date must keep 16px padding when the date/time stack starts from the bottom edge"));
+    if (isCornerAnchor(target.anchor) && targetEdges.includes("bottom") && !dateAbove) {
+      errors.push(error("rule", "date_follows_corner_time", "date.frame.y", "when time is placed on a bottom corner, date must stack vertically before the time, away from the corner"));
+    }
+    const dateTouchesTopCorner = approxEqual(date.frame.y, 16) && (approxEqual(date.frame.x, 16) || approxEqual(date.frame.x + date.frame.width, 205 - 16));
+    const dateTouchesBottomCorner = approxEqual(date.frame.y + date.frame.height, 251 - 16) && (approxEqual(date.frame.x, 16) || approxEqual(date.frame.x + date.frame.width, 205 - 16));
+    if (dateTouchesTopCorner && !dateAbove) {
+      errors.push(error("rule", "time_follows_corner_date", "date.frame.y", "when date is placed on a top corner, time must stack vertically after the date, away from the corner"));
+    }
+    if (dateTouchesBottomCorner && !dateBelow) {
+      errors.push(error("rule", "time_follows_corner_date", "date.frame.y", "when date is placed on a bottom corner, time must stack vertically before the date, away from the corner"));
     }
   }
 
   function hasChecklistFullFace(layout) {
     return layout.widgets.some((widget) => widget.template === "checklist_full_face");
+  }
+
+  function validateChecklistFullFaceContract(layout, errors) {
+    const checklistIndex = layout.widgets.findIndex((widget) => widget.template === "checklist_full_face");
+    if (checklistIndex < 0) return;
+    const widget = layout.widgets[checklistIndex];
+    const path = `widgets[${checklistIndex}]`;
+    const expectedWidgetFrame = { x: 0, y: 0, width: 205, height: 251 };
+    const expectedDateFrame = { x: 16, y: 16, width: 70, height: 22 };
+    const expectedTimeFrame = { x: 139, y: 16, width: 50, height: 22 };
+    for (const key of ["x", "y", "width", "height"]) {
+      if (!approxEqual(widget.frame?.[key], expectedWidgetFrame[key])) {
+        errors.push(error("rule", "checklist_strict_frame", `${path}.frame.${key}`, `checklist_full_face must occupy the full Figma component frame; expected ${key}=${expectedWidgetFrame[key]}`));
+      }
+      if (!approxEqual(layout.date.frame?.[key], expectedDateFrame[key])) {
+        errors.push(error("rule", "checklist_date_slot", `date.frame.${key}`, `checklist_full_face date slot must match Figma; expected ${key}=${expectedDateFrame[key]}`));
+      }
+      if (!approxEqual(layout.time.frame?.[key], expectedTimeFrame[key])) {
+        errors.push(error("rule", "checklist_time_slot", `time.frame.${key}`, `checklist_full_face time slot must match Figma; expected ${key}=${expectedTimeFrame[key]}`));
+      }
+    }
+    if (widget.verticalAlignment !== "top") {
+      errors.push(error("rule", "checklist_vertical_alignment", `${path}.verticalAlignment`, "checklist_full_face must use verticalAlignment top"));
+    }
+    if (widget.surfaceMode !== "accent_surface") {
+      errors.push(error("rule", "checklist_surface_mode", `${path}.surfaceMode`, "checklist_full_face must use accent_surface"));
+    }
+    if (layout.time.mode !== "single_line" || layout.time.containers?.length !== 1) {
+      errors.push(error("rule", "checklist_time_single_slot", "time.mode", "checklist_full_face must use one compact time slot supplied to the component"));
+      return;
+    }
+    const container = layout.time.containers[0];
+    for (const key of ["x", "y", "width", "height"]) {
+      if (!approxEqual(container.frame?.[key], expectedTimeFrame[key])) {
+        errors.push(error("rule", "checklist_time_slot", `time.containers[0].frame.${key}`, `checklist_full_face time container must match Figma; expected ${key}=${expectedTimeFrame[key]}`));
+      }
+    }
+    if (container.style?.fontSize !== 19 || container.style?.fontWeight !== 400 || container.style?.textAlign !== "right") {
+      errors.push(error("rule", "checklist_time_style", "time.containers[0].style", "checklist_full_face time slot must use SF Compact Regular 19pt and right-aligned text"));
+    }
   }
 
   function validateWidgetOverlapAndStacking(layout, errors) {
@@ -682,6 +827,16 @@ export function createLayoutValidator({
       else if (widget.shape === "rectangular") validateRectangularWidget(widget, index, errors);
       else errors.push(error("schema", "invalid_enum", `${path}.shape`, `${path}.shape is invalid`));
     });
+    validateChecklistFullFaceContract(layout, errors);
+    const rectangularWidgets = layout.widgets.filter((widget) => widget.shape === "rectangular");
+    const accentSurfaceWidgets = rectangularWidgets.filter((widget) => widget.surfaceMode === "accent_surface");
+    if (accentSurfaceWidgets.length > 1) {
+      errors.push(error("rule", "too_many_rectangular_accent_surfaces", "widgets", "Only the most important rectangular widget may use accent_surface"));
+    }
+    if (rectangularWidgets.length > 0 && rectangularWidgets[0].surfaceMode !== "accent_surface") {
+      const primaryRectIndex = layout.widgets.findIndex((widget) => widget.id === rectangularWidgets[0].id);
+      errors.push(error("rule", "primary_rectangular_missing_accent_surface", `widgets[${primaryRectIndex}].surfaceMode`, "The primary rectangular widget should use accent_surface"));
+    }
     validateRequiredSplitTime(layout, errors);
     validateCircularVariantComposition(layout, errors);
     validateWidgetOverlapAndStacking(layout, errors);

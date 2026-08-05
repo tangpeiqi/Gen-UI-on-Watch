@@ -2,9 +2,12 @@ import React, { type CSSProperties, type ReactNode } from "react";
 
 export type RectangularWidgetColors = {
   widgetAccentColor: string;
+  widgetAccentSurfaceColor?: string;
   background?: string;
   primaryText?: string;
   secondaryText?: string;
+  materialSymbolIcon?: string;
+  progressValue?: string;
   mutedSurface?: string;
   radioUnselectedStroke?: string;
   radioSelected?: string;
@@ -12,6 +15,7 @@ export type RectangularWidgetColors = {
 
 type BaseWidgetProps = {
   colors: RectangularWidgetColors;
+  surfaceMode?: "black_surface" | "accent_surface";
   className?: string;
   style?: CSSProperties;
   title?: string;
@@ -61,8 +65,35 @@ const defaults = {
   radioSelected: "#F2F4FC",
 };
 
-function resolveColors(colors: RectangularWidgetColors) {
-  return { ...defaults, ...colors };
+function colorWithOpacity(color: string, opacity: number) {
+  if (color.startsWith("#") && color.length === 7) {
+    const [r, g, b] = [1, 3, 5].map((index) => Number.parseInt(color.slice(index, index + 2), 16));
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  return color;
+}
+
+function resolveColors(colors: RectangularWidgetColors, surfaceMode: BaseWidgetProps["surfaceMode"] = "black_surface") {
+  const accentText = colors.widgetAccentColor;
+  const accentSurface = colors.widgetAccentSurfaceColor ?? colors.widgetAccentColor;
+  const surfaceDefaults =
+    surfaceMode === "accent_surface"
+      ? {
+          background: accentSurface,
+          primaryText: "#FFFFFF",
+          secondaryText: "rgba(242, 244, 252, 0.6)",
+          materialSymbolIcon: "#FFFFFF",
+          progressValue: "#FFFFFF",
+        }
+      : {
+          background: "#000000",
+          primaryText: accentText,
+          secondaryText: colorWithOpacity(accentText, 0.6),
+          materialSymbolIcon: accentText,
+          progressValue: accentText,
+        };
+
+  return { ...defaults, ...surfaceDefaults, ...colors };
 }
 
 function clamp01(value = 0) {
@@ -94,9 +125,9 @@ function bodyText(style?: CSSProperties): CSSProperties {
     lineHeight: "21.5px",
     fontWeight: 400,
     margin: 0,
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    minWidth: 0,
     ...style,
   };
 }
@@ -115,7 +146,9 @@ function numberText(style?: CSSProperties): CSSProperties {
     lineHeight: "42.5px",
     fontWeight: 400,
     margin: 0,
-    whiteSpace: "nowrap",
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    minWidth: 0,
     ...style,
   };
 }
@@ -138,7 +171,7 @@ function MaterialIcon({
         height: 48,
         display: "grid",
         placeItems: "center",
-        color: colors.widgetAccentColor,
+        color: colors.materialSymbolIcon,
         fontFamily: "'Material Symbols Rounded', 'Material Symbols Outlined', sans-serif",
         fontSize: 32,
         fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 32",
@@ -216,7 +249,7 @@ function ProgressBar({
         style={{
           width: `${clamp01(progress) * 100}%`,
           height: "100%",
-          background: colors.widgetAccentColor,
+          background: colors.progressValue,
         }}
       />
     </div>
@@ -230,11 +263,12 @@ export function MusicControlWidget({
   progress,
   playbackState = "playing",
   colors,
+  surfaceMode,
   className,
   style,
   title,
 }: MusicControlWidgetProps) {
-  const resolved = resolveColors(colors);
+  const resolved = resolveColors(colors, surfaceMode);
   const secondary = artist && album ? <>{artist} / {album}</> : artist ?? album ?? "";
 
   return (
@@ -282,11 +316,12 @@ export function ReminderWidget({
   label = "Reminder",
   completed,
   colors,
+  surfaceMode,
   className,
   style,
   title,
 }: ReminderWidgetProps) {
-  const resolved = resolveColors(colors);
+  const resolved = resolveColors(colors, surfaceMode);
 
   return (
     <section
@@ -310,9 +345,6 @@ export function ReminderWidget({
           style={bodyEmphasis({
             width: 140,
             whiteSpace: "normal",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
           })}
         >
           {content}
@@ -326,11 +358,12 @@ export function TimerRectangularWidget({
   countdown,
   running = true,
   colors,
+  surfaceMode,
   className,
   style,
   title,
 }: TimerRectangularWidgetProps) {
-  const resolved = resolveColors(colors);
+  const resolved = resolveColors(colors, surfaceMode);
 
   return (
     <section
@@ -370,10 +403,11 @@ export function ChecklistFace({
   timeLabel,
   items,
   colors,
+  surfaceMode,
   className,
   style,
 }: ChecklistFaceProps) {
-  const resolved = resolveColors(colors);
+  const resolved = resolveColors(colors, surfaceMode);
   const visibleItems = items.slice(0, 4);
 
   return (
@@ -433,7 +467,7 @@ export const rectangularTemplateGuidance = {
   },
   reminder: {
     useWhen: ["content type is reminder"],
-    mustPreserve: ["metadata row", "radio button left of reminder content", "Body Emphasis reminder content"],
+    mustPreserve: ["Reminder title row", "radio button left of reminder content", "Body Emphasis reminder content", "no due time or timestamp"],
   },
   timer_rectangular: {
     useWhen: ["content type is timer and rectangular rendering is chosen"],

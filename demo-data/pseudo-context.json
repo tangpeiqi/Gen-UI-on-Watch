@@ -199,6 +199,14 @@
     }
   ],
   "heartRate": {
+    "latestReading": {
+      "bpm": 76,
+      "timeSinceLastReadingMinutes": 6,
+      "activityType": "seated work",
+      "highWithinSameActivityTypeTodayBpm": 84,
+      "lowWithinSameActivityTypeTodayBpm": 68,
+      "watchFriendlySummary": "Heart rate is normal for seated work after lunch"
+    },
     "recentRanges": [
       {
         "label": "Last hour",
@@ -222,66 +230,7 @@
         "context": "Meeting wrap-up followed by lunch walk"
       }
     ],
-    "currentRangeNote": "Heart rate has settled into a low seated-work range after the lunch walk",
-    "sevenDayAverageRanges": [
-      {
-        "relativeDay": "today",
-        "dateOffset": 0,
-        "restingBpmRange": [57, 62],
-        "sleepingBpmRange": [49, 56],
-        "walkingBpmRange": [86, 108],
-        "workoutBpmRange": [118, 146]
-      },
-      {
-        "relativeDay": "yesterday",
-        "dateOffset": -1,
-        "restingBpmRange": [58, 64],
-        "sleepingBpmRange": [50, 57],
-        "walkingBpmRange": [84, 104],
-        "workoutBpmRange": [110, 132]
-      },
-      {
-        "relativeDay": "2 days ago",
-        "dateOffset": -2,
-        "restingBpmRange": [56, 61],
-        "sleepingBpmRange": [48, 55],
-        "walkingBpmRange": [88, 112],
-        "workoutBpmRange": [124, 152]
-      },
-      {
-        "relativeDay": "3 days ago",
-        "dateOffset": -3,
-        "restingBpmRange": [59, 65],
-        "sleepingBpmRange": [51, 58],
-        "walkingBpmRange": [82, 101],
-        "workoutBpmRange": [116, 139]
-      },
-      {
-        "relativeDay": "4 days ago",
-        "dateOffset": -4,
-        "restingBpmRange": [60, 66],
-        "sleepingBpmRange": [52, 59],
-        "walkingBpmRange": [90, 118],
-        "workoutBpmRange": [132, 166]
-      },
-      {
-        "relativeDay": "5 days ago",
-        "dateOffset": -5,
-        "restingBpmRange": [58, 63],
-        "sleepingBpmRange": [50, 57],
-        "walkingBpmRange": [84, 106],
-        "workoutBpmRange": [104, 126]
-      },
-      {
-        "relativeDay": "6 days ago",
-        "dateOffset": -6,
-        "restingBpmRange": [57, 62],
-        "sleepingBpmRange": [49, 56],
-        "walkingBpmRange": [86, 109],
-        "workoutBpmRange": [120, 148]
-      }
-    ],
-    "trend": "Resting and sleeping ranges are steady; workout ranges peak on Saturday's trail run and Monday's strength session"
+    "currentRangeNote": "Heart rate has settled into a low seated-work range after the lunch walk"
   },
   "sleepQuality": {
     "entries": [
@@ -356,120 +305,6 @@
       "exerciseCaloriesForGoal": 322,
       "exerciseGoalProgressPercent": 107,
       "summary": "Goal reached, but sitting time is high; a short walk before the 3:00 PM meeting would rebalance the afternoon"
-    },
-      {
-      "relativeDay": "yesterday",
-      "dateOffset": -1,
-      "observedActivities": [
-        {
-          "type": "sitting",
-          "durationMinutes": 370,
-          "calories": 72
-        },
-        {
-          "type": "standing",
-          "durationMinutes": 102,
-          "calories": 61
-        },
-        {
-          "type": "walking",
-          "durationMinutes": 58,
-          "calories": 214,
-          "steps": 6210
-        },
-        {
-          "type": "strength training",
-          "durationMinutes": 32,
-          "calories": 238
-        }
-      ],
-      "totalActiveCaloriesBurned": 585,
-      "timeMixPercent": {
-        "moving": 12,
-        "exercising": 7,
-        "standing": 20,
-        "sitting": 61
-      },
-      "exerciseCalorieGoal": 300,
-      "exerciseCaloriesForGoal": 238,
-      "exerciseGoalProgressPercent": 79,
-      "summary": "Strong total activity day, but dedicated exercise came in slightly under goal"
-    },
-      {
-      "relativeDay": "2 days ago",
-      "dateOffset": -2,
-      "observedActivities": [
-        {
-          "type": "sitting",
-          "durationMinutes": 340,
-          "calories": 66
-        },
-        {
-          "type": "standing",
-          "durationMinutes": 115,
-          "calories": 69
-        },
-        {
-          "type": "walking",
-          "durationMinutes": 72,
-          "calories": 268,
-          "steps": 7860
-        },
-        {
-          "type": "easy run",
-          "durationMinutes": 28,
-          "calories": 286
-        }
-      ],
-      "totalActiveCaloriesBurned": 689,
-      "timeMixPercent": {
-        "moving": 15,
-        "exercising": 6,
-        "standing": 22,
-        "sitting": 57
-      },
-      "exerciseCalorieGoal": 300,
-      "exerciseCaloriesForGoal": 286,
-      "exerciseGoalProgressPercent": 95,
-      "summary": "Balanced day with strong walking volume and a near-goal easy run"
-    },
-      {
-      "relativeDay": "3 days ago",
-      "dateOffset": -3,
-      "observedActivities": [
-        {
-          "type": "sitting",
-          "durationMinutes": 290,
-          "calories": 56
-        },
-        {
-          "type": "standing",
-          "durationMinutes": 125,
-          "calories": 75
-        },
-        {
-          "type": "walking",
-          "durationMinutes": 66,
-          "calories": 244,
-          "steps": 7080
-        },
-        {
-          "type": "trail run",
-          "durationMinutes": 48,
-          "calories": 512
-        }
-      ],
-      "totalActiveCaloriesBurned": 887,
-      "timeMixPercent": {
-        "moving": 14,
-        "exercising": 10,
-        "standing": 25,
-        "sitting": 51
-      },
-      "exerciseCalorieGoal": 300,
-      "exerciseCaloriesForGoal": 512,
-      "exerciseGoalProgressPercent": 171,
-      "summary": "Highest-output day in the recent window; recovery should stay easy today"
       }
     ]
   },
@@ -503,21 +338,6 @@
         "direction": "west"
       },
       "watchFriendlySummary": "Better outdoor window after lunch"
-    },
-    {
-      "relativeDay": "day after tomorrow",
-      "dateOffset": 2,
-      "condition": "Sunny",
-      "currentTemperatureF": null,
-      "highTemperatureF": 72,
-      "lowTemperatureF": 54,
-      "temperatureRangeF": [54, 72],
-      "rainChancePercent": 8,
-      "wind": {
-        "speedMph": 5,
-        "direction": "northwest"
-      },
-      "watchFriendlySummary": "Best day this week for an outdoor workout"
     }
   ],
   "groceryChecklist": [
@@ -554,6 +374,50 @@
   ],
   "reminders": [
     {
+      "title": "Choose podcast for morning commute",
+      "service": {
+        "relativeDay": "today",
+        "time": "morning"
+      },
+      "due": {
+        "relativeDay": "today",
+        "time": "8:10 AM"
+      }
+    },
+    {
+      "title": "Refill water bottle before planning sync",
+      "service": {
+        "relativeDay": "today",
+        "time": "morning"
+      },
+      "due": {
+        "relativeDay": "today",
+        "time": "9:05 AM"
+      }
+    },
+    {
+      "title": "Review project proposal notes",
+      "service": {
+        "relativeDay": "today",
+        "time": "late morning"
+      },
+      "due": {
+        "relativeDay": "today",
+        "time": "10:15 AM"
+      }
+    },
+    {
+      "title": "Take a lunch walk if rain is light",
+      "service": {
+        "relativeDay": "today",
+        "time": "midday"
+      },
+      "due": {
+        "relativeDay": "today",
+        "time": "12:10 PM"
+      }
+    },
+    {
       "title": "Review notes before one-on-one",
       "service": {
         "relativeDay": "today",
@@ -562,13 +426,25 @@
       "due": {
         "relativeDay": "today",
         "time": "2:45 PM"
+      },
+      "markCompleteActionAvailable": true
+    },
+    {
+      "title": "Send dinner timing poll to friends",
+      "service": {
+        "relativeDay": "today",
+        "time": "late afternoon"
+      },
+      "due": {
+        "relativeDay": "today",
+        "time": "4:45 PM"
       }
     },
     {
       "title": "Pick up groceries after work",
       "service": {
         "relativeDay": "today",
-        "time": "evening"
+        "time": "early evening"
       },
       "due": {
         "relativeDay": "today",
@@ -587,47 +463,25 @@
       }
     },
     {
-      "title": "Prep lunch for tomorrow",
+      "title": "Stretch for 10 minutes if evening run is skipped",
       "service": {
         "relativeDay": "today",
-        "time": "9 PM"
+        "time": "night"
       },
       "due": {
         "relativeDay": "today",
-        "time": "10:00 PM"
+        "time": "9:30 PM"
       }
     },
     {
       "title": "Charge watch before bed",
       "service": {
         "relativeDay": "today",
-        "time": "10 PM"
+        "time": "bedtime"
       },
       "due": {
         "relativeDay": "today",
         "time": "before bedtime"
-      }
-    },
-    {
-      "title": "Choose podcast for tomorrow commute",
-      "service": {
-        "relativeDay": "tomorrow",
-        "time": "morning"
-      },
-      "due": {
-        "relativeDay": "tomorrow",
-        "time": "8:15 AM"
-      }
-    },
-    {
-      "title": "Stretch for 10 minutes if evening run is skipped",
-      "service": {
-        "relativeDay": "today",
-        "time": "evening"
-      },
-      "due": {
-        "relativeDay": "today",
-        "time": "9:30 PM"
       }
     },
     {
@@ -639,17 +493,6 @@
       "due": {
         "relativeDay": "tomorrow",
         "time": "8:45 AM"
-      }
-    },
-    {
-      "title": "Text friends about dinner plan",
-      "service": {
-        "relativeDay": "tomorrow",
-        "time": "afternoon"
-      },
-      "due": {
-        "relativeDay": "tomorrow",
-        "time": "5:00 PM"
       }
     },
     {
@@ -675,6 +518,83 @@
       }
     }
   ],
+  "timerContext": {
+    "behaviorRule": "No timer is active by default. If a timer widget is shown, the AI should choose one timer opportunity that fits the live context, explain the choice in generation logs, and set the countdown from that opportunity's suggested duration.",
+    "activeTimer": null,
+    "opportunities": [
+      {
+        "id": "lunch_prep",
+        "label": "Lunch prep timer",
+        "watchFriendlyLabel": "Prep lunch",
+        "suggestedDurationMinutes": 20,
+        "bestContext": [
+          "evening meal prep",
+          "preparing lunch for tomorrow"
+        ],
+        "sourceContext": [
+          "reminder to prep lunch",
+          "grocery checklist"
+        ]
+      },
+      {
+        "id": "mobility_stretch",
+        "label": "Mobility stretch timer",
+        "watchFriendlyLabel": "Stretch",
+        "suggestedDurationMinutes": 10,
+        "bestContext": [
+          "evening recovery",
+          "skipped run",
+          "high sitting time"
+        ],
+        "sourceContext": [
+          "stretch reminder",
+          "activity summary",
+          "recovery note"
+        ]
+      },
+      {
+        "id": "salmon_cook",
+        "label": "Salmon cook timer",
+        "watchFriendlyLabel": "Salmon",
+        "suggestedDurationMinutes": 18,
+        "bestContext": [
+          "cooking dinner after grocery pickup"
+        ],
+        "sourceContext": [
+          "grocery item salmon",
+          "healthy eating persona"
+        ]
+      },
+      {
+        "id": "laundry_transfer",
+        "label": "Laundry transfer timer",
+        "watchFriendlyLabel": "Laundry",
+        "suggestedDurationMinutes": 35,
+        "bestContext": [
+          "at home in the evening between chores"
+        ],
+        "sourceContext": [
+          "balanced-life routine",
+          "evening home context"
+        ]
+      },
+      {
+        "id": "focus_sprint",
+        "label": "Focus sprint timer",
+        "watchFriendlyLabel": "Focus",
+        "suggestedDurationMinutes": 25,
+        "bestContext": [
+          "focus block",
+          "quiet work block",
+          "inbox triage"
+        ],
+        "sourceContext": [
+          "calendar focus blocks",
+          "full-time work schedule"
+        ]
+      }
+    ]
+  },
   "musicPlaylist": {
     "genre": "R&B",
     "tracks": [

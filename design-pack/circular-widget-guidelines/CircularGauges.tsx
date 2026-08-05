@@ -107,7 +107,8 @@ const closeSizes = {
     center: { x: 36, y: 36 },
     iconBox: { x: 20, y: 20, width: 32, height: 32 },
     text: {
-      value: { fontSize: 22, lineHeight: 24.5, box: { x: 9.6, y: 24.8, width: 52.8, height: 22.4 } },
+      value: { fontSize: 22, lineHeight: 24.5, box: { x: 8.5, y: 24.8, width: 55, height: 22.4 } },
+      footnote: { fontSize: 10, lineHeight: 12.5, box: { x: 16, y: 47.2, width: 40, height: 9.6 } },
     },
   },
   M: {
@@ -117,7 +118,8 @@ const closeSizes = {
     center: { x: 45, y: 45 },
     iconBox: { x: 26, y: 26, width: 38, height: 38 },
     text: {
-      value: { fontSize: 32, lineHeight: 34.5, box: { x: 12, y: 31, width: 66, height: 28 } },
+      value: { fontSize: 32, lineHeight: 34.5, box: { x: 12.5, y: 31, width: 65, height: 28 } },
+      footnote: { fontSize: 15, lineHeight: 17.5, box: { x: 20, y: 59, width: 50, height: 12 } },
     },
   },
   L: {
@@ -127,7 +129,8 @@ const closeSizes = {
     center: { x: 75, y: 75 },
     iconBox: { x: 42, y: 43, width: 64, height: 64 },
     text: {
-      value: { fontSize: 42, lineHeight: 44.5, box: { x: 41, y: 52, width: 67, height: 45 } },
+      value: { fontSize: 42, lineHeight: 44.5, box: { x: 17.5, y: 52, width: 115, height: 45 } },
+      footnote: { fontSize: 18, lineHeight: 20.5, box: { x: 35, y: 97, width: 80, height: 21 } },
     },
   },
 } as const;
@@ -139,12 +142,12 @@ const openSizes = {
     radius: 31.5,
     center: { x: 36, y: 36 },
     measureDot: { diameter: 8.21, strokeWidth: 2 },
-    iconBox: { x: 20, y: 20, width: 32, height: 32 },
+    iconBox: { x: 24, y: 48, width: 24, height: 24 },
     text: {
-      current: { fontSize: 22, lineHeight: 24.5, box: { x: 18, y: 23, width: 35, height: 25 } },
+      current: { fontSize: 22, lineHeight: 24.5, box: { x: 8.5, y: 23, width: 55, height: 25 } },
       low: { fontSize: 15, lineHeight: 17.5, box: { x: 13.05, y: 54, width: 19, height: 18 }, align: "left" },
       high: { fontSize: 15, lineHeight: 17.5, box: { x: 40.07, y: 54, width: 19, height: 18 }, align: "right" },
-      reference: { fontSize: 15, lineHeight: 17.5, box: { x: 26.54, y: 54, width: 18, height: 18 } },
+      reference: { fontSize: 15, lineHeight: 17.5, box: { x: 12, y: 54, width: 48, height: 18 } },
     },
   },
   M: {
@@ -153,12 +156,12 @@ const openSizes = {
     radius: 39.5,
     center: { x: 45, y: 45 },
     measureDot: { diameter: 10.27, strokeWidth: 2 },
-    iconBox: { x: 26, y: 26, width: 38, height: 38 },
+    iconBox: { x: 30, y: 61, width: 30, height: 30 },
     text: {
-      current: { fontSize: 32, lineHeight: 34.5, box: { x: 19, y: 27, width: 51, height: 35 } },
+      current: { fontSize: 32, lineHeight: 34.5, box: { x: 12.5, y: 27, width: 65, height: 35 } },
       low: { fontSize: 18, lineHeight: 20.5, box: { x: 16.31, y: 69, width: 23, height: 21 }, align: "left" },
       high: { fontSize: 18, lineHeight: 20.5, box: { x: 50.34, y: 69, width: 23, height: 21 }, align: "right" },
-      reference: { fontSize: 18, lineHeight: 20.5, box: { x: 34.43, y: 69, width: 21, height: 21 } },
+      reference: { fontSize: 18, lineHeight: 20.5, box: { x: 15, y: 69, width: 60, height: 21 } },
     },
   },
   L: {
@@ -167,12 +170,12 @@ const openSizes = {
     radius: 66.5,
     center: { x: 75, y: 75 },
     measureDot: { diameter: 17, strokeWidth: 3 },
-    iconBox: { x: 42, y: 43, width: 64, height: 64 },
+    iconBox: { x: 50, y: 102, width: 48, height: 48 },
     text: {
-      current: { fontSize: 48, lineHeight: 44.5, box: { x: 36, y: 52, width: 77, height: 45 } },
+      current: { fontSize: 48, lineHeight: 44.5, box: { x: 17.5, y: 52, width: 115, height: 45 } },
       low: { fontSize: 32, lineHeight: 44.5, box: { x: 27, y: 104, width: 38, height: 45 }, align: "left" },
       high: { fontSize: 32, lineHeight: 44.5, box: { x: 85, y: 104, width: 38, height: 45 }, align: "right" },
-      reference: { fontSize: 32, lineHeight: 44.5, box: { x: 57, y: 104, width: 35, height: 45 } },
+      reference: { fontSize: 32, lineHeight: 44.5, box: { x: 27, y: 104, width: 96, height: 45 } },
     },
   },
 } as const;
@@ -435,6 +438,7 @@ export function CloseGauge({
   size = "M",
   progress,
   value,
+  label,
   icon,
   metricKind = "default",
   colors: colorOverrides,
@@ -478,7 +482,12 @@ export function CloseGauge({
       {property === "icon" ? (
         <div style={iconBoxStyleWithColor(spec.iconBox, colors.widgetAccentColor)}>{icon}</div>
       ) : (
-        <div style={textBoxStyle(spec.text.value, colors.widgetAccentColor)}>{value}</div>
+        <>
+          <div style={textBoxStyle(spec.text.value, colors.widgetAccentColor)}>{value}</div>
+          {label !== undefined && label !== null ? (
+            <div style={textBoxStyle(spec.text.footnote, colors.widgetAccentColor)}>{label}</div>
+          ) : null}
+        </>
       )}
     </GaugeFrame>
   );
@@ -581,7 +590,12 @@ export function OpenGauge({
         )}
       </svg>
 
-      {property === "icon" && <div style={iconBoxStyleWithColor(spec.iconBox, interpolatedAccent)}>{icon}</div>}
+      {property === "icon" && (
+        <>
+          <div style={textBoxStyle(spec.text.current, interpolatedAccent)}>{value}</div>
+          <div style={iconBoxStyleWithColor(spec.iconBox, interpolatedAccent)}>{icon}</div>
+        </>
+      )}
       {property === "text" && (
         <>
           <div style={textBoxStyle(spec.text.current, interpolatedAccent)}>{value}</div>
@@ -779,7 +793,9 @@ export const gaugeVariantGuidance = {
           "Prefer over text when the metadata of the metrics has too many letter count to fit or an icon alone is enough to communicate the meaning of the metadata.",
         ],
         dataRequirements: [
-          "Requires a visible icon.",
+          "Requires value and a visible icon.",
+          "The value renders in the center of the open gauge.",
+          "The icon renders in the bottom icon slot, not in the center of the gauge.",
         ],
         examples: [
           "Small weather condition icon with the current temperature gauge.",

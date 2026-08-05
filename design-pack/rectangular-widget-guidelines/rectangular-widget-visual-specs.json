@@ -20,16 +20,33 @@
   "sharedTokens": {
     "widget": {
       "width": 205,
-      "background": "#000000",
       "cornerRadius": 54,
-      "cornerSmoothing": 1,
-      "cornerSmoothingPercent": 100,
+      "cornerSmoothing": 0.6,
+      "cornerSmoothingPercent": 60,
       "cornerSmoothingIntent": "iOS continuous corner treatment",
       "clipContent": true,
       "defaultInnerPadding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
       "progressBarEdgePaddingException": {
         "topProgressBarTopPadding": 0,
         "bottomProgressBarBottomPadding": 0
+      }
+    },
+    "surfaceModes": {
+      "black_surface": {
+        "background": "#000000",
+        "primaryText": "widget_accent_color.light",
+        "secondaryText": "widget_accent_color.light at 60% opacity",
+        "materialSymbolIcon": "widget_accent_color.light",
+        "progressValue": "widget_accent_color.light",
+        "useWhen": "A secondary rectangular widget or any explicit black-surface layout."
+      },
+      "accent_surface": {
+        "background": "widget_accent_color.dark",
+        "primaryText": "#FFFFFF",
+        "secondaryText": "rgba(242, 244, 252, 0.6)",
+        "materialSymbolIcon": "#FFFFFF",
+        "progressValue": "#FFFFFF",
+        "useWhen": "The primary rectangular widget, especially in multicolor mode or a focused one-rectangular-widget face."
       }
     },
     "typography": {
@@ -40,14 +57,14 @@
       "numbers": { "fontSize": 40, "lineHeight": 42.5, "fontWeight": 400 }
     },
     "colors": {
-      "primaryText": "#FFFFFF",
-      "secondaryText": "rgba(242, 244, 252, 0.6)",
+      "primaryText": "resolved by surfaceModes",
+      "secondaryText": "resolved by surfaceModes",
       "mutedSurface": "rgba(242, 244, 252, 0.1)",
       "radioUnselectedStroke": "#9BA0AA",
       "radioSelected": "#F2F4FC",
       "progressBase": "rgba(242, 244, 252, 0.1)",
-      "progressValue": "widget_accent_color",
-      "materialSymbolIcon": "widget_accent_color"
+      "progressValue": "resolved by surfaceModes",
+      "materialSymbolIcon": "resolved by surfaceModes"
     },
     "controls": {
       "buttonBox": { "width": 48, "height": 48 },
@@ -72,7 +89,7 @@
         "padding": { "top": 16, "right": 16, "bottom": 0, "left": 16 },
         "gap": 10,
         "cornerRadius": 54,
-        "cornerSmoothing": 1,
+        "cornerSmoothing": 0.6,
         "clipContent": true
       },
       "regions": {
@@ -110,7 +127,7 @@
         "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
         "gap": 8,
         "cornerRadius": 54,
-        "cornerSmoothing": 1,
+        "cornerSmoothing": 0.6,
         "clipContent": true
       },
       "regions": {
@@ -136,7 +153,7 @@
         "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
         "gap": 16,
         "cornerRadius": 54,
-        "cornerSmoothing": 1,
+        "cornerSmoothing": 0.6,
         "clipContent": true
       },
       "regions": {
@@ -162,9 +179,9 @@
         "cornerRadius": "watch_mask"
       },
       "regions": {
-        "date": { "x": 16, "y": 16, "unit": "body" },
-        "currentTime": { "x": 139, "y": 16, "unit": "body", "align": "right" },
-        "title": { "x": 16, "y": 42, "unit": "bodyEmphasis" },
+        "date": { "x": 16, "y": 16, "width": 70, "height": 22, "unit": "body" },
+        "currentTime": { "x": 139, "y": 16, "width": 50, "height": 22, "unit": "body", "align": "right", "font": "SF Compact Regular 19pt" },
+        "title": { "x": 16, "y": 42, "width": 173, "unit": "bodyEmphasis" },
         "list": {
           "x": 6,
           "y": 71,
@@ -192,6 +209,8 @@
       "rectangular timer rendered without timer_rectangular template",
       "checklist rendered with any other widget on the face",
       "checklist rendered outside checklist_full_face template",
+      "checklist generated with a separate large watch-face time/date stack instead of the locked Figma component slots",
+      "checklist component geometry changed instead of filling title, item text, and checked state",
       "required control slot omitted",
       "regular rectangular widget missing 16px inner padding",
       "edge progress bar has vertical padding from attached edge",

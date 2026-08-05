@@ -69,7 +69,7 @@
   },
   "circularSelectionDelegation": {
     "rule": "For content types in circularEligibility.allowedContentTypes, choose the circular component, property variant, and size by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. Do not hardcode content-type-to-component mappings in this policy.",
-    "focusedOneWidgetRule": "When the context calls for a focused one-widget watch face and the selected content type supports circular rendering, select one L circular widget.",
+    "focusedOneWidgetRule": "When the context calls for a focused one-widget watch face and the selected content type supports circular rendering, select one L circular widget unless the request asks for summary/detail text or controls that need a rectangular widget.",
     "mustUseApprovedComponents": [
       "close_gauge",
       "open_gauge"
@@ -123,15 +123,15 @@
           "property": "icon",
           "size": "S"
         },
-        "useWhen": "Countdown is the only visible timer need and controls are not required."
+        "useWhen": "Countdown status is the only visible timer need and controls, labels, creation, and duration setup are not required."
       },
       "allowedRectangularTemplate": "timer_rectangular",
       "customRectangularLayoutAllowed": false,
-      "selectionReason": "Timer may be compact as a circular close_gauge, but if rectangular it must use timer_rectangular."
+      "selectionReason": "Timer may be compact as a circular close_gauge for passive countdown status, but timer creation, labeled timers, duration setup, and visible controls must use timer_rectangular."
     }
   },
   "generativeContentRules": {
-    "rule": "For content types outside strictTemplateRules, choose circular widgets only when the content type is listed in circularEligibility.allowedContentTypes. All circular component, variant, and size decisions must be made by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. All other generative content types require rectangular generated compositions in a later phase."
+    "rule": "For content types outside strictTemplateRules, choose circular widgets only when the content type is listed in circularEligibility.allowedContentTypes and the user needs compact progress or status. Choose generated_rectangular_widget when an eligible content type needs readable summary/detail text or controls. For workout specifically, summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use generated_rectangular_widget. For weather specifically, when weather is the only selected content type, prioritize either one generated_rectangular_widget weather summary or three S circular widgets split into condition, temperature range, and precipitation chance; do not use a single L circular weather widget. For iot_control specifically, control, toggle, turn on/off, set, adjust, dim, lock/unlock, room, thermostat, temperature, light, fan, heater, or AC requests should use generated_rectangular_widget. Timer is a strict-template exception: timer creation, labeled timers, duration setup, and visible controls should use timer_rectangular. All circular component, variant, and size decisions must be made by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. All other generative content types require rectangular generated compositions in a later phase."
   },
   "deterministicExamples": [
     {

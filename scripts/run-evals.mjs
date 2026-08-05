@@ -51,10 +51,11 @@ function summarizeResult(result, status, latencyMs) {
     validationErrors: validation.errors || [],
     fallbackUsed: Boolean(layout?.metadata?.fallbackUsed),
     fallbackReason: layout?.metadata?.fallbackReason || result?.model?.fallbackReason || null,
+    validationFailureRendered: Boolean(result?.renderInvalidModelResult && !validation.ok),
     retryCount: layout?.metadata?.retryCount ?? result?.model?.retryCount ?? 0,
     validationAttemptCount: validationAttempts.length,
     repaired: validationAttempts.some((attempt) => attempt.repairedFromPreviousValidation && attempt.validation?.ok),
-    exhaustedRetries: validationAttempts.length > 1 && !validationAttempts.some((attempt) => attempt.validation?.ok),
+    exhaustedRetries: validationAttempts.length > 0 && !validationAttempts.some((attempt) => attempt.validation?.ok),
     selectedContentTypes: result?.selectedContentTypes || layout?.metadata?.selectedContentTypes || [],
     selectedWidgets: Array.isArray(layout?.widgets)
       ? layout.widgets.map((widget) => ({
@@ -76,6 +77,7 @@ function summarizeBatch(results, label) {
   const fallbacks = results.filter((item) => item.result.fallbackUsed).length;
   const repaired = results.filter((item) => item.result.repaired).length;
   const exhaustedRetries = results.filter((item) => item.result.exhaustedRetries).length;
+  const validationFailureRendered = results.filter((item) => item.result.validationFailureRendered).length;
   const latencies = results.map((item) => item.result.latencyMs).filter((value) => typeof value === "number");
   const averageLatencyMs = latencies.length
     ? Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length)
@@ -89,12 +91,13 @@ function summarizeBatch(results, label) {
     fallbackRate: total ? fallbacks / total : 0,
     repaired,
     exhaustedRetries,
+    validationFailureRendered,
     averageLatencyMs
   };
 }
 
 function printSummary(summary) {
-  console.log(`${summary.label}: ${summary.accepted}/${summary.total} accepted, ${summary.fallbacks} fallback, ${summary.repaired} repaired, ${summary.exhaustedRetries} exhausted, avg ${summary.averageLatencyMs}ms`);
+  console.log(`${summary.label}: ${summary.accepted}/${summary.total} accepted, ${summary.fallbacks} fallback, ${summary.repaired} repaired, ${summary.exhaustedRetries} exhausted, ${summary.validationFailureRendered} invalid-rendered, avg ${summary.averageLatencyMs}ms`);
 }
 
 async function runFallbackCase(testCase, designPack) {
@@ -190,7 +193,7 @@ const report = {
   },
   notes: [
     "fallback-only runs execute deterministic local generation without OpenAI.",
-    "backend-endpoint runs use the current /api/generate-watch-ui server, including OpenAI, repair retries, validation, and deterministic fallback."
+    "backend-endpoint runs use the current /api/generate-watch-ui server, including OpenAI, repair retries, validation, deterministic fallback for provider failures, and invalid model preview rendering for validation failures."
   ]
 };
 

@@ -23,7 +23,7 @@
     {
       "id": "rectangular-full-width-corner-contract",
       "strictness": "must",
-      "rule": "Regular rectangular widgets must be 205pt wide, use 54pt corner radius, and use 100% corner smoothing. Height may vary by template or layout need."
+      "rule": "Regular rectangular widgets must be 205pt wide, use 54pt corner radius, and use 60% corner smoothing. Height may vary by template or layout need."
     },
     {
       "id": "rectangular-padding-and-clipping-contract",
@@ -44,8 +44,29 @@
       "id": "accent-owned-by-watch-rules",
       "strictness": "must",
       "rule": "widget_accent_color is resolved by watch-face-generation-rules.md and consumed by rectangular templates."
+    },
+    {
+      "id": "rectangular-surface-mode-required",
+      "strictness": "must",
+      "rule": "Every rectangular widget must declare surfaceMode as black_surface or accent_surface. The primary rectangular widget should use accent_surface; if two rectangular widgets render, only the more important one may use accent_surface and the other must use black_surface."
     }
   ],
+  "surfaceModes": {
+    "black_surface": {
+      "background": "#000000",
+      "foreground": "widget_accent_color.light",
+      "secondary": "widget_accent_color.light at 60% opacity",
+      "icon": "widget_accent_color.light",
+      "progressValue": "widget_accent_color.light"
+    },
+    "accent_surface": {
+      "background": "widget_accent_color.dark",
+      "foreground": "#FFFFFF",
+      "secondary": "rgba(242, 244, 252, 0.6)",
+      "icon": "#FFFFFF",
+      "progressValue": "#FFFFFF"
+    }
+  },
   "templatePolicy": {
     "purpose": "Defines which semantic content types must use strict rectangular templates and which content types may choose between circular and rectangular rendering.",
     "strictRectangularContentTypes": {
@@ -129,8 +150,7 @@
       },
       "legalSize": { "width": 205, "height": 127 },
       "requiredData": {
-        "content": "string",
-        "dueDatetime": "datetime"
+        "content": "string"
       },
       "optionalData": {
         "label": "string",
@@ -215,6 +235,8 @@
       "rules": [
         "Checklist must use this full-face template.",
         "Checklist must be the only widget on the watch face.",
+        "Checklist must preserve the locked Figma component geometry: widget x=0 y=0 width=205 height=251; date x=16 y=16 width=70 height=22; time x=139 y=16 width=50 height=22 right-aligned SF Compact Regular 19pt; title x=16 y=42; list x=6 y=71 width=193.",
+        "The generator may fill only title, items, and checked/completed state; it must not invent a separate watch-face time/date layout around checklist.",
         "Render checklist items as rows with radio buttons on the left and Body text on the right."
       ],
       "visualSpecId": "checklist_full_face"

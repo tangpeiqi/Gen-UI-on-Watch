@@ -39,8 +39,11 @@ Use it as the decision layer:
 Variant content rules:
 - If `close_gauge` is the only widget for its content type, choose `property=icon`, not `property=text`, so the widget communicates what the data represents.
 - `open_gauge.text` must include a short visible bottom `label`; `open_gauge.icon` must include a valid semantic `icon`.
+- `open_gauge.icon` renders the `value` in the center and the `icon` in the bottom slot. Do not render the icon in the center of the gauge.
 - `open_gauge.range` must include `lowLabel` and `highLabel`; `open_gauge.offset` must include `referenceValue`.
-- Open Gauge bottom text uses fixed Figma font sizes: `S=15pt`, `M=18pt`, `L=32pt`. Keep bottom labels short enough to avoid clipping.
+- Open Gauge and Close Gauge text variant center value boxes use fixed widths: `S=55px`, `M=65px`, `L=115px`. Keep center values short enough to avoid clipping.
+- Open Gauge bottom text uses fixed Figma font sizes: `S=15pt`, `M=18pt`, `L=32pt`, and fixed bottom text box widths: `S=48px`, `M=60px`, `L=96px`. Keep bottom labels short enough to avoid clipping.
+- Close Gauge text footnotes use fixed text box widths: `S=40px`, `M=50px`, `L=80px`. Omit the footnote or use a shorter unit label if it would clip.
 
 ## Close Gauge
 

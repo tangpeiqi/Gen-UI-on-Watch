@@ -197,6 +197,7 @@
       "required": [
         "mode",
         "accentColor",
+        "surfaceAccentColor",
         "sourceRule"
       ],
       "properties": {
@@ -211,12 +212,17 @@
           "type": "string",
           "pattern": "^#([0-9a-fA-F]{6})$"
         },
+        "surfaceAccentColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{6})$"
+        },
         "sourceRule": {
           "type": "string",
           "enum": [
             "one-content-type-prefers-mono-tone",
             "two-content-types-prefers-multicolor",
             "three-content-types-flexible-color-mode",
+            "multi-content-balanced-color-mode",
             "user-context-explicit-color-mode"
           ]
         }
@@ -287,6 +293,14 @@
           "enum": [
             "fill",
             "outline_stroke"
+          ]
+        },
+        "textAlign": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
           ]
         }
       }
@@ -413,6 +427,32 @@
                     "const": 72
                   }
                 }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "component": {
+                "const": "open_gauge"
+              },
+              "variant": {
+                "properties": {
+                  "property": {
+                    "const": "icon"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": {
+                "required": [
+                  "value",
+                  "icon"
+                ]
               }
             }
           }
@@ -819,6 +859,7 @@
         "layer",
         "cornerRadius",
         "cornerSmoothing",
+        "surfaceMode",
         "verticalAlignment"
       ],
       "properties": {
@@ -881,7 +922,14 @@
           "const": 54
         },
         "cornerSmoothing": {
-          "const": 100
+          "const": 60
+        },
+        "surfaceMode": {
+          "type": "string",
+          "enum": [
+            "black_surface",
+            "accent_surface"
+          ]
         },
         "verticalAlignment": {
           "type": "string",
@@ -910,8 +958,7 @@
               },
               "data": {
                 "required": [
-                  "content",
-                  "dueDatetime"
+                  "content"
                 ]
               }
             }
@@ -935,7 +982,10 @@
               },
               "data": {
                 "required": [
-                  "countdown"
+                  "countdown",
+                  "timerLabel",
+                  "timerSourceId",
+                  "timerDurationMinutes"
                 ]
               }
             }
@@ -1213,6 +1263,17 @@
           "type": "string"
         },
         "timerLabel": {
+          "type": "string"
+        },
+        "timerSourceId": {
+          "type": "string"
+        },
+        "timerDurationMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 180
+        },
+        "timerReason": {
           "type": "string"
         },
         "running": {

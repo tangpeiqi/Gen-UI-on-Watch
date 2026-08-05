@@ -191,11 +191,13 @@ function generationRecordFromResult({ context, result, status, validationAttempt
     fallback: {
       used: Boolean(layout?.metadata?.fallbackUsed),
       id: layout?.metadata?.fallbackId || null,
-      reason: layout?.metadata?.fallbackReason || model.fallbackReason || failureKind || null,
+      reason: layout?.metadata?.fallbackUsed ? layout?.metadata?.fallbackReason || model.fallbackReason || failureKind || null : null,
       provider: model.fallbackProvider || null,
       model: model.fallbackModel || null
     },
+    validationFailureRendered: Boolean(result?.renderInvalidModelResult && !validation.ok),
     acceptedLayout: validation.ok ? layout : null,
+    renderedLayout: layout,
     latencyMs: model.latencyMs ?? null,
     estimatedCost: model.estimatedCost || "not-calculated",
     userFeedback: null
@@ -333,33 +335,35 @@ async function handleGenerateWatchUi(request, response) {
     }
 
     if (!validation.ok) {
-      const fallbackResult = generateFallbackWatchUi({
-        context,
-        preferences: { ...preferences, fallbackReason: "invalid_output" },
-        designPack
-      });
       const logs = [
         ...openAiLogs,
         ...attemptLogs,
         { id: "select-content-types", status: "complete", detail: selectedContentTypes.join(", ") },
         { id: "choose-widgets", status: "complete", detail: widgetDecisions.join(" | ") },
-        { id: "fallback", status: "complete", detail: "OpenAI layouts failed validation after retry; deterministic backend fallback is returned." },
-        ...fallbackResult.logs
+        { id: "validation-failed", status: "warning", detail: `OpenAI layout failed validation after configured attempt(s): ${validationSummaryForLog(validation)}` },
+        { id: "fallback", status: "skipped", detail: "Deterministic fallback was not used; the invalid OpenAI layout is returned for preview and debugging." },
+        { id: "render", status: "pending", detail: "Frontend may render the invalid model layout with validation failure visible in debug." }
       ];
       const result = {
-        ...fallbackResult,
+        layout: aiResult.layout,
         logs,
+        validation,
+        selectedContentTypes,
+        widgetDecisions,
+        pseudoContextSummary: [
+          `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"}.`,
+          `Loaded pseudo context markdown (${designPack.pseudoContextMarkdown.length} characters) for prompt assembly.`
+        ],
         model: {
           ...aiResult.model,
           retryCount: maxValidationRetries,
-          fallbackProvider: fallbackResult.model.provider,
-          fallbackModel: fallbackResult.model.model,
-          fallbackReason: "invalid_output"
+          validationFailedRendered: true
         },
         aiValidation: validation,
-        validationAttempts
+        validationAttempts,
+        renderInvalidModelResult: true
       };
-      sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, result, { context, validationAttempts, aiValidation: validation, failureKind: "invalid_output" });
+      sendGenerationResult(response, 200, result, { context, validationAttempts, aiValidation: validation, failureKind: "invalid_output" });
       return;
     }
 

@@ -40,6 +40,7 @@
     "layer",
     "cornerRadius",
     "cornerSmoothing",
+    "surfaceMode",
     "verticalAlignment",
     "composition"
   ],
@@ -103,7 +104,10 @@
       "const": 54
     },
     "cornerSmoothing": {
-      "const": 100
+      "const": 60
+    },
+    "surfaceMode": {
+      "$ref": "#/$defs/surfaceMode"
     },
     "verticalAlignment": {
       "type": "string",
@@ -124,6 +128,13 @@
     }
   },
   "$defs": {
+    "surfaceMode": {
+      "type": "string",
+      "enum": [
+        "black_surface",
+        "accent_surface"
+      ]
+    },
     "composition": {
       "type": "object",
       "additionalProperties": false,
@@ -244,12 +255,6 @@
         },
         "align": {
           "$ref": "#/$defs/textAlign"
-        },
-        "maxLines": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 2,
-          "default": 1
         }
       }
     },
@@ -434,13 +439,14 @@
       "template": "generated_rectangular_widget",
       "frame": {
         "x": 0,
-        "y": 112,
+        "y": 100,
         "width": 205,
-        "height": 139
+        "height": 151
       },
       "layer": "top",
       "cornerRadius": 54,
-      "cornerSmoothing": 100,
+      "cornerSmoothing": 60,
+      "surfaceMode": "accent_surface",
       "verticalAlignment": "bottom",
       "accentSource": "widget_accent_color",
       "composition": {

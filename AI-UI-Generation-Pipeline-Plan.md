@@ -42,6 +42,7 @@ Each generation should produce or log these intermediate decisions before a fina
 3. **Select semantic content types:** use `design-pack/widget-content-types.md`, `design-pack/widget-content-types.json`, and `design-pack/watch-face-generation-rules.md` to decide which content types are useful. Select no more than three.
 4. **Choose widget count and shape:** use the selected content types, their metadata density, the content-type JSON contract, `watch-face-generation-rules.md`, `rectangular-widget-guidelines`, and `circular-widget-guidelines` to decide whether to render one, two, or three widgets, and whether each widget is circular or rectangular.
 5. **Populate widgets:** use live context, pseudo context, `widget-content-types.md`, `widget-content-types.json`, and `material-symbols-registry.json` to fill required data fields and choose semantic icon tokens only.
+   - For `timer`, treat `demo-data/pseudo-context.json.timerContext.opportunities` as possible timer sources, not active timers. The agent must choose the timer opportunity that best matches the live context, use that opportunity's suggested duration as the countdown, and log the selected opportunity id and reason. It must not reuse a hardcoded timer label or countdown across generations.
 6. **Generate layout:** use `watch-face-generation-rules.md`, circular guidelines, and rectangular guidelines to place time, date, widgets, and layers inside the 205 x 251 `Gen Watch Face` container.
 7. **Validate and render:** schema validation and deterministic rule validation must pass before `index.html` renders the layout in the Preview panel.
 
@@ -92,6 +93,7 @@ The rule validator should enforce:
 - date remains secondary and is not grouped into the primary time object
 - widgets use valid component variants and required data props
 - icons use approved semantic tokens and match allowed content types
+- timer widgets include a context-derived `timerSourceId`, `timerLabel`, `timerDurationMinutes`, and `countdown`; `timerSourceId` must match a pseudo-context timer opportunity unless the live user context explicitly provides a timer task
 - text, icon boxes, and dynamic values do not collide or overflow
 
 Invalid generations should be rejected, retried, repaired, or replaced with deterministic fallbacks.
