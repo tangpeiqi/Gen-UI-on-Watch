@@ -34,8 +34,8 @@
   },
   "colorPolicy": {
     "agentMayChooseColors": false,
-    "rule": "Circular widget colors are resolved by watch-face-generation-rules.md before rendering. Components consume widget_accent_color or the component-specific two-color open gauge rule; they do not invent independent colors.",
-    "sourceOfTruth": "watch-face-generation-rules.md widget_accent_color",
+    "rule": "Circular widget colors are resolved by generation-guide.md before rendering. Components consume widget_accent_color or the component-specific two-color open gauge rule; they do not invent independent colors.",
+    "sourceOfTruth": "generation-guide.md widget_accent_color",
     "minimumContrast": {
       "primaryTextOnBlack": "4.5:1",
       "secondaryTextOnBlack": "3:1",
@@ -60,7 +60,7 @@
     },
     "openGauge": {
       "accentColorCount": "1_or_2",
-      "colorSource": "watch-face-generation-rules.md",
+      "colorSource": "generation-guide.md",
       "oneColorMode": {
         "color": "widget_accent_color",
         "rules": [
@@ -188,7 +188,7 @@
             "icon": "widget_accent_color"
           },
           "contentAware": false,
-          "sourceOfTruth": "watch-face-generation-rules.md widget_accent_color"
+          "sourceOfTruth": "generation-guide.md widget_accent_color"
         }
       },
       "preferredWebImplementation": {
@@ -392,7 +392,7 @@
             "offsetText": "offset_color"
           },
           "contentAware": false,
-          "sourceOfTruth": "watch-face-generation-rules.md"
+          "sourceOfTruth": "generation-guide.md"
         }
       },
       "preferredWebImplementation": {

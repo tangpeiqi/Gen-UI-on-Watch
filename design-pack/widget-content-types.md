@@ -1,46 +1,12 @@
 # Widget Content Types
 
-This document defines semantic widget content types for the generative UI agent. Use it with `watch-face-generation-rules.md`: this file defines what information can be shown for each type, while the watch-face generation rules decide whether the type renders as a single widget, multiple widgets, or a mixed group.
+This document defines semantic widget content types for the generative UI agent. Use it with `widget-selection-policy.json`: this file defines what information can be shown for each type, while the selection policy decides whether the type renders as a single widget, multiple widgets, or a mixed group.
 
 The content taxonomy should not make the final layout-budget decision. It should identify useful metadata, which fields can stand alone as compact metrics, which fields need text space, and which fields require controls.
 
-## Selection Contract
+## Ownership
 
-```yaml
-semantic_widget_selection:
-  steps:
-    - read_current_context
-    - combine_with_prepopulated_pseudo_context
-    - infer_up_to_three_semantic_content_types
-    - extract_required_metadata
-    - extract_available_optional_metadata
-    - identify_primary_display_value
-    - identify_splittable_metric_fields
-    - identify_detail_fields
-    - identify_control_fields
-    - pass_content_metadata_to_watch_face_generation_rules
-
-  rules:
-    - id: semantic-before-layout
-      strictness: must
-      rule: Choose semantic content types before choosing widget count, shape, or layout.
-
-    - id: max-three-types
-      strictness: must
-      rule: Select at most three semantic content types from the combined context.
-
-    - id: required-metadata-first
-      strictness: must
-      rule: Required metadata must be prioritized over optional metadata.
-
-    - id: optional-only-when-available
-      strictness: must
-      rule: Optional metadata should render only when available from context or specifically requested.
-
-    - id: strategy-owned-by-layout
-      strictness: must
-      rule: Final single, multi, or mixed rendering strategy is decided by watch-face-generation-rules.md.
-```
+Selection sequence, ranking, eligibility, count, and shape decisions belong to `widget-selection-policy.json`. This taxonomy supplies the data fields and metadata roles used by selection and widget design. Widget guidelines own how those fields are displayed.
 
 ## Metadata Role Columns
 
@@ -170,7 +136,7 @@ content_types:
       - Visible controls require rectangular rendering.
       - Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use `rectangular_layout_templates.timer_rectangular`.
       - Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.
-      - Timer may render as a Close Gauge circular widget from `Circular Widget Guidelines/circular-widget-catalog.json`, or as a rectangular widget using `rectangular_layout_templates.timer_rectangular` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
+      - Timer may render as a Close Gauge circular widget from `circular-widget-guidelines/circular-widget-catalog.json`, or as a rectangular widget using `rectangular_layout_templates.timer_rectangular` from `rectangular-widget-guidelines/rectangular-widget-catalog.json`.
 
   heart_rate:
     purpose: Show the latest heart rate reading and optional activity range.
@@ -314,7 +280,7 @@ content_types:
         - previous_action
     rules:
       - Visible playback controls require rectangular rendering.
-      - Must use `rectangular_layout_templates.music_control` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json` when rendered.
+      - Must use `rectangular_layout_templates.music_control` from `rectangular-widget-guidelines/rectangular-widget-catalog.json` when rendered.
 
   reminder:
     purpose: Show a reminder to-do item with a completion affordance.
@@ -336,7 +302,7 @@ content_types:
         - mark_complete_action
     rules:
       - Visible mark complete controls require rectangular rendering.
-      - Must use `rectangular_layout_templates.reminder` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json` when rendered.
+      - Must use `rectangular_layout_templates.reminder` from `rectangular-widget-guidelines/rectangular-widget-catalog.json` when rendered.
 
   weather:
     purpose: Show current weather and daily temperature range.
@@ -366,7 +332,7 @@ content_types:
     rules:
       - When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.
       - The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.
-      - Do not render Weather-only as one L circular widget unless the user explicitly asks for one compact weather metric.
+      - Do not render Weather-only as one L circular widget; use a generated summary or three S circular widgets according to widget-selection-policy.json.
 
   checklist:
     purpose: Show a scrollable list of checklist items.
@@ -389,7 +355,7 @@ content_types:
         - completed_items
     rules:
       - Checklist is a locked full-face component; fill content only.
-      - Must use `rectangular_layout_templates.checklist_full_face` from `Rectangular Widget Guidelines/rectangular-widget-catalog.json`.
+      - Must use `rectangular_layout_templates.checklist_full_face` from `rectangular-widget-guidelines/rectangular-widget-catalog.json`.
       - Must be the only widget on the watch face.
       - Must preserve the Figma component frame and slots: widget x=0 y=0 width=205 height=251; date x=16 y=16 width=70 height=22; time x=139 y=16 width=50 height=22, right-aligned SF Compact Regular 19pt; title x=16 y=42; list x=6 y=71 width=193.
       - Do not generate a separate large time/date stack or any extra watch-face widgets around checklist.

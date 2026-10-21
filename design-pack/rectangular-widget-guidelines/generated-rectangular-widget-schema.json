@@ -10,7 +10,7 @@
     "rectangular-widget-catalog.json",
     "../layout-schema.json",
     "../material-symbols-registry.json",
-    "../watch-face-generation-rules.md"
+    "../generation-guide.md"
   ],
   "generatedRectangularWidgetContentTypes": [
     "workout",

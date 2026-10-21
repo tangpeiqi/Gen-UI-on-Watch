@@ -32,6 +32,12 @@ const validator = createLayoutValidator(designPack);
 const designPackHash = crypto
   .createHash("sha256")
   .update(JSON.stringify({
+    runtimeWorkflow: designPack.runtimeWorkflow,
+    widgetContentTypes: designPack.widgetContentTypes,
+    widgetDesignResources: designPack.widgetDesignResources,
+    generationGuide: designPack.generationGuide,
+    sampleLayouts: designPack.sampleLayouts,
+    circularVisualSpecs: designPack.circularVisualSpecs,
     schema: designPack.schema,
     materialSymbolsRegistry: designPack.materialSymbolsRegistry,
     widgetSelectionPolicy: designPack.widgetSelectionPolicy,

@@ -39,11 +39,11 @@ Each generation should produce or log these intermediate decisions before a fina
 
 1. **Read live context:** collect `timeOfDay`, `location`, `activity`, and `goal` from the Context panel in `index.html`.
 2. **Load past context:** combine the live context with `demo-data/pseudo-context.md` and `demo-data/pseudo-context.json` so the agent has a larger fictional user picture.
-3. **Select semantic content types:** use `design-pack/widget-content-types.md`, `design-pack/widget-content-types.json`, and `design-pack/watch-face-generation-rules.md` to decide which content types are useful. Select no more than three.
-4. **Choose widget count and shape:** use the selected content types, their metadata density, the content-type JSON contract, `watch-face-generation-rules.md`, `rectangular-widget-guidelines`, and `circular-widget-guidelines` to decide whether to render one, two, or three widgets, and whether each widget is circular or rectangular.
-5. **Populate widgets:** use live context, pseudo context, `widget-content-types.md`, `widget-content-types.json`, and `material-symbols-registry.json` to fill required data fields and choose semantic icon tokens only.
+3. **Select semantic content types:** use `design-pack/widget-content-types.md`, `design-pack/widget-content-types.json`, and `design-pack/widget-selection-policy.json` to decide which content types are useful. Select no more than three.
+4. **Choose widget count and shape:** use `widget-selection-policy.json` with the semantic metadata to decide retained content types, widget count, circular/rectangular shapes, and strict templates.
+5. **Design and populate widgets:** use the selected shapes, circular/rectangular guidelines, catalogs, visual specs, live context, pseudo context, `widget-content-types.md`, `widget-content-types.json`, and `material-symbols-registry.json` to fill required data fields and choose semantic icon tokens only.
    - For `timer`, treat `demo-data/pseudo-context.json.timerContext.opportunities` as possible timer sources, not active timers. The agent must choose the timer opportunity that best matches the live context, use that opportunity's suggested duration as the countdown, and log the selected opportunity id and reason. It must not reuse a hardcoded timer label or countdown across generations.
-6. **Generate layout:** use `watch-face-generation-rules.md`, circular guidelines, and rectangular guidelines to place time, date, widgets, and layers inside the 205 x 251 `Gen Watch Face` container.
+6. **Generate layout:** after widget internal designs and required dimensions are complete, use `generation-guide.md` to select the overall theme and place time, date, widgets, and layers inside the 205 x 251 `Gen Watch Face` container.
 7. **Validate and render:** schema validation and deterministic rule validation must pass before `index.html` renders the layout in the Preview panel.
 
 The Debug panel should eventually show the final layout JSON plus step-level logs for content-type selection, widget-shape selection, icon selection, validation, retry, and fallback decisions.
@@ -52,7 +52,9 @@ The Debug panel should eventually show the final layout JSON plus step-level log
 Load the relevant design-pack files on the backend for each generation request:
 
 - `design-pack/layout-schema.json`
-- `design-pack/watch-face-generation-rules.md`
+- `design-pack/README.md` (ordered runtime workflow)
+- `design-pack/widget-selection-policy.json`
+- `design-pack/generation-guide.md`
 - `design-pack/widget-content-types.md`
 - `design-pack/widget-content-types.json`
 - `design-pack/circular-widget-guidelines/circular-widget-catalog.json`
@@ -80,7 +82,7 @@ Use OpenAI's Responses API with Structured Outputs and `strict: true` against `d
 Run validation in two deterministic phases before anything reaches the frontend:
 
 1. Schema validation checks that the model returned JSON matching `design-pack/layout-schema.json`.
-2. Rule validation checks project-specific constraints from `design-pack/watch-face-generation-rules.md` and related component catalogs.
+2. Rule validation checks project-specific constraints from `design-pack/generation-guide.md` and related component catalogs.
 
 The rule validator should enforce:
 

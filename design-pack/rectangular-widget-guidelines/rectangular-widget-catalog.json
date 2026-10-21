@@ -6,7 +6,7 @@
     "generated-rectangular-widget-schema.json",
     "rectangular-widget-visual-specs.json",
     "RectangularWidgets.tsx",
-    "../watch-face-generation-rules.md",
+    "../generation-guide.md",
     "../widget-content-types.md",
     "../widget-content-types.json"
   ],
@@ -43,7 +43,7 @@
     {
       "id": "accent-owned-by-watch-rules",
       "strictness": "must",
-      "rule": "widget_accent_color is resolved by watch-face-generation-rules.md and consumed by rectangular templates."
+      "rule": "widget_accent_color is resolved by generation-guide.md and consumed by rectangular templates."
     },
     {
       "id": "rectangular-surface-mode-required",
@@ -185,7 +185,7 @@
       },
       "legalSize": { "width": 205, "height": 139 },
       "alternativeAllowedComponent": "close_gauge",
-      "alternativeComponentCatalog": "../Circular Widget Guidelines/circular-widget-catalog.json",
+      "alternativeComponentCatalog": "../circular-widget-guidelines/circular-widget-catalog.json",
       "requiredData": {
         "countdown": "duration"
       },

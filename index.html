@@ -809,7 +809,8 @@
       </section>
     </main>
 
-    <script>
+    <script type="module">
+      import { fitTimeLayout, measureTimeText, timeFrameInsideMask } from "./scripts/time-layout.mjs";
       const timeField = document.querySelector("#time-of-day");
       const form = document.querySelector("#context-form");
       const logs = document.querySelector("#logs");
@@ -1088,7 +1089,7 @@
       }
 
       function omittedByCompositionDecision(contentType) {
-        return `${contentType} -> omitted because a rectangular-present composition may render at most two widgets total`;
+        return `${contentType} -> omitted because this local fallback template has no remaining placement slot`;
       }
 
       function fallbackReasonFromContext(context) {
@@ -2238,26 +2239,12 @@
             const path = `time.containers[${index}]`;
             const anchorEdges = String(container.anchor || "").split("_");
             const isCornerAnchor = anchorEdges.some((edge) => ["top", "bottom"].includes(edge)) && anchorEdges.some((edge) => ["left", "right"].includes(edge));
-            if (layout.time.mode === "single_line" && isCornerAnchor && container.frame?.width !== 205) {
-              errors.push(makeValidationError("rule", "combined_time_corner_requires_full_width", `${path}.anchor`, "combined time may align to a corner only when its container is full width at 205px"));
-            }
             if (layout.time.mode !== "single_line" && isCornerAnchor && container.frame?.width <= 105) {
               errors.push(makeValidationError("rule", "split_time_corner_width", `${path}.frame.width`, "split time containers may align to a corner only when each corner-anchored container is wider than 105px"));
             }
-            if (container.frame?.width === 205 && container.frame?.x !== 0) {
-              errors.push(makeValidationError("rule", "full_width_time_spans_canvas", `${path}.frame.x`, `${path} with 205px width must span the watch-face width from x=0`));
-            }
-            if (container.frame?.width === 205 && container.style?.textAlign !== undefined && container.style.textAlign !== "center") {
-              errors.push(makeValidationError("rule", "full_width_time_center_aligned", `${path}.style.textAlign`, `${path} with 205px width must center-align text`));
-            }
+
           }
-          if (layout.time.mode === "single_line" && layout.time.containers.length === 1) {
-            const container = layout.time.containers[0];
-            const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
-            if (container.frame?.width === 205 && container.frame.height >= 70 && visuallyFilledWidth < 205 * 0.85) {
-              errors.push(makeValidationError("rule", "time_underfills_full_width_container", "time.containers[0].style.fontSize", "when combined time uses a 205px container, center-align it and increase its font size so the digits visually fill at least 85% of the watch-face width"));
-            }
-          }
+
         }
         if (!/^[A-Z]{3} [0-9]{1,2}$/.test(layout.date?.value || "")) {
           errors.push(makeValidationError("rule", "date_compact_format", "date.value", "date must use compact uppercase format like SUN 2"));
@@ -2300,7 +2287,7 @@
           if (textObject.frame.x < 0 || textObject.frame.y < 0 || textObject.frame.x + textObject.frame.width > 205 || textObject.frame.y + textObject.frame.height > 251) {
             errors.push(makeValidationError("rule", "frame_outside_canvas", `${path}.frame`, `${path} must fit inside the 205 x 251 canvas`));
           }
-          if (!layoutUsesChecklistFullFace && estimateTextWidth(textObject.value, textObject.style.fontSize) > textObject.frame.width + 2) {
+          if (!layoutUsesChecklistFullFace && (path === "date" ? estimateTextWidth(textObject.value, textObject.style.fontSize) : measureTimeText(textObject.value, textObject.style).width) > textObject.frame.width + 2) {
             errors.push(makeValidationError("rule", "text_overflow", `${path}.value`, `${path}.value is estimated to overflow its declared frame`));
           }
         }
@@ -2320,8 +2307,8 @@
           }
           if (hasChecklistWidget && layout.widgets.length !== 1) {
             errors.push(makeValidationError("rule", "checklist_must_be_only_widget", "widgets", "checklist layouts must contain exactly one widget"));
-          } else if (rectangularWidgetCount > 0 && layout.widgets.length > 2) {
-            errors.push(makeValidationError("rule", "rectangular_present_widget_cap", "widgets", "rectangular-present layouts must contain at most two widgets"));
+          } else if (rectangularWidgetCount >= 2 && layout.widgets.length > 2) {
+            errors.push(makeValidationError("rule", "rectangular_present_widget_cap", "widgets", "layouts with two rectangular widgets cannot contain a third widget"));
           }
           if (hasChecklistFullFace) {
             const checklistIndex = layout.widgets.findIndex((widget) => widget.template === "checklist_full_face");
@@ -2357,7 +2344,7 @@
               errors.push(makeValidationError("rule", "checklist_component_contract", `widgets[${checklistIndex}]`, "checklist_full_face must use verticalAlignment top and surfaceMode accent_surface"));
             }
           }
-          if (layout.widgets.length === 1 && layout.widgets[0].shape === "circular" && layout.widgets[0].variant?.size !== "L") {
+          if (layout.widgets.length === 1 && layout.widgets[0].shape === "circular" && layout.widgets[0].variant?.size !== "L" && !(layout.widgets[0].contentType === "timer" && layout.widgets[0].variant?.size === "M")) {
             errors.push(makeValidationError("rule", "focused_single_circular_uses_large", "widgets[0].variant.size", "when the watch face focuses on one circular-supported widget, use the L circular size"));
           }
           if (splitTimeRequiredForWidgets(layout.widgets)) {
@@ -2370,11 +2357,7 @@
               if (horizontalOverlap(hour.frame, minute.frame) <= 0 || stackGap > 4) {
                 errors.push(makeValidationError("rule", "split_time_vertical_stack", "time.containers", "split hour and minute containers must stack vertically with horizontal overlap"));
               }
-              const availableColumnWidth = Math.max(hour.frame.width, minute.frame.width);
-              const filledColumnWidth = Math.max(estimateTextWidth(hour.value, hour.style.fontSize), estimateTextWidth(minute.value, minute.style.fontSize));
-              if (filledColumnWidth < availableColumnWidth * 0.55) {
-                errors.push(makeValidationError("rule", "split_time_underfills_available_space", "time.containers", "when split time is required, increase hour and minute font sizes so they fill the remaining empty space"));
-              }
+
             }
           }
 
@@ -2584,6 +2567,7 @@
             widgetDecisions.push(omittedByComposition ? omittedByCompositionDecision(contentType) : deferredWidgetDecision(contentType));
           }
         }
+        fitTimeLayout(layout);
         const validation = validateLocalLayout(layout);
         const model = {
           provider: layout.metadata.provider,
@@ -2700,6 +2684,7 @@
           }
           return `${widget.contentType} -> ${widget.template} from hand-authored sample ${index + 1}`;
         });
+        fitTimeLayout(layout);
         const validation = validateLocalLayout(layout);
         const model = {
           provider: "local-sample",
@@ -3501,9 +3486,36 @@
         return element;
       }
 
+      const timeFontStack = '"SF Compact", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif';
+      function configureTimeFont(context, style) {
+        context.font = `${style.fontWeight || 760} ${style.fontSize}px ${timeFontStack}`;
+        context.textBaseline = "alphabetic";
+        context.textAlign = "left";
+        context.letterSpacing = `${style.letterSpacing || 0}px`;
+      }
+      const timeMeasureContext = document.createElement("canvas").getContext("2d");
+      function measureRenderedTime(value, style) {
+        configureTimeFont(timeMeasureContext, style);
+        const metrics = timeMeasureContext.measureText(value);
+        const stroke = style.treatment === "outline_stroke" ? 1.5 : 0;
+        return {
+          width: metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight + stroke,
+          height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + stroke
+        };
+      }
+
       function renderWatchFace(layout, options = {}) {
         const allowInvalidPreview = Boolean(options.allowInvalidPreview);
         if (!allowInvalidPreview) {
+          fitTimeLayout(layout, measureRenderedTime);
+          if (!layout.widgets?.some(widget => widget.template === "checklist_full_face")) {
+            for (const container of layout.time.containers) {
+              const bounds = measureRenderedTime(container.value, container.style);
+              if (!timeFrameInsideMask(container.frame) || Math.abs(bounds.width - container.frame.width) > 0.1 || Math.abs(bounds.height - container.frame.height) > 0.1) {
+                throw new Error("Rendered time must fit its glyph bounds inside the rounded watch mask");
+              }
+            }
+          }
           validateRenderableLayout(layout);
         }
         genWatchFace.replaceChildren();
@@ -3511,18 +3523,26 @@
         const hasChecklistFullFace = layout.widgets?.some((widget) => widget.template === "checklist_full_face");
 
         const timeElements = (Array.isArray(layout.time?.containers) ? layout.time.containers : [layout.time]).map((container) => {
-          const time = createElement("div", "watch-el watch-time", container.value);
+          const time = document.createElement("canvas");
+          time.className = "watch-el watch-time";
+          time.setAttribute("role", "img");
+          time.setAttribute("aria-label", container.value);
           applyFrame(time, container.frame);
-          time.style.fontFamily = `"${container.style?.fontFamily || "SF Compact"}", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif`;
-          time.style.color = container.style?.color || "#fff";
-          time.style.fontSize = `${container.style?.fontSize || 64}px`;
-          time.style.fontWeight = container.style?.fontWeight || 760;
-          time.style.letterSpacing = `${container.style?.letterSpacing || 0}px`;
-          time.style.textAlign = container.frame?.width === 205 ? "center" : container.style?.textAlign || "left";
-          if (container.style?.treatment === "outline_stroke") {
-            time.style.color = "transparent";
-            time.style.webkitTextStroke = `1.5px ${container.style.color || "#fff"}`;
-          }
+          const scale = window.devicePixelRatio || 1;
+          time.width = Math.ceil(container.frame.width * scale);
+          time.height = Math.ceil(container.frame.height * scale);
+          const context = time.getContext("2d");
+          context.scale(scale, scale);
+          configureTimeFont(context, container.style);
+          const metrics = context.measureText(container.value);
+          const stroke = container.style.treatment === "outline_stroke" ? 0.75 : 0;
+          context.fillStyle = container.style.color || "#fff";
+          context.strokeStyle = container.style.color || "#fff";
+          context.lineWidth = 1.5;
+          const x = metrics.actualBoundingBoxLeft + stroke;
+          const y = metrics.actualBoundingBoxAscent + stroke;
+          if (stroke) context.strokeText(container.value, x, y);
+          else context.fillText(container.value, x, y);
           return time;
         });
 

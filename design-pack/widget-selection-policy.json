@@ -1,9 +1,8 @@
 {
-  "schemaVersion": "1.0.0",
-  "purpose": "Deterministic widget selection policy for Phase 4. Chooses widget count, shape, component, and variant from semantic content types before layout placement.",
+  "schemaVersion": "1.1.0",
+  "purpose": "Canonical widget selection policy. Owns content eligibility, strict template overrides, and composition caps before layout placement.",
   "sourceDocuments": [
     "widget-content-types.json",
-    "watch-face-generation-rules.md",
     "circular-widget-guidelines/circular-widget-catalog.json",
     "rectangular-widget-guidelines/rectangular-widget-catalog.json"
   ],
@@ -32,6 +31,16 @@
       "id": "circular-content-type-whitelist",
       "strictness": "must",
       "rule": "Only workout, timer, heart_rate, iot_control, and weather may render as circular widgets. All other content types must render as rectangular widgets."
+    },
+    {
+      "id": "message-intent-primary",
+      "strictness": "must",
+      "rule": "When the user asks about messages, texts, chat, DMs, unread items, sender, or their latest/last message, select last_message as the primary content type. Match semantic intent, not incidental typography or wording."
+    },
+    {
+      "id": "max-three-semantic-content-types",
+      "strictness": "must",
+      "rule": "Use live context plus available pseudo context to rank candidates and retain at most three semantic content types before applying the top-three/two-rectangle rule and strict standalone overrides."
     }
   ],
   "selectionSequence": [
@@ -41,15 +50,15 @@
     },
     {
       "step": "choose-renderable-composition",
-      "rule": "Choose a renderable composition from the ranked candidates instead of assuming the top three content types can all fit."
+      "rule": "Select the top three ranked content types first, then determine their required shapes before applying composition caps. Do not demote higher-ranked content merely to prefer an all-circular composition."
     },
     {
       "step": "choose-widget-shapes",
-      "rule": "Choose circular or rectangular rendering for each candidate according to circular eligibility, strict template rules, density, controls, and context needs."
+      "rule": "Choose circular or rectangular rendering for each selected content type according to circular eligibility, strict template rules, density, controls, and context needs. This rule applies universally: among the top three ranked content types (or all candidates if fewer than three), if at least two require rectangular rendering, drop the third-ranked content type if present and render the top two as rectangular widgets, even if one of those two could otherwise use a circle. Preserve their original ranking and use each content type's permitted rectangular template or generated composition. Prioritize legibility and enough useful information over retaining a third content type. If fewer than two require rectangles, retain the selected content types when the legal composition fits. Never substitute lower-ranked circular content solely to fit three widgets. Strict standalone requirements take precedence: checklist_full_face renders alone."
     },
     {
       "step": "cap-rendered-content-types",
-      "rule": "Apply composition caps after shape selection: all-circular layouts may render up to three widgets; rectangular-present layouts may render at most two widgets total; checklist renders alone."
+      "rule": "Allow up to three circular widgets with no rectangles; one rectangle plus up to two circular widgets; or two rectangles with no other widgets. Checklist renders alone. All content must still fit."
     },
     {
       "step": "emit-final-widgets",
@@ -65,11 +74,11 @@
       "weather"
     ],
     "rule": "Circular widgets are only legal for compact metric or status content. Eligibility does not force circular rendering; each eligible content type may still choose rectangular rendering when the context needs more detail or controls.",
-    "rectangularOnlyRule": "Every content type not listed in allowedContentTypes is rectangular-only. If no strict rectangular template exists yet, the content type must wait for generated rectangular composition support instead of being forced into a circular widget."
+    "rectangularOnlyRule": "Every content type not listed in allowedContentTypes is rectangular-only. Use its strict template when defined; otherwise use generated_rectangular_widget when permitted by generated-rectangular-widget-schema.json."
   },
   "circularSelectionDelegation": {
-    "rule": "For content types in circularEligibility.allowedContentTypes, choose the circular component, property variant, and size by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. Do not hardcode content-type-to-component mappings in this policy.",
-    "focusedOneWidgetRule": "When the context calls for a focused one-widget watch face and the selected content type supports circular rendering, select one L circular widget unless the request asks for summary/detail text or controls that need a rectangular widget.",
+    "rule": "For eligible compact metric/status content, select circular shape and apply the policy size constraints. Delegate component/property-variant design and fixed rendering tokens to circular-widget-catalog.json, circular-widget-visual-specs.json, and circular-widget-guidelines/README.md.",
+    "focusedOneWidgetRule": "When the final composition contains exactly one widget and it is circular, use L, except a passive timer may use M or L. Apply content-specific selection exceptions first: weather-only requests use a generated summary or three S circular weather widgets; detail or control requests use the appropriate rectangle.",
     "mustUseApprovedComponents": [
       "close_gauge",
       "open_gauge"
@@ -86,9 +95,10 @@
       "rule": "When every rendered widget is circular, the layout may render up to three widgets."
     },
     "rectangularPresent": {
-      "maxWidgets": 2,
+      "maxWidgets": 3,
       "maxRectangularWidgets": 2,
-      "rule": "When at least one rendered widget is rectangular, the layout may render at most two widgets total. The second widget may be circular or rectangular."
+      "rule": "Allow up to three circular widgets with no rectangles; one rectangle plus up to two circular widgets; or two rectangles with no other widgets. Checklist renders alone. All content must still fit.",
+      "maxWidgetsWithTwoRectangular": 2
     },
     "checklistOnly": {
       "maxWidgets": 1,
@@ -120,10 +130,15 @@
       "allowedCircular": {
         "component": "close_gauge",
         "variant": {
-          "property": "icon",
-          "size": "S"
+          "property": "icon"
         },
-        "useWhen": "Countdown status is the only visible timer need and controls, labels, creation, and duration setup are not required."
+        "useWhen": "Countdown status is the only visible timer need and controls, labels, creation, and duration setup are not required.",
+        "allowedSizes": [
+          "S",
+          "M",
+          "L"
+        ],
+        "sizeRule": "Use M or L when this is the only rendered widget; select an approved size that fits when it has companions."
       },
       "allowedRectangularTemplate": "timer_rectangular",
       "customRectangularLayoutAllowed": false,
@@ -131,7 +146,7 @@
     }
   },
   "generativeContentRules": {
-    "rule": "For content types outside strictTemplateRules, choose circular widgets only when the content type is listed in circularEligibility.allowedContentTypes and the user needs compact progress or status. Choose generated_rectangular_widget when an eligible content type needs readable summary/detail text or controls. For workout specifically, summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use generated_rectangular_widget. For weather specifically, when weather is the only selected content type, prioritize either one generated_rectangular_widget weather summary or three S circular widgets split into condition, temperature range, and precipitation chance; do not use a single L circular weather widget. For iot_control specifically, control, toggle, turn on/off, set, adjust, dim, lock/unlock, room, thermostat, temperature, light, fan, heater, or AC requests should use generated_rectangular_widget. Timer is a strict-template exception: timer creation, labeled timers, duration setup, and visible controls should use timer_rectangular. All circular component, variant, and size decisions must be made by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and watch-face-generation-rules.md. All other generative content types require rectangular generated compositions in a later phase."
+    "rule": "For content types outside strictTemplateRules, choose circular widgets only when the content type is listed in circularEligibility.allowedContentTypes and the user needs compact progress or status. Choose generated_rectangular_widget when an eligible content type needs readable summary/detail text or controls. For workout specifically, summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use generated_rectangular_widget. For weather specifically, when weather is the only selected content type, prioritize either one generated_rectangular_widget weather summary or three S circular widgets split into condition, temperature range, and precipitation chance; do not use a single L circular weather widget. For iot_control specifically, control, toggle, turn on/off, set, adjust, dim, lock/unlock, room, thermostat, temperature, light, fan, heater, or AC requests should use generated_rectangular_widget. Timer is a strict-template exception: timer creation, labeled timers, duration setup, and visible controls should use timer_rectangular. All circular component, variant, and size decisions must be made by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and circular-widget-guidelines/README.md. Other supported generative content types use generated_rectangular_widget."
   },
   "deterministicExamples": [
     {
@@ -281,5 +296,21 @@
         }
       ]
     }
-  ]
+  ],
+  "contentExpansionRules": {
+    "rule": "One semantic content type may expand to multiple widgets only when separate requested metadata benefits from separate presentation and the final composition respects compositionRules. Do not expand at the expense of a higher-ranked retained content type. Weather-only selection follows its explicit exception. Content density does not independently impose a one-rectangle cap; use the top-three/two-rectangle ranking rule and whole-face feasibility."
+  },
+  "semanticInputs": {
+    "taxonomy": "widget-content-types.json",
+    "steps": [
+      "read_current_context",
+      "combine_with_prepopulated_pseudo_context",
+      "rank_candidate_content_types",
+      "extract_required_and_available_optional_metadata",
+      "identify_primary_display_value",
+      "identify_splittable_metric_fields",
+      "identify_detail_and_control_fields",
+      "apply_selection_sequence_before_widget_design"
+    ]
+  }
 }

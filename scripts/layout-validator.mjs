@@ -1,8 +1,12 @@
+import { fitTimeLayout, measureTimeText, timeMaskInset, timeFrameInsideMask } from "./time-layout.mjs";
+import { circularGenerationTokens } from "./design-contracts.mjs";
+
 export function createLayoutValidator({
   schema,
   materialSymbolsRegistry,
   widgetSelectionPolicy,
-  generatedRectangularWidgetSchema
+  generatedRectangularWidgetSchema,
+  circularVisualSpecs
 }) {
   const circularComponents = new Set(["close_gauge", "open_gauge"]);
   const rectangularTemplates = new Set(["music_control", "reminder", "timer_rectangular", "checklist_full_face", "generated_rectangular_widget"]);
@@ -10,36 +14,16 @@ export function createLayoutValidator({
   const generatedRectangularBlockTypes = new Set(["text", "inline_small_icon_text", "big_icon_text_group", "number_text_lockup", "edge_progress_bar"]);
   const generatedRectangularTextUnits = new Set(["numbers", "body_emphasis", "body", "secondary"]);
   const circularSizes = new Set(["S", "M", "L"]);
-  const circularSizeFrames = {
-    S: { width: 72, height: 72 },
-    M: { width: 90, height: 90 },
-    L: { width: 150, height: 150 }
-  };
+  const circularTokens = circularGenerationTokens(circularVisualSpecs);
+  const tokenMap = (field) => Object.fromEntries(Object.entries(circularTokens).map(([size, tokens]) => [size, tokens[field]]));
+  const circularSizeFrames = tokenMap("frame");
   const openGaugeMetricKinds = new Set(["temperature", "current_temperature", "weather_temperature", "bpm", "heart_rate", "precipitation_probability", "rain_chance", "uv_index", "air_quality", "recovery", "pace"]);
   const closeGaugeMetricKinds = new Set(["timer", "countdown", "countdown_timer", "workout", "activity", "activity_progress", "goal_progress", "exercise_goal_progress", "battery", "completion", "hydration", "focus"]);
   const cornerSafeSplitTimeMinWidth = 105;
-  const fullWidthTimeFillRatio = 0.85;
-  const splitTimeFillRatio = 0.55;
-  const openGaugeBottomText = {
-    S: { fontSize: 15, width: 48 },
-    M: { fontSize: 18, width: 60 },
-    L: { fontSize: 32, width: 96 }
-  };
-  const openGaugeCenterValueText = {
-    S: { fontSize: 22, width: 55 },
-    M: { fontSize: 32, width: 65 },
-    L: { fontSize: 48, width: 115 }
-  };
-  const closeGaugeCenterValueText = {
-    S: { fontSize: 22, width: 55 },
-    M: { fontSize: 32, width: 65 },
-    L: { fontSize: 42, width: 115 }
-  };
-  const closeGaugeFootnoteText = {
-    S: { fontSize: 10, width: 40 },
-    M: { fontSize: 15, width: 50 },
-    L: { fontSize: 18, width: 80 }
-  };
+  const openGaugeBottomText = tokenMap("openBottom");
+  const openGaugeCenterValueText = tokenMap("openCenter");
+  const closeGaugeCenterValueText = tokenMap("closeCenter");
+  const closeGaugeFootnoteText = tokenMap("closeFootnote");
   const contentTypes = new Set(schema.$defs.contentType.enum);
   const iconTokens = materialSymbolsRegistry.tokens;
   const allowedTopLevel = new Set(Object.keys(schema.properties));
@@ -500,7 +484,7 @@ export function createLayoutValidator({
       ["date", layout.date]
     ];
     for (const [path, textObject] of textObjects) {
-      const estimatedWidth = estimateTextWidth(textObject.value, textObject.style.fontSize);
+      const estimatedWidth = path === "date" ? estimateTextWidth(textObject.value, textObject.style.fontSize) : measureTimeText(textObject.value, textObject.style).width;
       if (estimatedWidth > textObject.frame.width + 2) {
         errors.push(error("rule", "text_overflow", `${path}.value`, `${path}.value is estimated to overflow its declared frame`));
       }
@@ -545,34 +529,23 @@ export function createLayoutValidator({
         if (containers.length !== 1 || container.role !== "combined") {
           errors.push(error("rule", "single_time_container_required", "time.containers", "single_line time must use exactly one combined time container"));
         }
-        if (isCornerAnchor(container.anchor) && container.frame.width !== 205) {
-          errors.push(error("rule", "combined_time_corner_requires_full_width", `${path}.anchor`, "combined time may align to a watch-face corner only when its container is full width at 205px"));
-        }
       } else if (container.anchor === "center") {
         errors.push(error("rule", "split_time_container_centered", `${path}.anchor`, "split or segmented time containers must be edge-anchored, not centered"));
       } else if (isCornerAnchor(container.anchor) && container.frame.width <= cornerSafeSplitTimeMinWidth) {
         errors.push(error("rule", "split_time_corner_width", `${path}.frame.width`, `split time containers may align to a watch-face corner only when each corner-anchored container is wider than ${cornerSafeSplitTimeMinWidth}px`));
       }
-      const padding = container.frame.width < 105 ? 16 : 0;
-      if (approxEqual(container.frame.width, 205)) {
-        if (!approxEqual(container.frame.x, 0)) {
-          errors.push(error("rule", "full_width_time_spans_canvas", `${path}.frame.x`, `${path} with 205px width must span the watch-face width from x=0`));
-        }
-        if (container.style.textAlign !== undefined && container.style.textAlign !== "center") {
-          errors.push(error("rule", "full_width_time_center_aligned", `${path}.style.textAlign`, `${path} with 205px width must center-align text`));
-        }
-      }
-      if (edges.includes("top") && !approxEqual(container.frame.y, padding)) {
-        errors.push(error("rule", "time_edge_padding", `${path}.frame.y`, `${path} top edge padding must be ${padding}px`));
-      }
-      if (edges.includes("left") && !approxEqual(container.frame.x, padding)) {
-        errors.push(error("rule", "time_edge_padding", `${path}.frame.x`, `${path} left edge padding must be ${padding}px`));
-      }
-      if (edges.includes("right") && !approxEqual(container.frame.x + container.frame.width, 205 - padding)) {
-        errors.push(error("rule", "time_edge_padding", `${path}.frame.x`, `${path} right edge padding must be ${padding}px`));
-      }
-      if (edges.includes("bottom") && !approxEqual(container.frame.y + container.frame.height, 251 - padding)) {
-        errors.push(error("rule", "time_edge_padding", `${path}.frame.y`, `${path} bottom edge padding must be ${padding}px`));
+      if (!hasChecklistFullFace(layout)) {
+        const frame = container.frame;
+        const padding = frame.width < 105 ? 16 : 0;
+        const verticalInset = timeMaskInset(Math.min(frame.x, 205 - frame.x - frame.width));
+        const horizontalInset = timeMaskInset(Math.min(frame.y, 251 - frame.y - frame.height));
+        const combinedCorner = time.mode === "single_line" && isCornerAnchor(container.anchor);
+        if (!timeFrameInsideMask(frame)) errors.push(error("rule", "time_outside_mask", `${path}.frame`, "visible time bounds must fit inside the rounded watch mask"));
+        if (combinedCorner && !approxEqual(frame.x + frame.width / 2, 102.5)) errors.push(error("rule", "combined_corner_time_center", `${path}.frame.x`, "combined corner time must be centered within its full-width available region"));
+        if (edges.includes("top") && !approxEqual(frame.y, Math.max(padding, verticalInset))) errors.push(error("rule", "time_edge_padding", `${path}.frame.y`, "top-anchored time must fit against the mask-safe edge"));
+        if (edges.includes("bottom") && !approxEqual(frame.y + frame.height, 251 - Math.max(padding, verticalInset))) errors.push(error("rule", "time_edge_padding", `${path}.frame.y`, "bottom-anchored time must fit against the mask-safe edge"));
+        if (!combinedCorner && edges.includes("left") && !approxEqual(frame.x, Math.max(padding, horizontalInset))) errors.push(error("rule", "time_edge_padding", `${path}.frame.x`, "left-anchored time must fit against the mask-safe edge"));
+        if (!combinedCorner && edges.includes("right") && !approxEqual(frame.x + frame.width, 205 - Math.max(padding, horizontalInset))) errors.push(error("rule", "time_edge_padding", `${path}.frame.x`, "right-anchored time must fit against the mask-safe edge"));
       }
     }
     if (time.mode === "split_hour_minute" && containers.length !== 2) {
@@ -597,11 +570,16 @@ export function createLayoutValidator({
         }
       }
     }
-    if (time.mode === "single_line" && containers.length === 1) {
-      const container = containers[0];
-      const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
-      if (approxEqual(container.frame.width, 205) && container.frame.height >= 70 && visuallyFilledWidth < 205 * fullWidthTimeFillRatio) {
-        errors.push(error("rule", "time_underfills_full_width_container", "time.containers[0].style.fontSize", "when combined time uses a 205px container, center-align it and increase its font size so the digits visually fill at least 85% of the watch-face width without violating overlap rules"));
+    if (!hasChecklistFullFace(layout)) {
+      const fitted = fitTimeLayout(structuredClone(layout));
+      for (const [index, container] of containers.entries()) {
+        if (fitted.time.containers[index].style.fontSize > container.style.fontSize + 1) {
+          errors.push(error("rule", "time_underfills_available_space", `time.containers[${index}].style.fontSize`, "increase time font size to fit the space left by widgets, date, other time parts, and mask"));
+        }
+        const bounds = measureTimeText(container.value, container.style);
+        if (Math.abs(bounds.width - container.frame.width) > 2 || Math.abs(bounds.height - container.frame.height) > 2) {
+          errors.push(error("rule", "time_container_text_bounds", `time.containers[${index}].frame`, "time container must tightly fit its text width and height after font sizing"));
+        }
       }
     }
   }
@@ -644,8 +622,8 @@ export function createLayoutValidator({
   }
 
   function validateRequiredSplitTime(layout, errors) {
-    if (layout.widgets?.length === 1 && layout.widgets[0].shape === "circular" && layout.widgets[0].variant?.size !== "L") {
-      errors.push(error("rule", "focused_single_circular_uses_large", "widgets[0].variant.size", "when the watch face focuses on one circular-supported widget, use the L circular size"));
+    if (layout.widgets?.length === 1 && layout.widgets[0].shape === "circular" && layout.widgets[0].variant?.size !== "L" && !(layout.widgets[0].contentType === "timer" && layout.widgets[0].variant?.size === "M")) {
+      errors.push(error("rule", "focused_single_circular_uses_large", "widgets[0].variant.size", "when the watch face focuses on one circular-supported widget, use L; a passive timer may use M or L"));
     }
     if (!splitTimeRequired(layout)) return;
     if (layout.time.mode !== "split_hour_minute" || layout.time.containers.length !== 2) {
@@ -658,11 +636,7 @@ export function createLayoutValidator({
     if (horizontalOverlap(hour.frame, minute.frame) <= 0 || stackGap > 4) {
       errors.push(error("rule", "split_time_vertical_stack", "time.containers", "split hour and minute containers must stack vertically with horizontal overlap"));
     }
-    const availableColumnWidth = Math.max(hour.frame.width, minute.frame.width);
-    const filledColumnWidth = Math.max(estimateTextWidth(hour.value, hour.style.fontSize), estimateTextWidth(minute.value, minute.style.fontSize));
-    if (filledColumnWidth < availableColumnWidth * splitTimeFillRatio) {
-      errors.push(error("rule", "split_time_underfills_available_space", "time.containers", "when split time is required, increase hour and minute font sizes so they fill the remaining empty space"));
-    }
+
   }
 
   function validateDatePlacement(layout, errors) {
@@ -812,7 +786,8 @@ export function createLayoutValidator({
     if (hasChecklistWidget && layout.widgets.length !== compositionRules.checklistOnly.maxWidgets) {
       errors.push(error("rule", "checklist_must_be_only_widget", "widgets", `checklist layouts must contain ${compositionRules.checklistOnly.maxWidgets} widget`));
     } else if (rectangularWidgetCount > 0) {
-      if (layout.widgets.length > compositionRules.rectangularPresent.maxWidgets) errors.push(error("rule", "rectangular_present_widget_cap", "widgets", `rectangular-present layouts must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`));
+      const maxWidgets = rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets;
+      if (layout.widgets.length > maxWidgets) errors.push(error("rule", "rectangular_present_widget_cap", "widgets", `layouts with ${rectangularWidgetCount} rectangular widgets must contain at most ${maxWidgets} widgets`));
       if (rectangularWidgetCount > compositionRules.rectangularPresent.maxRectangularWidgets) errors.push(error("rule", "rectangular_count_cap", "widgets", `layouts must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`));
     }
     layout.widgets.forEach((widget, index) => {

@@ -1,3 +1,4 @@
+import { fitTimeLayout, measureTimeText } from "./time-layout.mjs";
 import fs from "node:fs";
 import { createLayoutValidator } from "./layout-validator.mjs";
 import { generateFallbackWatchUi } from "./fallback-generator.mjs";
@@ -7,17 +8,20 @@ const samples = JSON.parse(fs.readFileSync("design-pack/sample-layouts.json", "u
 const materialSymbolsRegistry = JSON.parse(fs.readFileSync("design-pack/material-symbols-registry.json", "utf8"));
 const widgetSelectionPolicy = JSON.parse(fs.readFileSync("design-pack/widget-selection-policy.json", "utf8"));
 const generatedRectangularWidgetSchema = JSON.parse(fs.readFileSync("design-pack/rectangular-widget-guidelines/generated-rectangular-widget-schema.json", "utf8"));
+const circularVisualSpecs = JSON.parse(fs.readFileSync("design-pack/circular-widget-guidelines/circular-widget-visual-specs.json", "utf8"));
 const layoutValidator = createLayoutValidator({
   schema,
   materialSymbolsRegistry,
   widgetSelectionPolicy,
-  generatedRectangularWidgetSchema
+  generatedRectangularWidgetSchema,
+  circularVisualSpecs
 });
 const fallbackDesignPack = {
   schema,
   materialSymbolsRegistry,
   widgetSelectionPolicy,
   generatedRectangularWidgetSchema,
+  circularVisualSpecs,
   pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
   pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
 };
@@ -37,8 +41,6 @@ const circularSizeFrames = {
 const openGaugeMetricKinds = new Set(["temperature", "current_temperature", "weather_temperature", "bpm", "heart_rate", "precipitation_probability", "rain_chance", "uv_index", "air_quality", "recovery", "pace"]);
 const closeGaugeMetricKinds = new Set(["timer", "countdown", "countdown_timer", "workout", "activity", "activity_progress", "goal_progress", "exercise_goal_progress", "battery", "completion", "hydration", "focus"]);
 const cornerSafeSplitTimeMinWidth = 105;
-const fullWidthTimeFillRatio = 0.85;
-const splitTimeFillRatio = 0.55;
 const openGaugeBottomText = {
   S: { fontSize: 15, width: 48 },
   M: { fontSize: 18, width: 60 },
@@ -248,13 +250,9 @@ function validateTimeObject(object) {
     assert(typeof container.value === "string" && container.value.length > 0, `${path}.value is required`);
     assert(["center", "top", "left", "right", "bottom", "top_left", "top_right", "bottom_left", "bottom_right"].includes(container.anchor), `${path}.anchor is invalid`);
     assert(object.mode === "single_line" || container.anchor !== "center", `${path}.anchor cannot be center for split or segmented time`);
-    if (object.mode === "single_line") {
-      assert(!isCornerAnchor(container.anchor) || container.frame.width === 205, "combined time may align to a corner only when full width");
-    } else {
+    if (object.mode !== "single_line") {
       assert(!isCornerAnchor(container.anchor) || container.frame.width > cornerSafeSplitTimeMinWidth, `${path}.frame.width is too narrow for corner anchoring`);
     }
-    assert(container.frame.width !== 205 || container.frame.x === 0, `${path}.frame.x must be 0 when width is 205`);
-    assert(container.frame.width !== 205 || container.style.textAlign === undefined || container.style.textAlign === "center", `${path}.style.textAlign must be center when width is 205`);
     validateFrame(container.frame, `${path}.frame`);
     validateTextStyle(container.style, `${path}.style`);
     assert(container.style.fontFamily === "SF Compact", `${path}.style.fontFamily must be SF Compact`);
@@ -465,7 +463,7 @@ function validateWidgetSelectionExample(example, index) {
 
   const rectangularWidgetCount = example.selectedWidgets.filter((widget) => widget.shape === "rectangular").length;
   if (rectangularWidgetCount > 0 && !hasChecklist) {
-    assert(example.selectedWidgets.length <= compositionRules.rectangularPresent.maxWidgets, `${path} rectangular-present compositions must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
+    assert(example.selectedWidgets.length <= (rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets), `${path} rectangular-present compositions must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
     assert(rectangularWidgetCount <= compositionRules.rectangularPresent.maxRectangularWidgets, `${path} must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`);
   }
 
@@ -485,7 +483,7 @@ function validateWidgetSelectionExample(example, index) {
         const rule = widgetSelectionPolicy.strictTemplateRules.timer.allowedCircular;
         assert(widget.component === rule.component, `${widgetPath}.component must be ${rule.component} for circular timer`);
         assert(widget.variant.property === rule.variant.property, `${widgetPath}.variant.property must be ${rule.variant.property} for circular timer`);
-        assert(widget.variant.size === rule.variant.size, `${widgetPath}.variant.size must be ${rule.variant.size} for circular timer`);
+        assert(rule.allowedSizes.includes(widget.variant.size), `${widgetPath}.variant.size must be an approved circular timer size`);
       } else {
         assert(!widgetSelectionPolicy.strictTemplateRules[widget.contentType], `${widgetPath}.contentType cannot use circular rendering`);
       }
@@ -527,10 +525,11 @@ function validateLayout(layout) {
   assert(typeof layout.metadata.fallbackUsed === "boolean", "metadata.fallbackUsed must be a boolean");
   validateTimeObject(layout.time);
   validateDateObject(layout.date, layout.time);
-  if (layout.time.mode === "single_line" && layout.time.containers.length === 1) {
-    const container = layout.time.containers[0];
-    const visuallyFilledWidth = estimateTextWidth(container.value, container.style.fontSize);
-    assert(container.frame.width !== 205 || container.frame.height < 70 || visuallyFilledWidth >= 205 * fullWidthTimeFillRatio, "full-width time must visually fill at least 85% of watch width when it has enough vertical room");
+  if (!layout.widgets.some(widget => widget.template === "checklist_full_face")) {
+    for (const container of layout.time.containers) {
+      const bounds = measureTimeText(container.value, container.style);
+      assert(Math.abs(container.frame.width - bounds.width) <= 2 && Math.abs(container.frame.height - bounds.height) <= 2, "time container must tightly fit its text bounds");
+    }
   }
   assert(Array.isArray(layout.widgets), "widgets must be an array");
   assert(layout.widgets.length <= 3, "widgets must contain at most 3 items");
@@ -540,7 +539,7 @@ function validateLayout(layout) {
   if (hasChecklistWidget) {
     assert(layout.widgets.length === compositionRules.checklistOnly.maxWidgets, `checklist layouts must contain ${compositionRules.checklistOnly.maxWidgets} widget`);
   } else if (rectangularWidgetCount > 0) {
-    assert(layout.widgets.length <= compositionRules.rectangularPresent.maxWidgets, `rectangular-present layouts must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
+    assert(layout.widgets.length <= (rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets), `rectangular-present layouts must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
     assert(rectangularWidgetCount <= compositionRules.rectangularPresent.maxRectangularWidgets, `layouts must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`);
   }
   layout.widgets.forEach((widget, index) => {
@@ -577,7 +576,7 @@ function validateLayout(layout) {
     assert(!(widget.shape === "circular" && widget.component === "close_gauge" && widget.variant.property === "text" && contentTypeCounts.get(widget.contentType) === 1), `widgets[${index}].variant.property must be icon when close_gauge is the only widget for ${widget.contentType}`);
   });
   if (layout.widgets.length === 1 && layout.widgets[0].shape === "circular") {
-    assert(layout.widgets[0].variant.size === "L", "single focused circular widget must use L size");
+    assert(layout.widgets[0].variant.size === "L" || (layout.widgets[0].contentType === "timer" && layout.widgets[0].variant.size === "M"), "single focused circular widget must use L, except passive timer may use M or L");
   }
   if (splitTimeRequired(layout)) {
     assert(layout.time.mode === "split_hour_minute" && layout.time.containers.length === 2, "circular layout requires split hour/minute time");
@@ -585,9 +584,7 @@ function validateLayout(layout) {
     const minute = layout.time.containers.find((container) => container.role === "minute") || layout.time.containers[1];
     const stackGap = Math.max(0, Math.max(hour.frame.y, minute.frame.y) - Math.min(hour.frame.y + hour.frame.height, minute.frame.y + minute.frame.height));
     assert(horizontalOverlap(hour.frame, minute.frame) > 0 && stackGap <= 4, "split hour/minute containers must stack vertically");
-    const availableColumnWidth = Math.max(hour.frame.width, minute.frame.width);
-    const filledColumnWidth = Math.max(estimateTextWidth(hour.value, hour.style.fontSize), estimateTextWidth(minute.value, minute.style.fontSize));
-    assert(filledColumnWidth >= availableColumnWidth * splitTimeFillRatio, "split hour/minute time must fill available empty space");
+
   }
   for (let index = 0; index < layout.widgets.length; index += 1) {
     for (let nextIndex = index + 1; nextIndex < layout.widgets.length; nextIndex += 1) {
@@ -822,6 +819,7 @@ for (const [index, layout] of samples.layouts.entries()) {
 }
 
 for (const [index, layout] of fallbackFixtures().entries()) {
+  fitTimeLayout(layout);
   validateLayout(layout);
   const result = layoutValidator.validateLayout(layout);
   assert(result.ok, `structured validator rejected fallback ${layout.metadata.fallbackId}: ${result.errors.map((item) => item.message).join("; ")}`);
@@ -842,6 +840,7 @@ const messageFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -865,6 +864,7 @@ const checklistFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -891,6 +891,7 @@ const workoutSummaryFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -915,6 +916,7 @@ const timerSetupFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -940,6 +942,7 @@ const iotControlFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -964,6 +967,7 @@ const weatherOnlyFallback = generateFallbackWatchUi({
     materialSymbolsRegistry,
     widgetSelectionPolicy,
     generatedRectangularWidgetSchema,
+    circularVisualSpecs,
     pseudoContextJson: JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")),
     pseudoContextMarkdown: fs.readFileSync("demo-data/pseudo-context.md", "utf8")
   },
@@ -1055,14 +1059,14 @@ const invalidCases = [
     }
   },
   {
-    name: "combined time corner anchor without full width",
+    name: "time container width does not fit text",
     mutate(layout) {
       layout.time.frame.width = 150;
       layout.time.containers[0].frame.width = 150;
     }
   },
   {
-    name: "full-width time underfills container",
+    name: "time container has unused width and height",
     mutate(layout) {
       layout.time.value = "2:41";
       layout.time.style.fontSize = 64;
@@ -1074,10 +1078,10 @@ const invalidCases = [
     }
   },
   {
-    name: "full-width time is not center aligned",
+    name: "time container height does not fit text",
     mutate(layout) {
-      layout.time.style.textAlign = "right";
-      layout.time.containers[0].style.textAlign = "right";
+      layout.time.containers[0].frame.height += 10;
+      layout.time.frame.height += 10;
     }
   },
   {
@@ -1276,10 +1280,10 @@ const invalidCases = [
     }
   },
   {
-    name: "rectangular-present layout with three widgets",
+    name: "two rectangles cannot have a third widget",
     baseLayoutIndex: 1,
     mutate(layout) {
-      layout.widgets.push(clone(samples.layouts[0].widgets[0]), clone(samples.layouts[0].widgets[1]));
+      layout.widgets.push(clone(layout.widgets[0]), clone(samples.layouts[0].widgets[0]));
     }
   },
   {

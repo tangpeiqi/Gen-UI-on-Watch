@@ -96,7 +96,7 @@ The current baseline is `index.html`: a static web simulator with a Context pane
 
 **Work:**
 - Read widget metadata density from `widget-content-types.json`.
-- Use `watch-face-generation-rules.md` to decide whether the layout should use one, two, or three widgets.
+- Use `widget-selection-policy.json` to decide widget count, retained content types, shapes, and strict templates.
 - Use `design-pack/circular-widget-guidelines/circular-widget-catalog.json` for circular component and variant options.
 - Use `design-pack/rectangular-widget-guidelines/rectangular-widget-catalog.json` for rectangular template options.
 - Add `design-pack/widget-selection-policy.json` as the Phase 4 executable decision contract.

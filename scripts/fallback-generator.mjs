@@ -1,3 +1,4 @@
+import { fitTimeLayout } from "./time-layout.mjs";
 import fs from "node:fs";
 import { createLayoutValidator } from "./layout-validator.mjs";
 
@@ -62,8 +63,29 @@ function balancedColorModeForContext(context = {}, renderedContentTypes = []) {
 
 export function loadDesignPack(cwd = process.cwd()) {
   const readJson = (path) => JSON.parse(fs.readFileSync(`${cwd}/${path}`, "utf8"));
+  const ownership = fs.readFileSync(`${cwd}/design-pack/README.md`, "utf8");
+  const runtimeWorkflow = ownership.match(/## Runtime workflow\n([\s\S]*?)\n## Boundary contracts/)?.[1].trim();
+  if (!runtimeWorkflow) throw new Error("design-pack/README.md must define the runtime workflow");
+  const circularVisualSpecs = readJson("design-pack/circular-widget-guidelines/circular-widget-visual-specs.json");
   return {
+    runtimeWorkflow,
+    widgetContentTypes: readJson("design-pack/widget-content-types.json"),
+    widgetDesignResources: {
+      circular: {
+        guidelines: fs.readFileSync(`${cwd}/design-pack/circular-widget-guidelines/README.md`, "utf8"),
+        catalog: readJson("design-pack/circular-widget-guidelines/circular-widget-catalog.json"),
+        visualSpecs: circularVisualSpecs
+      },
+      rectangular: {
+        guidelines: fs.readFileSync(`${cwd}/design-pack/rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md`, "utf8"),
+        catalog: readJson("design-pack/rectangular-widget-guidelines/rectangular-widget-catalog.json"),
+        visualSpecs: readJson("design-pack/rectangular-widget-guidelines/rectangular-widget-visual-specs.json")
+      }
+    },
     schema: readJson("design-pack/layout-schema.json"),
+    generationGuide: fs.readFileSync(`${cwd}/design-pack/generation-guide.md`, "utf8"),
+    sampleLayouts: readJson("design-pack/sample-layouts.json"),
+    circularVisualSpecs,
     materialSymbolsRegistry: readJson("design-pack/material-symbols-registry.json"),
     widgetSelectionPolicy: readJson("design-pack/widget-selection-policy.json"),
     generatedRectangularWidgetSchema: readJson("design-pack/rectangular-widget-guidelines/generated-rectangular-widget-schema.json"),
@@ -1049,6 +1071,7 @@ export function generateFallbackWatchUi({ context = {}, preferences = {}, design
   const widgets = fallbackSelection.widgets;
   const fallbackId = preferences.fallbackId || fallbackIdFromWidgets(widgets) || chooseFallbackId(selectedContentTypes, context);
   const layout = buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallbackReason, now });
+  fitTimeLayout(layout);
   const validator = createLayoutValidator(designPack);
   const validation = validator.validateLayout(layout);
   const widgetDecisions = widgets.map((widget) => widget.decision);

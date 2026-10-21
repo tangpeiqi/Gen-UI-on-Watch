@@ -1,53 +1,12 @@
 {
-  "schemaVersion": "1.1.0",
-  "purpose": "Agent-readable semantic widget content taxonomy. Defines metadata and presentation affordances; watch-face-generation-rules.md decides single, multi, or mixed rendering strategy from content count, metadata density, and available space.",
+  "schemaVersion": "1.2.0",
+  "purpose": "Agent-readable semantic widget content taxonomy. Defines metadata and presentation affordances; widget-selection-policy.json decides single, multi, or mixed rendering strategy from content count, metadata density, and available space.",
   "relatedDocuments": [
-    "watch-face-generation-rules.md",
+    "widget-selection-policy.json",
     "widget-content-types.md",
-    "Circular Widget Guidelines/circular-widget-catalog.json",
-    "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+    "circular-widget-guidelines/circular-widget-catalog.json",
+    "rectangular-widget-guidelines/rectangular-widget-catalog.json"
   ],
-  "selectionContract": {
-    "steps": [
-      "read_current_context",
-      "combine_with_prepopulated_pseudo_context",
-      "infer_up_to_three_semantic_content_types",
-      "extract_required_metadata",
-      "extract_available_optional_metadata",
-      "identify_primary_display_value",
-      "identify_splittable_metric_fields",
-      "identify_detail_fields",
-      "identify_control_fields",
-      "pass_content_metadata_to_watch_face_generation_rules"
-    ],
-    "rules": [
-      {
-        "id": "semantic-before-layout",
-        "strictness": "must",
-        "rule": "Choose semantic content types before choosing widget count, shape, or layout."
-      },
-      {
-        "id": "max-three-types",
-        "strictness": "must",
-        "rule": "Select at most three semantic content types from the combined context."
-      },
-      {
-        "id": "required-metadata-first",
-        "strictness": "must",
-        "rule": "Required metadata must be prioritized over optional metadata."
-      },
-      {
-        "id": "optional-only-when-available",
-        "strictness": "must",
-        "rule": "Optional metadata should render only when available from context or specifically requested."
-      },
-      {
-        "id": "strategy-owned-by-layout",
-        "strictness": "must",
-        "rule": "Final single, multi, or mixed rendering strategy is decided by watch-face-generation-rules.md."
-      }
-    ]
-  },
   "metadataRoleTypes": {
     "primary": "The strongest single value or text group for a one-widget summary.",
     "splittable_metrics": "Fields that can become separate compact widgets when layout budget allows.",
@@ -190,7 +149,7 @@
         ],
         "circularComponent": "close_gauge",
         "rectangularTemplate": "rectangular_layout_templates.timer_rectangular",
-        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
       },
       "rules": [
         "Visible controls require rectangular rendering.",
@@ -394,7 +353,7 @@
           "rectangular"
         ],
         "rectangularTemplate": "rectangular_layout_templates.music_control",
-        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
       },
       "rules": [
         "Visible playback controls require rectangular rendering.",
@@ -433,7 +392,7 @@
           "rectangular"
         ],
         "rectangularTemplate": "rectangular_layout_templates.reminder",
-        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json"
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
       },
       "rules": [
         "Visible mark complete controls require rectangular rendering.",
@@ -477,7 +436,7 @@
       "rules": [
         "When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.",
         "The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.",
-        "Do not render Weather-only as one L circular widget unless the user explicitly asks for one compact weather metric."
+        "Do not render Weather-only as one L circular widget; use a generated summary or three S circular widgets according to widget-selection-policy.json."
       ]
     },
     {
@@ -512,7 +471,7 @@
           "full_watch_face_rectangular"
         ],
         "rectangularTemplate": "rectangular_layout_templates.checklist_full_face",
-        "templateCatalog": "Rectangular Widget Guidelines/rectangular-widget-catalog.json",
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json",
         "mustBeOnlyWidget": true
       },
       "rules": [
@@ -523,5 +482,6 @@
         "Do not generate a separate large watch-face time/date stack or any extra widgets around checklist."
       ]
     }
-  ]
+  ],
+  "selectionPolicy": "widget-selection-policy.json"
 }

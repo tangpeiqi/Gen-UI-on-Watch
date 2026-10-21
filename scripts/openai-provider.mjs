@@ -1,5 +1,8 @@
+import { fitTimeLayout } from "./time-layout.mjs";
+import { circularGenerationTokens } from "./design-contracts.mjs";
+
 const DEFAULT_OPENAI_MODEL = "gpt-5.6-terra";
-const PROMPT_VERSION = "watch-face-phase-9-openai-v1";
+const PROMPT_VERSION = "watch-face-phase-9-openai-v4";
 
 const ACCENT_BY_CONTENT_TYPE = {
   weather: "#3CD3FE",
@@ -115,7 +118,7 @@ function buildResponseSchema() {
   };
 }
 
-function buildPromptPayload({ context, preferences, designPack, currentTime, validationFeedback = [], retryCount = 0 }) {
+export function buildPromptPayload({ context, preferences, designPack, currentTime, validationFeedback = [], retryCount = 0 }) {
   const contentTypes = designPack.schema.$defs.contentType.enum;
   const iconTokens = Object.fromEntries(
     Object.entries(designPack.materialSymbolsRegistry.tokens).map(([token, spec]) => [
@@ -125,6 +128,12 @@ function buildPromptPayload({ context, preferences, designPack, currentTime, val
   );
 
   return {
+    runtimeWorkflow: designPack.runtimeWorkflow,
+    widgetSelectionPolicy: designPack.widgetSelectionPolicy,
+    widgetContentTypes: designPack.widgetContentTypes,
+    widgetDesignResources: designPack.widgetDesignResources,
+    generationGuide: designPack.generationGuide,
+    layoutSchema: designPack.schema,
     liveContext: context,
     requestPreferences: preferences,
     currentTime,
@@ -152,99 +161,16 @@ function buildPromptPayload({ context, preferences, designPack, currentTime, val
       rectangularWidgetKeysOnly: ["id", "contentType", "shape", "template", "data", "composition", "frame", "layer", "cornerRadius", "cornerSmoothing", "surfaceMode", "verticalAlignment"]
     },
     validLayoutExample: {
-      schemaVersion: "1.0.0",
-      targetContainer: "Gen Watch Face",
+      ...designPack.sampleLayouts.layouts[0],
       metadata: {
-        pipelinePhase: "phase-9-openai-structured-output",
+        ...designPack.sampleLayouts.layouts[0].metadata,
         provider: "openai",
-        model: "gpt-5.6-terra",
+        model: openAiModel(),
+        pipelinePhase: "phase-9-openai-structured-output",
         promptVersion: PROMPT_VERSION,
-        schemaVersion: "1.0.0",
-        selectedContentTypes: ["weather"],
-        retryCount: 0,
         fallbackUsed: false,
-        contextSource: "live_context_plus_pseudo_context",
-        generationStepProvenance: [
-          "read-live-context",
-          "load-pseudo-context",
-          "select-content-types",
-          "choose-widgets",
-          "populate-widgets",
-          "generate-layout-json",
-          "validate",
-          "render"
-        ]
-      },
-      canvas: { width: 205, height: 251, borderRadius: 54, coordinateSystem: "fixed" },
-      colorSystem: { mode: "mono_tone", accentColor: "#3CD3FE", surfaceAccentColor: "#004559", sourceRule: "one-content-type-prefers-mono-tone" },
-      time: {
-        mode: "single_line",
-        value: "10:09",
-        layer: "bottom",
-        frame: { x: 0, y: 193, width: 205, height: 58 },
-        style: {
-          fontFamily: "SF Compact",
-          fontSize: 64,
-          fontWeight: 760,
-          letterSpacing: 0,
-          color: "#63D6FF",
-          treatment: "fill",
-          textAlign: "center"
-        },
-        containers: [
-          {
-            id: "time-combined",
-            role: "combined",
-            value: "10:09",
-            frame: { x: 0, y: 193, width: 205, height: 58 },
-            style: {
-              fontFamily: "SF Compact",
-              fontSize: 64,
-              fontWeight: 760,
-              letterSpacing: 0,
-              color: "#63D6FF",
-              treatment: "fill",
-              textAlign: "center"
-            },
-            anchor: "bottom_left"
-          }
-        ]
-      },
-      date: {
-        value: "SAT 1",
-        priority: "secondary",
-        layer: "bottom",
-        frame: { x: 0, y: 171, width: 62, height: 22 },
-        style: {
-          fontFamily: "SF Compact",
-          fontSize: 19,
-          fontWeight: 400,
-          letterSpacing: 0,
-          color: "#63D6FF",
-          treatment: "fill"
-        },
-        stackedWithTimeContainerId: "time-combined",
-        stackGap: 0,
-        edgePaddingWhenStackedFromEdge: 16
-      },
-      widgets: [
-        {
-          id: "weather-rain",
-          contentType: "weather",
-          shape: "circular",
-          component: "open_gauge",
-          variant: { property: "icon", size: "S" },
-          data: {
-            icon: "weather_umbrella",
-            value: "68%",
-            progress: 0.68,
-            metricKind: "precipitation_probability"
-          },
-          frame: { x: 118, y: 20, width: 72, height: 72 },
-          layer: "top"
-        }
-      ],
-      layers: { bottom: ["time", "date"], top: ["weather-rain"] }
+        retryCount
+      }
     },
     validGeneratedRectangularWidgetExample: {
       id: "event-eta",
@@ -284,72 +210,29 @@ function buildPromptPayload({ context, preferences, designPack, currentTime, val
       surfaceMode: "accent_surface",
       verticalAlignment: "bottom"
     },
-    widgetSelectionPolicy: designPack.widgetSelectionPolicy,
-    generatedRectangularWidgetSchema: {
-      generatedRectangularWidgetContentTypes: designPack.generatedRectangularWidgetSchema.generatedRectangularWidgetContentTypes,
-      strictTemplateExcludedContentTypes: designPack.generatedRectangularWidgetSchema.strictTemplateExcludedContentTypes,
-      allowedBlocks: ["text", "inline_small_icon_text", "big_icon_text_group", "number_text_lockup", "edge_progress_bar"]
-    },
+    circularTokens: circularGenerationTokens(designPack.circularVisualSpecs),
+    generatedRectangularWidgetSchema: designPack.generatedRectangularWidgetSchema,
     orderedPipelineSteps: [
       "read-live-context",
       "load-pseudo-context",
-      "select-content-types",
-      "choose-widgets",
-      "populate-widgets",
-      "generate-layout-json",
+      "select-widgets-using-policy",
+      "design-complete-widgets-using-widget-resources",
+      "compose-watch-face-using-generation-guide",
       "validate",
       "render"
     ]
   };
 }
 
-function buildSystemPrompt() {
+export function buildSystemPrompt(designPack) {
   return [
     "You generate Apple Watch face UI layout JSON for the Gen UI on Watch simulator.",
     "Return only a JSON object matching the supplied structured output schema. Put the complete watch-face layout JSON object in layoutJson as a serialized JSON string.",
     "The JSON string inside layoutJson must parse to the exact watch-face layout contract shown in validLayoutExample. Copy that nesting style.",
     "The renderer owns HTML, CSS, SVG, and Material Symbols rendering. Do not output code.",
-    "Use the live context plus pseudo context to select at most three semantic content types.",
-    "If the user mentions message, messages, text, chat, DM, sender, unread, latest message, last message, or asks what their latest message says, select last_message as the primary content type.",
-    "Choose a legal composition before choosing widgets: all-circular layouts may contain up to three widgets; any layout with a rectangular widget may contain at most two widgets; checklist must be the only widget. Widgets themselves must never overlap; only time may overlap a widget by at most 10px.",
-    "Only workout, timer, heart_rate, iot_control, and weather may be circular. Other content types are rectangular-only.",
-    "For this Phase 9 generation path, prefer circular compositions only for compact progress or status. If the user asks for a workout or exercise summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison, render workout as a generated_rectangular_widget so the summary text and numbers are readable. If the user asks to set, create, start, pause, cancel, reset, label, or control a timer, or includes a duration such as 20 min, render timer as the strict timer_rectangular template. If the user asks to control, toggle, turn on/off, set, adjust, dim, lock/unlock, or change a smart device, room, thermostat, light, fan, heater, AC, or temperature, render iot_control as generated_rectangular_widget. If weather is the only selected content type, do not render one L circular weather widget; prioritize either one generated_rectangular_widget weather summary or three S circular weather widgets split into weather condition, temperature range, and precipitation chance.",
-    "If dinner/event timing competes with workout/weather/timer, it is acceptable to defer upcoming_event and render the legal all-circular composition instead.",
-    "Music control, reminder, checklist, and rectangular timer must use their strict templates. Other rectangular content should use generated_rectangular_widget.",
-    "Checklist is a locked Figma component, not a prompt-invented watch face. When checklist is selected, output exactly one widget using template checklist_full_face with frame {x:0,y:0,width:205,height:251}, verticalAlignment top, surfaceMode accent_surface, cornerRadius 54, and cornerSmoothing 60. The only model-authored content is data.title, data.items, and optional checked/completed item state.",
-    "For checklist_full_face, the component owns the date/time/title/list layout. Set top-level date to the component date slot {x:16,y:16,width:70,height:22}. Set top-level time to one compact component time slot {x:139,y:16,width:50,height:22}, SF Compact Regular 19pt, right-aligned. Do not add a separate large watch-face time/date stack around checklist.",
-    "Circular widgets must use exact fixed Figma sizes: S is 72x72, M is 90x90, and L is 150x150. The frame width and height must match variant.size exactly.",
-    "Choose open_gauge for metrics that move back and forth within a range, including temperature, heart rate/BPM, precipitation probability, UV, air quality, recovery, and pace. Choose close_gauge for one-direction progress, including countdown timer, workout/activity progress, battery, completion, hydration, and focus progress.",
-    "close_gauge with property=text has one centered text value and may include a short optional data.label only when the footnote is needed for unit metadata. Close gauge footnote box widths are S=40px, M=50px, L=80px; omit the label when it would clip.",
-    "If a close_gauge is the only widget for its content type, use property=icon instead of property=text so the widget communicates what kind of data it represents. Include data.icon and data.progress.",
-    "For open_gauge property=text, include both data.value and a short bottom data.label. For open_gauge property=icon, include both data.value and data.icon; the value renders centered and the icon renders in the bottom slot, never in the center. For open_gauge range, include lowLabel and highLabel. For open_gauge offset, include referenceValue. Never leave the bottom text/icon content empty.",
-    "Open gauge center values and close_gauge text center values use fixed box widths: S=55px, M=65px, L=115px. Keep displayed values short enough to fit without clipping.",
-    "Open gauge bottom text uses fixed Figma font sizes S=15pt, M=18pt, L=32pt and fixed box widths S=48px, M=60px, L=96px. Keep bottom labels very short so they fit without clipping; use an icon variant when the text label would be too long.",
-    "When rendering three circular widgets, stack the three circles vertically in one column so they use the full watch-face height. Do not arrange three circular widgets horizontally or in an overlapping row.",
-    "When using generated_rectangular_widget, copy the grammar in validGeneratedRectangularWidgetExample: frame.x must be 0, frame.width must be 205, frame.height must be 108-251, cornerRadius must be 54, cornerSmoothing must be 60, surfaceMode must be accent_surface or black_surface, verticalAlignment must be top or bottom, composition.layout must be vertical or horizontal, composition.gap must be 0, 4, 8, 10, or 16, composition.padding is required, and block fields must exactly match their block type.",
-    "Generated rectangular inline_small_icon_text.textUnit must be only body, body_emphasis, or secondary; never output primary. Text blocks use unit, not textUnit.",
-    "For last_message rectangular widgets, the sender/timestamp line may use inline_small_icon_text with the message icon, but the message content line must be a plain text block without an icon.",
-    "Generated rectangular widget text must never truncate, ellipsize, or line-clamp. Do not output maxLines. If text cannot fit on one line, compose it so it wraps onto the next line below; choose shorter copy, fewer blocks, vertical layout, or a taller frame so all wrapped text remains visible.",
-    "When a rectangular widget is present, size and place the rectangular widget before sizing time/date. The rectangle must be tall enough for its full content after wrapping; it should fill the remaining watch-face band from its top edge to the nearest watch-face edge. Then fit time and date into the remaining space.",
-    "Use semantic icon tokens from material-symbols-registry.json, not raw Material Symbols names.",
-    "Never output top-level composition, deferredContentTypes, reasoning, or notes. Put widget composition only inside a rectangular widget with template generated_rectangular_widget.",
-    "Never use time.text, date.text, time.fontSize, or date.fontSize. Use time.value/date.value and time.style/date.style exactly. Time must also include time.containers.",
-    "Always include colorSystem and layers.",
-    "For time, use frame width at least 130 for 44px text, or width at least 150 for 64px text. Do not put 64px time inside a narrow frame.",
-    "Time must use SF Compact. single_line uses exactly one combined time container that is centered or anchored to an edge. split_hour_minute uses exactly two independently edge-anchored containers. segmented_digits uses at least two independently edge-anchored containers.",
-    "Use split_hour_minute and stack the hour and minute containers vertically when there is only one S or M circular widget on the watch face, when two S circular widgets occupy opposite corners, or when three S circular widgets stack vertically on one side.",
-    "When split_hour_minute is required by the circular widget layout, increase the hour and minute font sizes so they fill the remaining empty space on the watch face without violating mask fit or the 10px widget/time overlap rule.",
-    "When the user context suggests a focused one-widget watch face and the content type supports circular rendering, show one L circular widget unless the request asks for summary/details/recap/stats text that needs a rectangular generated widget.",
-    "When time is placed on a watch-face corner, the padding between time and the watch-face edge must be 0px. Combined time may use a corner only when its container is 205px wide; set style.textAlign to center and increase font size so the text fills that container. Split hour/minute containers may use corners only when each corner-anchored container is wider than 105px, and each font size should increase to fill its container.",
-    "When time is placed on a corner, stack the date vertically after the time, away from that corner: below top-corner time, or above bottom-corner time. When date is placed on a corner, keep 16px padding between date and the watch-face edge and stack time vertically inward from the date: below top-corner date, or above bottom-corner date. Date-corner time may be small, split, or big full-width 205px; it does not need to satisfy corner-time width rules unless the time container itself is corner-anchored.",
-    "After widgets are placed, if the combined time sits on a row with clear horizontal space, increase the time font size so the digits visually fill the available row. If any time container is full width at 205px, set style.textAlign to center and make the estimated digit width at least 85% of the 205px watch-face width unless that would violate the 10px widget overlap rule.",
-    "Date must use compact uppercase weekday plus numeric day, for example SUN 2. Date must use SF Compact Regular 19pt, stack vertically with one time container, use stackGap 0, and include stackedWithTimeContainerId and edgePaddingWhenStackedFromEdge 16.",
-    "Time should fill the remaining empty space after rectangular widgets have claimed the height required by their content. Keep all frames inside the 205 x 251 canvas. Date must not overlap widgets; time may overlap widgets by at most 10px.",
-    "For color mode, one visible widget content type should use mono_tone. When two or three visible widget content types are rendered, choose mono_tone and multicolor at roughly equal rates across requests; use multicolor when explicit semantic distinction matters, and use mono_tone when visual unity matters. Respect explicit requests for colorful, multicolor, monochrome, or single-color modes.",
-    "Every rectangular widget must include surfaceMode. The most important rectangular widget should use surfaceMode accent_surface, which renders the dark content type accent as the widget background with white text and icons. If there are two rectangular widgets, only the more important rectangular widget may use accent_surface; the other must use black_surface.",
-    "If previousValidationFailures is present, repair those exact failures and avoid repeating the same frame, schema, widget, or overlap mistake.",
-    "Set metadata.provider to openai, metadata.pipelinePhase to phase-9-openai-structured-output, metadata.promptVersion to watch-face-phase-9-openai-v1, metadata.fallbackUsed to false, metadata.retryCount to the supplied retryAttempt number, and metadata.contextSource to live_context_plus_pseudo_context."
-  ].join("\n");
+    `Set metadata.provider to openai, metadata.pipelinePhase to phase-9-openai-structured-output, metadata.promptVersion to ${PROMPT_VERSION}, metadata.fallbackUsed to false, metadata.retryCount to the supplied retryAttempt number, and metadata.contextSource to live_context_plus_pseudo_context.`,
+    designPack.runtimeWorkflow
+  ].join("\n\n");
 }
 
 function extractOutputText(responseJson) {
@@ -402,13 +285,6 @@ function estimateGeneratedRectangularContentHeight(widget) {
   const blocksHeight = blocks.reduce((total, block) => total + estimateGeneratedRectangularBlockHeight(block, innerWidth), 0);
   const gap = Number(composition?.gap) || 0;
   return Math.ceil((Number(padding.top) || 0) + (Number(padding.bottom) || 0) + blocksHeight + Math.max(0, blocks.length - 1) * gap);
-}
-
-function hasWidgetOnSameRow(widgets, frame) {
-  return (widgets || []).some((widget) => {
-    if (!widget.frame) return false;
-    return Math.max(0, Math.min(frame.y + frame.height, widget.frame.y + widget.frame.height) - Math.max(frame.y, widget.frame.y)) > 0;
-  });
 }
 
 function unionFrame(frames) {
@@ -1203,7 +1079,8 @@ function normalizeModelLayout(layout, { model, selectedContentTypes, currentTime
     for (const widget of normalized.widgets) {
       contentTypeCounts.set(widget.contentType, (contentTypeCounts.get(widget.contentType) || 0) + 1);
     }
-    if (normalized.widgets.length === 1 && circularWidgets.length === 1) {
+    if (normalized.widgets.length === 1 && circularWidgets.length === 1
+      && !(circularWidgets[0].contentType === "timer" && circularWidgets[0].variant?.size === "M")) {
       circularWidgets[0].variant = { ...(circularWidgets[0].variant || {}), size: "L" };
       circularWidgets[0].frame = { x: 28, y: 6, width: 150, height: 150 };
     }
@@ -1315,34 +1192,7 @@ function normalizeModelLayout(layout, { model, selectedContentTypes, currentTime
       }
     }
   }
-  if (normalized.time?.mode === "single_line" && normalized.time.containers?.length === 1) {
-    const container = normalized.time.containers[0];
-    const clearTimeRow = container.frame && !hasWidgetOnSameRow(normalized.widgets || [], container.frame);
-    const currentVisualWidth = estimateTextWidth(container.value, container.style?.fontSize || 0);
-    if (clearTimeRow && container.frame.width === 205 && currentVisualWidth < 205 * 0.85) {
-      const bottom = container.frame.y + container.frame.height;
-      const targetFontSize = Math.min(92, Math.floor((205 * 0.95) / (String(container.value).length * 0.58)));
-      const nextFontSize = Math.max(container.style.fontSize || 0, targetFontSize);
-      const nextHeight = Math.ceil(nextFontSize * 0.9);
-      const dateTargetedThisContainer = normalized.date?.stackedWithTimeContainerId === container.id;
-      const dateWasAbove = dateTargetedThisContainer && normalized.date.frame.y + normalized.date.frame.height <= container.frame.y + 1;
-      const dateWasBelow = dateTargetedThisContainer && normalized.date.frame.y >= bottom - 1;
-      container.style.fontSize = nextFontSize;
-      container.frame.height = nextHeight;
-      if (String(container.anchor || "").includes("bottom")) {
-        container.frame.y = Math.max(0, bottom - nextHeight);
-      }
-      if (normalized.time.style) {
-        normalized.time.style.fontSize = nextFontSize;
-      }
-      if (dateWasAbove) {
-        normalized.date.frame.y = Math.max(0, container.frame.y - normalized.date.frame.height);
-      } else if (dateWasBelow) {
-        normalized.date.frame.y = Math.min(251 - normalized.date.frame.height, container.frame.y + container.frame.height);
-      }
-      normalized.time.frame = unionFrame(normalized.time.containers.map((timeContainer) => timeContainer.frame));
-    }
-  }
+  fitTimeLayout(normalized);
   return normalized;
 }
 
@@ -1400,7 +1250,7 @@ export async function generateOpenAiWatchUi({ context = {}, preferences = {}, de
         input: [
           {
             role: "system",
-            content: [{ type: "input_text", text: buildSystemPrompt() }]
+            content: [{ type: "input_text", text: buildSystemPrompt(designPack) }]
           },
           {
             role: "user",

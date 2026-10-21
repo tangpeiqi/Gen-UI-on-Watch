@@ -651,18 +651,18 @@ export const gaugeSpecs = {
 
 export const gaugeColorGuidance = {
   close_gauge: {
-    source: "watch-face-generation-rules.md widget_accent_color",
+    source: "generation-guide.md widget_accent_color",
     rules: [
       "Close Gauge can only have one accent color.",
-      "The single accent color must be the widget_accent_color resolved by watch-face-generation-rules.md.",
+      "The single accent color must be the widget_accent_color resolved by generation-guide.md.",
       "Apply widget_accent_color to the value arc, text, number, and icon.",
       "The base ring must always use the translucent light grey track color.",
     ],
   },
   open_gauge: {
-    source: "watch-face-generation-rules.md widget_accent_color and optional two-color circular gauge rule",
+    source: "generation-guide.md widget_accent_color and optional two-color circular gauge rule",
     rules: [
-      "Open Gauge can use one accent color or two colors, decided by watch-face-generation-rules.md.",
+      "Open Gauge can use one accent color or two colors, decided by generation-guide.md.",
       "If one accent color is used, it must be widget_accent_color.",
       "If two colors are used, the open ring must use those colors as a gradient from start to end.",
     ],

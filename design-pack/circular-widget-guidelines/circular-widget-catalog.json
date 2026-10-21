@@ -24,7 +24,7 @@
     {
       "id": "watch-rule-owned-colors",
       "strictness": "must",
-      "rule": "Circular gauge colors must be resolved by watch-face-generation-rules.md. Close Gauge consumes one widget_accent_color. Open Gauge consumes either one widget_accent_color or two rule-selected colors for its component-specific gradient behavior."
+      "rule": "Circular gauge colors must be resolved by generation-guide.md. Close Gauge consumes one widget_accent_color. Open Gauge consumes either one widget_accent_color or two rule-selected colors for its component-specific gradient behavior."
     }
   ],
   "components": [
@@ -95,7 +95,7 @@
         "metricKind": {
           "type": "string",
           "required": false,
-          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color from watch-face-generation-rules.md."
+          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color from generation-guide.md."
         }
       },
       "selectionGuidance": [
@@ -233,7 +233,7 @@
         "metricKind": {
           "type": "string",
           "required": false,
-          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color or the two-color open gauge rule from watch-face-generation-rules.md."
+          "description": "Optional semantic hint for fallback demo colors only. Production color selection must use widget_accent_color or the two-color open gauge rule from generation-guide.md."
         }
       },
       "selectionGuidance": [

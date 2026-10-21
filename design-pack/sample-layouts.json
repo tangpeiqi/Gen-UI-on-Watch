@@ -44,14 +44,14 @@
         "value": "5:42",
         "layer": "bottom",
         "frame": {
-          "x": 0,
-          "y": 175,
-          "width": 205,
-          "height": 76
+          "x": 10.34960000000001,
+          "y": 170.0050052134904,
+          "width": 184.30079999999998,
+          "height": 58.78559999999999
         },
         "style": {
           "fontFamily": "SF Compact",
-          "fontSize": 84,
+          "fontSize": 79.44,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#FFFFFF",
@@ -63,14 +63,14 @@
             "role": "combined",
             "value": "5:42",
             "frame": {
-              "x": 0,
-              "y": 175,
-              "width": 205,
-              "height": 76
+              "x": 10.34960000000001,
+              "y": 170.0050052134904,
+              "width": 184.30079999999998,
+              "height": 58.785599999999995
             },
             "style": {
               "fontFamily": "SF Compact",
-              "fontSize": 84,
+              "fontSize": 79.44,
               "fontWeight": 760,
               "letterSpacing": 0,
               "color": "#FFFFFF",
@@ -86,7 +86,7 @@
         "layer": "bottom",
         "frame": {
           "x": 0,
-          "y": 153,
+          "y": 148.0050052134904,
           "width": 70,
           "height": 22
         },
@@ -201,14 +201,14 @@
         "value": "6:08",
         "layer": "bottom",
         "frame": {
-          "x": 0,
-          "y": 0,
-          "width": 205,
-          "height": 76
+          "x": 11.89240000000001,
+          "y": 20.19245613417028,
+          "width": 181.21519999999998,
+          "height": 57.801399999999994
         },
         "style": {
           "fontFamily": "SF Compact",
-          "fontSize": 84,
+          "fontSize": 78.11,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#F2F4FC",
@@ -220,14 +220,14 @@
             "role": "combined",
             "value": "6:08",
             "frame": {
-              "x": 0,
-              "y": 0,
-              "width": 205,
-              "height": 76
+              "x": 11.89240000000001,
+              "y": 20.19245613417028,
+              "width": 181.21519999999998,
+              "height": 57.8014
             },
             "style": {
               "fontFamily": "SF Compact",
-              "fontSize": 84,
+              "fontSize": 78.11,
               "fontWeight": 760,
               "letterSpacing": 0,
               "color": "#F2F4FC",
@@ -243,7 +243,7 @@
         "layer": "bottom",
         "frame": {
           "x": 0,
-          "y": 76,
+          "y": 77.99385613417027,
           "width": 70,
           "height": 22
         },
@@ -334,14 +334,14 @@
         "value": "6:42",
         "layer": "bottom",
         "frame": {
-          "x": 0,
-          "y": 0,
-          "width": 205,
-          "height": 76
+          "x": 11.89240000000001,
+          "y": 20.19245613417028,
+          "width": 181.21519999999998,
+          "height": 57.801399999999994
         },
         "style": {
           "fontFamily": "SF Compact",
-          "fontSize": 84,
+          "fontSize": 78.11,
           "fontWeight": 760,
           "letterSpacing": 0,
           "color": "#7DD3FC",
@@ -353,14 +353,14 @@
             "role": "combined",
             "value": "6:42",
             "frame": {
-              "x": 0,
-              "y": 0,
-              "width": 205,
-              "height": 76
+              "x": 11.89240000000001,
+              "y": 20.19245613417028,
+              "width": 181.21519999999998,
+              "height": 57.8014
             },
             "style": {
               "fontFamily": "SF Compact",
-              "fontSize": 84,
+              "fontSize": 78.11,
               "fontWeight": 760,
               "letterSpacing": 0,
               "color": "#7DD3FC",
@@ -376,7 +376,7 @@
         "layer": "bottom",
         "frame": {
           "x": 0,
-          "y": 76,
+          "y": 77.99385613417027,
           "width": 70,
           "height": 22
         },

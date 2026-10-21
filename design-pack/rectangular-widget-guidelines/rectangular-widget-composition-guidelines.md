@@ -1,6 +1,6 @@
 # Rectangular Widget Composition Guidelines
 
-This document defines the atomic visual units available for composing rectangular widgets in the generative watch face. Assembly rules, valid patterns, and content-specific guidance will be added after the atomic vocabulary is stable.
+This document defines the atomic visual units available for composing rectangular widgets in the generative watch face. The generated composition schema owns allowed fields and blocks; the selection policy owns strict-template overrides and composition caps. Checklist uses its fixed component slots instead of the general container and time/date rules.
 
 ## Design Intent
 
@@ -184,11 +184,11 @@ colors:
 ```
 
 - Every rectangular widget must declare `surfaceMode` as `black_surface` or `accent_surface`.
-- The primary rectangular widget should use `accent_surface`; if two rectangular widgets render, only the more important one may use `accent_surface` and the other must use `black_surface`.
+- Consume the `surfaceMode` role assigned during face composition by `generation-guide.md`; this document defines its internal rendering.
 - On `black_surface`, text, Material Symbols icons, and progress-bar values use the light role of `widget_accent_color`; secondary text uses the same light accent at 60% opacity.
 - On `accent_surface`, the widget background uses the dark role of `widget_accent_color`; text, Material Symbols icons, and progress-bar values use white; secondary text uses white or light grey at 60% opacity.
 - Icon containers have no fill.
-- `widget_accent_color` is resolved by `watch-face-generation-rules.md` using `widget-content-types.md`, `widget-content-types.json`, and other layout or context factors.
+- `widget_accent_color` is resolved by `generation-guide.md` using `widget-content-types.md`, `widget-content-types.json`, and other layout or context factors.
 - Progress bars use a muted base layer and a value layer that aligns with the widget's chosen accent color.
 - Radio buttons use a muted stroke when unselected and a full-opacity stroke plus inner dot when selected.
 
@@ -243,7 +243,7 @@ icon_color_contract:
   icon_source: Material Symbols
   symbol_color: resolved by surfaceMode
   accent_source:
-    owner: watch-face-generation-rules.md
+    owner: generation-guide.md
     semantic_inputs:
       - widget-content-types.md
       - widget-content-types.json
@@ -257,7 +257,7 @@ icon_color_contract:
       rule: Render the selected Material Symbols icon in the light widget_accent_color on black_surface, and in white on accent_surface.
     - id: accent-owned-by-content-type
       strictness: must
-      rule: Use widget_accent_color resolved by watch-face-generation-rules.md; do not determine it inside the local composition pattern.
+      rule: Use widget_accent_color resolved by generation-guide.md; do not determine it inside the local composition pattern.
     - id: icon-container-no-fill
       strictness: must
       rule: Icon containers must not add a background fill behind the Material Symbols icon.
@@ -401,7 +401,7 @@ composition_patterns:
 
 ## Content-Specific Layout Templates
 
-These templates are stricter than the general composition patterns. When `watch-face-generation-rules.md` maps a widget content type to one of these templates, the agent must preserve the template structure and only substitute content, selected icons, control state, progress values, and `widget_accent_color`.
+These templates are stricter than the general composition patterns. When `widget-selection-policy.json` maps a widget content type to one of these templates, the agent must preserve the template structure and only substitute content, selected icons, control state, progress values, and `widget_accent_color`.
 
 All regular rectangular widgets use the full watch-face width: 205pt wide, 54pt corner radius, and 60% corner smoothing. Regular rectangular widget content uses 16px inner padding on all sides. When a progress bar is attached to the top or bottom edge, that attached edge's padding is 0px. All regular rectangular widgets clip child content to their rounded bounds. Template dimensions below use watch-face points; in the web simulator, 1pt maps to 1 CSS px.
 
@@ -576,12 +576,9 @@ rectangular_layout_templates:
             - radio_button
             - body: checklist_item_text
     rules:
-      - id: checklist-only-widget
-        strictness: must
-        rule: Checklist must be the only widget on the watch face.
       - id: checklist-full-face-template
         strictness: must
-        rule: Checklist must use this full-face checklist template, not a normal rectangular widget mixed with other widgets.
+        rule: When selected by widget-selection-policy.json, preserve this full-face component structure.
       - id: checklist-locked-figma-component
         strictness: must
         rule: Preserve the Figma component geometry exactly: widget x=0 y=0 width=205 height=251, date x=16 y=16 width=70 height=22, time x=139 y=16 width=50 height=22, title x=16 y=42, list x=6 y=71 width=193.
@@ -613,3 +610,21 @@ The following sections are intentionally left as placeholders for the next desig
 - Data binding rules
 - Empty, loading, and error states
 - Accepted and rejected examples
+
+## Runtime widget design contract
+
+- Consume the selected content type, rectangular shape, and permitted template from widget-selection-policy.json. Finalize the widget's content, internal design, and required dimensions before watch-face placement. Strict templates preserve their required regions and only substitute supported content/state.
+- For generated_rectangular_widget, follow generated-rectangular-widget-schema.json, not a copied example as an alternative grammar. The frame width is 205, height is 108–251 subject to whole-face feasibility, cornerRadius is 54, cornerSmoothing is 60, and composition.padding is required. Use only the schema's supported layout, gap, and block fields.
+- Use 16px internal padding on all sides, except top edge progress bars use 0px top padding and bottom edge progress bars use 0px bottom padding. Other sides remain 16px. Strict components retain their fixed internals.
+- inline_small_icon_text.textUnit supports body, body_emphasis, or secondary; never primary. Plain text blocks use unit, not textUnit.
+- For last_message, the sender/timestamp line may use inline_small_icon_text with the message icon. Message content must be plain text without an icon.
+- Text must wrap in full; never truncate, ellipsize, line-clamp, or emit maxLines. Calculate required height from text wrapping, icons, controls, padding, and gaps. Shorten optional copy or reduce optional blocks when necessary; preserve required information and fixed typography.
+- Prioritize required metadata over optional detail. Populate available context data only; do not invent missing real-world values. Use compatible semantic icon tokens from material-symbols-registry.json.
+- Accept the face theme, semantic light/dark accents, and surfaceMode role from generation-guide.md. accent_surface uses the dark accent background with white text/icons; black_surface uses black with the assigned light accent. Apply secondary opacity and other details from the visual specs. Always include surfaceMode.
+- If completed widgets cannot fit with time/date, return to widget design for optional-detail reduction or to selection under widget-selection-policy.json. Do not silently shrink fonts or discard higher-priority content during face composition.
+
+### Checklist fixed component contract
+
+checklist_full_face is a locked full-face component. Its frame is {x:0,y:0,width:205,height:251}, verticalAlignment is top, surfaceMode is accent_surface, cornerRadius is 54, and cornerSmoothing is 60. Model-authored widget content is data.title, data.items, and supported checked/completed state only. Preserve the fixed visual-spec title/list structure.
+
+The component supplies the top-level date slot {x:16,y:16,width:70,height:22} and time slot {x:139,y:16,width:50,height:22}. Time uses one right-aligned compact container with SF Compact Regular 19pt. Do not add an external large time/date stack. These fixed slots override general face stacking, anchoring, prominence, and widget/date-overlap rules. Selection and standalone eligibility remain owned by widget-selection-policy.json.

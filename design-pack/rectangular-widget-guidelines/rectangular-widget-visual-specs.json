@@ -13,7 +13,7 @@
       "Use React components in RectangularWidgets.tsx for webpage UI.",
       "Do not rasterize Figma frames for final webpage UI.",
       "Do not rearrange strict template regions.",
-      "Use widget_accent_color resolved by watch-face-generation-rules.md for accent-bearing parts.",
+      "Use widget_accent_color resolved by generation-guide.md for accent-bearing parts.",
       "Clip child content to the rectangular widget bounds."
     ]
   },
