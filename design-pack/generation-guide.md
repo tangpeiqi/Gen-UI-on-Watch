@@ -57,17 +57,15 @@ Follow these steps in order. checklist_full_face retains its component-owned slo
 
 - Tune font size and letter spacing together to fill the allocated region. Negative spacing can support taller numerals in narrow space; use the largest legible size that fits both dimensions without stretching glyphs. If substantial overlap becomes necessary, return to step 3 and use segmented_digits.
 - Split hour/minute containers share font weight, letter spacing, and color treatment; their font sizes may differ. Coordinate all time styling with the face's color theme.
-- For overlapping segmented digits, prefer coordinated per-digit horizontal gradients and intentional front-to-back ordering to distinguish crossing strokes. Preserve consistent font family, weight, and palette. Reference: [overlapping time digits](https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=551-422). Emit only supported style fields; gradients require schema and renderer support. Use supported fill or outline treatments where appropriate.
+- For overlapping segmented digits, use intentional front-to-back ordering and, when permitted by the Color theme rules, coordinated per-digit horizontal gradients to distinguish crossing strokes. Preserve consistent font family, weight, and palette. Reference: [overlapping time digits](https://www.figma.com/design/3biDt7StqMPp22ws1FVx3v/2026-Projects?node-id=551-422). Emit only supported style fields; gradients require schema and renderer support. Use supported fill or outline treatments where appropriate.
 - Fit each time container tightly to its final visible text width and height, including letter spacing and outline stroke. Add no internal padding or line-height whitespace. time.frame is the bounding union of time.containers.
 - Confirm the final bounds still satisfy the chosen anchors, the 105px padding threshold, date stacking, mask fit, and overlap limits. If styling changes the required padding or fit, revisit placement before returning the layout.
 
 ## Color theme
 
-- Respect explicit requests for colorful, multicolor, monochrome, or single-color modes. Otherwise one visible semantic content type should use mono_tone. For two or three visible content types, balance mono_tone and multicolor roughly equally across requests, favoring semantic distinction or visual unity as appropriate.
-- mono_tone uses one coordinated chromatic accent, with black, white, and opacity variations as support. Use the primary content type's accent theme across the face; time and date use its light accent. Widgets consume that shared theme through their component specs.
-- multicolor assigns each content type its semantic accent theme; widgets of the same type share it. Time and date use white. Component-specific gauge color derivation remains owned by circular widget specs.
-- Assign accent_surface to the most important rectangular widget and black_surface to any other rectangle. Widget specs own the internal background/text/icon treatment for these roles.
-- Use the semantic accent pairs below as defaults. Light accents serve black surfaces and time/date; dark accents serve accent surfaces. Adjust only when user intent, meaningful status, or contrast requires it, while preserving the selected theme and per-widget consistency.
+### 1. Use the content-type accent colors
+
+Use the exact light/dark accent pair below for each content type; do not substitute other hues. The selected color mode determines whether a widget uses its own pair or shares the highest-ranked content type's pair.
 
 | Content type | Light accent | Dark accent |
 | --- | --- | --- |
@@ -84,7 +82,32 @@ Follow these steps in order. checklist_full_face retains its component-owned slo
 | music_control | #30D158 | #004D13 |
 | checklist | #B78A66 | #592800 |
 
-- Coordinate time treatments with the face theme. Fill, outline, and per-digit gradient design choices must preserve legibility; heavy numerals may use an outline when it improves openness. Only emit treatments and gradient fields supported by the supplied schema and renderer.
+### 2. Choose the color mode
+
+- One visible content type: use mono_tone.
+- More than one visible content type: balance mono_tone and multicolor roughly equally across requests.
+
+### 3. Assign colors within the selected mode
+
+- **mono_tone:** Use the sole visible content type's accent pair. If multiple types are visible, use the pair belonging to the highest-ranked visible type from widget-selection-policy.json. Apply that shared theme to every widget; time and date use its light accent.
+- **multicolor:** Give each content type its own accent pair. Widgets of the same type share the same accent treatment. Time and date use white.
+
+### 4. Apply light accents and rectangular surface roles
+
+- Circular widgets always use the assigned light accent; the dark accent is reserved for rectangular accent surfaces.
+- Assign accent_surface to the most important rectangle. For each other rectangle, choose accent_surface or black_surface based on hierarchy, contrast, and overall visual balance. Widget specs implement the following surface contract without changing widget geometry:
+
+| Rectangular surface | Background | Primary text/icons | Secondary text/icons |
+| --- | --- | --- | --- |
+| accent_surface | Assigned dark accent | White, 100% opacity | White, 60% opacity |
+| black_surface | Black | Assigned light accent, 100% opacity | Assigned light accent, 60% opacity |
+
+### 5. Choose solid color or gradient for time
+
+- When time occupies at most one third of the watch face, use a solid color for its fill or stroke. When it occupies more than one third, a gradient is permitted. Assess the combined area of the fitted time containers, excluding unused available space and counting overlapping regions only once.
+- For non-segmented time, gradients run top to bottom, from 100% opacity at the top to 0% at the bottom. Split hour/minute containers use the same direction and treatment.
+- For segmented_digits, per-digit gradients run left to right, from 100% opacity on the left to 0% on the right. Preserve contrast and reading order where digits overlap.
+- Gradients fade the time color assigned by the selected mode; they do not introduce new hues. Date keeps its assigned solid color. Emit only gradient fields supported by the schema and renderer; until those are available, use the supported solid fill or stroke treatment.
 
 ## Output and final validation
 

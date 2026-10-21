@@ -25,7 +25,12 @@
       "cornerSmoothingPercent": 60,
       "cornerSmoothingIntent": "iOS continuous corner treatment",
       "clipContent": true,
-      "defaultInnerPadding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+      "defaultInnerPadding": {
+        "top": 16,
+        "right": 16,
+        "bottom": 16,
+        "left": 16
+      },
       "progressBarEdgePaddingException": {
         "topProgressBarTopPadding": 0,
         "bottomProgressBarBottomPadding": 0
@@ -38,23 +43,37 @@
         "secondaryText": "widget_accent_color.light at 60% opacity",
         "materialSymbolIcon": "widget_accent_color.light",
         "progressValue": "widget_accent_color.light",
-        "useWhen": "A secondary rectangular widget or any explicit black-surface layout."
+        "useWhen": "A secondary rectangular widget or any explicit black-surface layout.",
+        "secondaryIcon": "widget_accent_color.light at 60% opacity"
       },
       "accent_surface": {
         "background": "widget_accent_color.dark",
         "primaryText": "#FFFFFF",
-        "secondaryText": "rgba(242, 244, 252, 0.6)",
+        "secondaryText": "rgba(255, 255, 255, 0.6)",
         "materialSymbolIcon": "#FFFFFF",
         "progressValue": "#FFFFFF",
-        "useWhen": "The primary rectangular widget, especially in multicolor mode or a focused one-rectangular-widget face."
+        "useWhen": "The primary rectangular widget, especially in multicolor mode or a focused one-rectangular-widget face.",
+        "secondaryIcon": "rgba(255, 255, 255, 0.6)"
       }
     },
     "typography": {
       "fontFamily": "SF Compact, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
       "letterSpacing": 0,
-      "body": { "fontSize": 19, "lineHeight": 21.5, "fontWeight": 400 },
-      "bodyEmphasis": { "fontSize": 19, "lineHeight": 21.5, "fontWeight": 600 },
-      "numbers": { "fontSize": 40, "lineHeight": 42.5, "fontWeight": 400 }
+      "body": {
+        "fontSize": 19,
+        "lineHeight": 21.5,
+        "fontWeight": 400
+      },
+      "bodyEmphasis": {
+        "fontSize": 19,
+        "lineHeight": 21.5,
+        "fontWeight": 600
+      },
+      "numbers": {
+        "fontSize": 40,
+        "lineHeight": 42.5,
+        "fontWeight": 400
+      }
     },
     "colors": {
       "primaryText": "resolved by surfaceModes",
@@ -67,10 +86,21 @@
       "materialSymbolIcon": "resolved by surfaceModes"
     },
     "controls": {
-      "buttonBox": { "width": 48, "height": 48 },
-      "radioBox": { "width": 24, "height": 24 },
-      "radioOuter": { "diameter": 16, "strokeWidth": 2 },
-      "radioInner": { "diameter": 10 }
+      "buttonBox": {
+        "width": 48,
+        "height": 48
+      },
+      "radioBox": {
+        "width": 24,
+        "height": 24
+      },
+      "radioOuter": {
+        "diameter": 16,
+        "strokeWidth": 2
+      },
+      "radioInner": {
+        "diameter": 10
+      }
     },
     "progressBar": {
       "width": 173,
@@ -86,7 +116,12 @@
         "width": 205,
         "height": 140,
         "layout": "vertical",
-        "padding": { "top": 16, "right": 16, "bottom": 0, "left": 16 },
+        "padding": {
+          "top": 16,
+          "right": 16,
+          "bottom": 0,
+          "left": 16
+        },
         "gap": 10,
         "cornerRadius": 54,
         "cornerSmoothing": 0.6,
@@ -99,8 +134,18 @@
           "layout": "vertical",
           "gap": 0,
           "children": [
-            { "slot": "song", "unit": "bodyEmphasis", "height": 22, "color": "primaryText" },
-            { "slot": "artistOrAlbum", "unit": "secondary", "height": 22, "color": "secondaryText" }
+            {
+              "slot": "song",
+              "unit": "bodyEmphasis",
+              "height": 22,
+              "color": "primaryText"
+            },
+            {
+              "slot": "artistOrAlbum",
+              "unit": "secondary",
+              "height": 22,
+              "color": "secondaryText"
+            }
           ]
         },
         "controls": {
@@ -108,7 +153,11 @@
           "height": 48,
           "layout": "horizontal",
           "distribution": "space-between",
-          "buttons": ["previous", "playPause", "next"]
+          "buttons": [
+            "previous",
+            "playPause",
+            "next"
+          ]
         },
         "progress": {
           "position": "bottom",
@@ -124,7 +173,12 @@
         "width": 205,
         "height": 127,
         "layout": "vertical",
-        "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+        "padding": {
+          "top": 16,
+          "right": 16,
+          "bottom": 16,
+          "left": 16
+        },
         "gap": 8,
         "cornerRadius": 54,
         "cornerSmoothing": 0.6,
@@ -141,7 +195,10 @@
           "width": 173,
           "layout": "horizontal",
           "gap": 8,
-          "children": ["radioButton", "bodyEmphasis"]
+          "children": [
+            "radioButton",
+            "bodyEmphasis"
+          ]
         }
       }
     },
@@ -150,7 +207,12 @@
         "width": 205,
         "height": 139,
         "layout": "vertical",
-        "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+        "padding": {
+          "top": 16,
+          "right": 16,
+          "bottom": 16,
+          "left": 16
+        },
         "gap": 16,
         "cornerRadius": 54,
         "cornerSmoothing": 0.6,
@@ -166,7 +228,11 @@
           "height": 48,
           "layout": "horizontal",
           "distribution": "space-between",
-          "buttons": ["reset", "startPause", "cancel"]
+          "buttons": [
+            "reset",
+            "startPause",
+            "cancel"
+          ]
         }
       }
     },
@@ -179,9 +245,28 @@
         "cornerRadius": "watch_mask"
       },
       "regions": {
-        "date": { "x": 16, "y": 16, "width": 70, "height": 22, "unit": "body" },
-        "currentTime": { "x": 139, "y": 16, "width": 50, "height": 22, "unit": "body", "align": "right", "font": "SF Compact Regular 19pt" },
-        "title": { "x": 16, "y": 42, "width": 173, "unit": "bodyEmphasis" },
+        "date": {
+          "x": 16,
+          "y": 16,
+          "width": 70,
+          "height": 22,
+          "unit": "body"
+        },
+        "currentTime": {
+          "x": 139,
+          "y": 16,
+          "width": 50,
+          "height": 22,
+          "unit": "body",
+          "align": "right",
+          "font": "SF Compact Regular 19pt"
+        },
+        "title": {
+          "x": 16,
+          "y": 42,
+          "width": 173,
+          "unit": "bodyEmphasis"
+        },
         "list": {
           "x": 6,
           "y": 71,
@@ -194,9 +279,15 @@
             "height": 56,
             "cornerRadius": 8,
             "fill": "mutedSurface",
-            "padding": { "left": 8, "right": 8 },
+            "padding": {
+              "left": 8,
+              "right": 8
+            },
             "gap": 4,
-            "children": ["radioButton", "body"]
+            "children": [
+              "radioButton",
+              "body"
+            ]
           }
         }
       }

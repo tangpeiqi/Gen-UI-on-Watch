@@ -13,7 +13,7 @@ Rectangular widgets should be built from a small set of repeatable typographic, 
 | Numbers | Primary numeric value | Intrinsic to text content | SF Compact Regular, 40px, 42.5px line height | #FFFFFF | Use for the dominant data value in a rectangular widget. |
 | Body Emphasis | Emphasized body text | Intrinsic to text content | SF Compact Semibold, 19px, 21.5px line height | #FFFFFF | Use for short labels, status phrases, or secondary values that need emphasis. |
 | Body | Standard body text | Intrinsic to text content | SF Compact Regular, 19px, 21.5px line height | #FFFFFF | Use for normal readable text at the main body scale. |
-| Secondary | Muted supporting text | Intrinsic to text content | SF Compact Regular, 19px, 21.5px line height | rgba(242, 244, 252, 0.6) | Use for captions, secondary labels, timestamps, or lower-priority supporting information. |
+| Secondary | Muted supporting text | Intrinsic to text content | SF Compact Regular, 19px, 21.5px line height | rgba(255, 255, 255, 0.6) | Use for captions, secondary labels, timestamps, or lower-priority supporting information. |
 | Icon Big | Primary icon container | 48 x 48 | N/A | Container: no fill; symbol: widget accent color | Circular icon slot. Use when the icon is a key part of the widget identity. |
 | Icon Small | Supporting icon container | 24 x 24 | N/A | Container: no fill; symbol: widget accent color | Circular icon slot. Use for compact symbols, status markers, or accessory icons. |
 | Progress Bar | Linear progress indicator | 173 x 12 | N/A | Base: rgba(242, 244, 252, 0.1); value: widget accent color | Use for bounded progress, completion, range fulfillment, or level indicators. |
@@ -73,7 +73,7 @@ atomic_units:
       line_height: 21.5
       horizontal_align: left
       vertical_align: center
-    color: "rgba(242, 244, 252, 0.6)"
+    color: "rgba(255, 255, 255, 0.6)"
 
   icon_big:
     type: icon_container
@@ -170,12 +170,14 @@ colors:
       primary_text: widget_accent_color.light
       secondary_text: widget_accent_color.light at 60% opacity
       material_symbol_icon: widget_accent_color.light
+      secondary_icon: widget_accent_color.light at 60% opacity
       progress_bar_value: widget_accent_color.light
     accent_surface:
       widget_background: widget_accent_color.dark
       primary_text: "#FFFFFF"
-      secondary_text: "rgba(242, 244, 252, 0.6)"
+      secondary_text: "rgba(255, 255, 255, 0.6)"
       material_symbol_icon: "#FFFFFF"
+      secondary_icon: "rgba(255, 255, 255, 0.6)"
       progress_bar_value: "#FFFFFF"
   icon_container: none
   progress_bar_base: "rgba(242, 244, 252, 0.1)"
@@ -185,8 +187,8 @@ colors:
 
 - Every rectangular widget must declare `surfaceMode` as `black_surface` or `accent_surface`.
 - Consume the `surfaceMode` role assigned during face composition by `generation-guide.md`; this document defines its internal rendering.
-- On `black_surface`, text, Material Symbols icons, and progress-bar values use the light role of `widget_accent_color`; secondary text uses the same light accent at 60% opacity.
-- On `accent_surface`, the widget background uses the dark role of `widget_accent_color`; text, Material Symbols icons, and progress-bar values use white; secondary text uses white or light grey at 60% opacity.
+- On `black_surface`, text, Material Symbols icons, and progress-bar values use the light role of `widget_accent_color`; secondary text and icons use the same light accent at 60% opacity.
+- On `accent_surface`, the widget background uses the dark role of `widget_accent_color`; text, Material Symbols icons, and progress-bar values use white; secondary text and icons use white at 60% opacity.
 - Icon containers have no fill.
 - `widget_accent_color` is resolved by `generation-guide.md` using `widget-content-types.md`, `widget-content-types.json`, and other layout or context factors.
 - Progress bars use a muted base layer and a value layer that aligns with the widget's chosen accent color.

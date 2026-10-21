@@ -8,7 +8,10 @@
   },
   "renderer": {
     "path": "CircularGauges.tsx",
-    "exports": ["CloseGauge", "OpenGauge"]
+    "exports": [
+      "CloseGauge",
+      "OpenGauge"
+    ]
   },
   "globalRules": [
     {
@@ -24,7 +27,7 @@
     {
       "id": "watch-rule-owned-colors",
       "strictness": "must",
-      "rule": "Circular gauge colors must be resolved by generation-guide.md. Close Gauge consumes one widget_accent_color. Open Gauge consumes either one widget_accent_color or two rule-selected colors for its component-specific gradient behavior."
+      "rule": "Circular widgets consume the light accent assigned by generation-guide.md in either face color mode. Do not use dark accents or independent two-hue gradients in generated watch faces; retain fixed neutral track tokens."
     }
   ],
   "components": [
@@ -54,26 +57,44 @@
         "component": "close_gauge",
         "properties": {
           "property": {
-            "allowedValues": ["icon", "text"],
+            "allowedValues": [
+              "icon",
+              "text"
+            ],
             "figmaPropertyName": "Property",
             "required": true
           },
           "size": {
-            "allowedValues": ["S", "M", "L"],
+            "allowedValues": [
+              "S",
+              "M",
+              "L"
+            ],
             "figmaPropertyName": "Size",
             "required": true
           }
         }
       },
       "legalSizes": {
-        "S": { "width": 72, "height": 72 },
-        "M": { "width": 90, "height": 90 },
-        "L": { "width": 150, "height": 150 }
+        "S": {
+          "width": 72,
+          "height": 72
+        },
+        "M": {
+          "width": 90,
+          "height": 90
+        },
+        "L": {
+          "width": 150,
+          "height": 150
+        }
       },
       "dataProps": {
         "value": {
           "type": "number|string",
-          "requiredFor": ["property=text"],
+          "requiredFor": [
+            "property=text"
+          ],
           "description": "Primary value displayed in the center of the gauge."
         },
         "label": {
@@ -83,12 +104,17 @@
         },
         "icon": {
           "type": "iconToken|string",
-          "requiredFor": ["property=icon"],
+          "requiredFor": [
+            "property=icon"
+          ],
           "description": "Icon rendered in the center of the gauge."
         },
         "progress": {
           "type": "number",
-          "range": [0, 1],
+          "range": [
+            0,
+            1
+          ],
           "required": true,
           "description": "Normalized progress used to draw the value arc."
         },
@@ -113,7 +139,10 @@
       "exampleProps": [
         {
           "component": "close_gauge",
-          "variant": { "property": "text", "size": "M" },
+          "variant": {
+            "property": "text",
+            "size": "M"
+          },
           "data": {
             "value": "82",
             "progress": 0.82,
@@ -122,7 +151,10 @@
         },
         {
           "component": "close_gauge",
-          "variant": { "property": "icon", "size": "S" },
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
           "data": {
             "icon": "battery",
             "progress": 0.64,
@@ -163,71 +195,115 @@
         "component": "open_gauge",
         "properties": {
           "property": {
-            "allowedValues": ["text", "icon", "range", "offset"],
+            "allowedValues": [
+              "text",
+              "icon",
+              "range",
+              "offset"
+            ],
             "figmaPropertyName": "Property",
             "required": true
           },
           "size": {
-            "allowedValues": ["S", "M", "L"],
+            "allowedValues": [
+              "S",
+              "M",
+              "L"
+            ],
             "figmaPropertyName": "size",
             "required": true
           }
         }
       },
       "legalSizes": {
-        "S": { "width": 72, "height": 72 },
-        "M": { "width": 90, "height": 90 },
-        "L": { "width": 150, "height": 150 }
+        "S": {
+          "width": 72,
+          "height": 72
+        },
+        "M": {
+          "width": 90,
+          "height": 90
+        },
+        "L": {
+          "width": 150,
+          "height": 150
+        }
       },
       "dataProps": {
         "value": {
           "type": "number|string",
-          "requiredFor": ["property=text", "property=icon", "property=range", "property=offset"],
+          "requiredFor": [
+            "property=text",
+            "property=icon",
+            "property=range",
+            "property=offset"
+          ],
           "description": "Current or primary value displayed in the center. Required for open_gauge icon because the icon renders in the bottom slot."
         },
         "label": {
           "type": "string",
-          "requiredFor": ["property=text"],
+          "requiredFor": [
+            "property=text"
+          ],
           "description": "Short secondary label for text-only open gauges."
         },
         "icon": {
           "type": "iconToken|string",
-          "requiredFor": ["property=icon"],
+          "requiredFor": [
+            "property=icon"
+          ],
           "description": "Icon rendered in the bottom icon slot for open_gauge icon. Do not render it in the center."
         },
         "min": {
           "type": "number",
-          "requiredFor": ["property=range", "property=offset"],
+          "requiredFor": [
+            "property=range",
+            "property=offset"
+          ],
           "description": "Lower bound used to normalize measured-dot position on the open arc."
         },
         "max": {
           "type": "number",
-          "requiredFor": ["property=range", "property=offset"],
+          "requiredFor": [
+            "property=range",
+            "property=offset"
+          ],
           "description": "Upper bound used to normalize measured-dot position on the open arc."
         },
         "lowLabel": {
           "type": "number|string",
-          "requiredFor": ["property=range"],
+          "requiredFor": [
+            "property=range"
+          ],
           "description": "Visible low value label. Usually matches min."
         },
         "highLabel": {
           "type": "number|string",
-          "requiredFor": ["property=range"],
+          "requiredFor": [
+            "property=range"
+          ],
           "description": "Visible high value label. Usually matches max."
         },
         "referenceValue": {
           "type": "number|string",
-          "requiredFor": ["property=offset"],
+          "requiredFor": [
+            "property=offset"
+          ],
           "description": "Secondary comparison value displayed near the bottom of the gauge."
         },
         "measuredValue": {
           "type": "number",
-          "requiredFor": ["property=range", "property=offset"],
+          "requiredFor": [
+            "property=range",
+            "property=offset"
+          ],
           "description": "Numeric value that determines the measured-dot position. Defaults to value when omitted."
         },
         "referenceMeasuredValue": {
           "type": "number",
-          "requiredFor": ["property=offset"],
+          "requiredFor": [
+            "property=offset"
+          ],
           "description": "Optional numeric comparison value that determines the second measured-dot position."
         },
         "metricKind": {
@@ -249,7 +325,10 @@
         "Prefer size M or L for range and offset variants because they contain multiple text values."
       ],
       "measuredDotBehavior": {
-        "appliesToProperties": ["range", "offset"],
+        "appliesToProperties": [
+          "range",
+          "offset"
+        ],
         "rule": "Every dot named measure in the Figma component must be rendered dynamically on the webpage. Its position must correspond to the measured numeric value normalized within min and max.",
         "normalization": "normalized = clamp((measuredValue - min) / (max - min), 0, 1)",
         "rangeExample": {
@@ -264,7 +343,10 @@
       "exampleProps": [
         {
           "component": "open_gauge",
-          "variant": { "property": "range", "size": "M" },
+          "variant": {
+            "property": "range",
+            "size": "M"
+          },
           "data": {
             "value": "68",
             "min": 55,
@@ -277,7 +359,10 @@
         },
         {
           "component": "open_gauge",
-          "variant": { "property": "offset", "size": "L" },
+          "variant": {
+            "property": "offset",
+            "size": "L"
+          },
           "data": {
             "value": "76",
             "referenceValue": "72",

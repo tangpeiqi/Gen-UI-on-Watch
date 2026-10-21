@@ -30,7 +30,7 @@ Follow these stages in order within each generation request; they are not separa
 
 ## Time styling contract alignment
 
-The generation guide permits negative letter spacing and intentional overlap between individual digit containers, with coordinated per-digit gradients as a design option. Negative letterSpacing is already represented in the current schema and renderer. The current contract still anchors segmented containers independently and enforces shared treatment; the fitter reserves space between time parts and the renderer has no time-gradient fields. Before enabling the full segmented effect, align schema, validation, fitting, and rendering for group anchoring, intentional digit overlap, per-digit gradients, and explicit digit stacking order. Do not invent unsupported output fields during generation.
+The generation guide permits negative letter spacing and intentional overlap between individual digit containers, with coordinated per-digit gradients as a design option. Negative letterSpacing is already represented in the current schema and renderer. The current contract still anchors segmented containers independently and enforces shared treatment; the fitter reserves space between time parts and the renderer has no time-gradient fields. Before enabling the full segmented effect, align schema, validation, fitting, and rendering for group anchoring, intentional digit overlap, per-digit gradients, time-coverage measurement for the one-third gradient threshold, and explicit digit stacking order. Do not invent unsupported output fields during generation.
 
 ## Editing and verification
 

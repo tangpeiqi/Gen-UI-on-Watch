@@ -106,7 +106,7 @@ For this weather example, `measuredValue` equals `max`, so the dot is rendered a
 
 ## Color Contract
 
-Circular gauge colors are decided by `generation-guide.md`.
+For generated watch faces, `generation-guide.md` assigns the light accent to every circular gauge. Dark accents are only for rectangular accent surfaces. Use the single-accent API for generated faces; the two-color examples below describe reusable component capability, not permission to choose independent hues in watch-face generation.
 
 `CloseGauge` can only have one accent color. Use the resolved `widget_accent_color` for the value arc, text, number, and icon. The base ring always uses the translucent light grey track.
 
