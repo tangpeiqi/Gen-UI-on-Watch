@@ -146,7 +146,6 @@ export function buildPromptPayload({ context, preferences, designPack, currentTi
       targetContainer: "Gen Watch Face"
     },
     pseudoContextJson: designPack.pseudoContextJson,
-    pseudoContextMarkdownSummary: designPack.pseudoContextMarkdown.slice(0, 3500),
     schemaVersion: designPack.schema.properties.schemaVersion.const,
     availableContentTypes: contentTypes,
     materialSymbolsRegistry: iconTokens,
@@ -231,6 +230,8 @@ export function buildSystemPrompt(designPack) {
     "The JSON string inside layoutJson must parse to the exact watch-face layout contract shown in validLayoutExample. Copy that nesting style.",
     "The renderer owns HTML, CSS, SVG, and Material Symbols rendering. Do not output code.",
     `Set metadata.provider to openai, metadata.pipelinePhase to phase-9-openai-structured-output, metadata.promptVersion to ${PROMPT_VERSION}, metadata.fallbackUsed to false, metadata.retryCount to the supplied retryAttempt number, and metadata.contextSource to live_context_plus_pseudo_context.`,
+    "For activity_summary, select the latest snapshot on the requested day at or before the runtime time; use cumulative times directly, never sum snapshots. For heart_rate, select the latest reading on that day at or before runtime time; derive age and daily high/low only from readings already available. For iot_control, select the latest available snapshot for the requested device, even if the user is away from the device. Never use future measurements; show unavailable data explicitly when no reading qualifies. For reminders, use the requested day and relevant task wording, choose the nearest upcoming due reminder, or the most recently due relevant reminder if none remain upcoming. Treat before-bedtime as a day-end window. Do not infer, track, filter, or update reminder completion state; completion actions are UI affordances only.",
+    "For weather current_temperature, use the latest weather_temperature_reading in pseudoContextJson.timeline on the requested day at or before the requested time. Combine it with that day’s condition, high/low, precipitation, and wind. Do not use a future reading, a thermostat temperature, or invent a reading before the first sample. Tomorrow is forecast-only and has no current temperature observation.",
     designPack.runtimeWorkflow
   ].join("\n\n");
 }

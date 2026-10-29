@@ -2,361 +2,372 @@
 
 This document defines semantic widget content types for the generative UI agent. Use it with `widget-selection-policy.json`: this file defines what information can be shown for each type, while the selection policy decides whether the type renders as a single widget, multiple widgets, or a mixed group.
 
-The content taxonomy should not make the final layout-budget decision. It should identify useful metadata, which fields can stand alone as compact metrics, which fields need text space, and which fields require controls.
+The content taxonomy should not make the final layout-budget decision. It should define related metadata groups, which fields need text space, and which fields require controls.
 
 ## Ownership
 
 Selection sequence, ranking, eligibility, count, and shape decisions belong to `widget-selection-policy.json`. This taxonomy supplies the data fields and metadata roles used by selection and widget design. Widget guidelines own how those fields are displayed.
 
-## Metadata Role Columns
+## Metadata Roles
 
-Use the following terms in the content type table:
+The content definitions use these metadata roles:
 
-- `primary`: The strongest single value or text group for a one-widget summary.
-- `splittable_metrics`: Fields that can become separate compact widgets when layout budget allows.
-- `detail_fields`: Fields that usually need rectangular text space.
-- `control_fields`: Interactive actions; these require rectangular rendering when visible.
-- `conditional_fields`: Fields that render only under specific context conditions.
+- `metric_groups`: Groups of related metadata within a content type. Each group lists required and optional metadata, plus derived metrics where applicable.
+- `detail_fields`: Descriptive metadata such as names, labels, explanations, and comparisons.
+- `control_fields`: Metadata representing interactive actions such as start, pause, or mark complete.
+
+Required metadata is the core content; optional metadata is additional information that may be available.
+
+## Metric Groups
+
+Each content type contains metric groups with `metadata.required` and `metadata.optional`. Workout lists its groups separately for during and after a workout. Derived metrics are calculated from the metadata.
+
+Rules for splitting groups across widgets or combining groups in one widget belong to `widget-selection-policy.json`.
+
+The JSON companion uses camelCase keys; the YAML below uses snake_case equivalents. Group IDs in the summary refer to the definitions below. These are first-draft groupings for review.
+
+## Metadata Value Types
+
+- `icon`: An approved icon token for the content type.
+- `string_or_icon_or_both`: A text string, an object with an icon token, or an object with both text and an icon token. For example: `"Running"`, `{"icon": "workout_running"}`, or `{"text": "Running", "icon": "workout_running"}`. Rendered icons must use an approved icon token for the content type.
 
 ## Content Type Summary
 
-| Type | Required Metadata | Optional Metadata | Primary | Splittable Metrics | Detail / Control Rules |
+A dash (—) means no metadata is currently labeled with that role.
+
+| Type | Required Metadata | Optional Metadata | Metric Groups | Detail Fields | Control Fields |
 |---|---|---|---|---|---|
-| `workout` | `workout_type`, `duration`, `calories_burned` | `calorie_goal`, `past_week_average`, `elapsed_time`, `progress` | workout summary | `duration`, `calories_burned`, `progress` | Comparisons to goal or past week average need detail space. |
-| `activity_summary` | `sitting_time`, `standing_time`, `walking_time` | `last_three_day_average`, `trend` | activity summary | `sitting_time`, `standing_time`, `walking_time` | Average and trend copy need detail space. |
-| `upcoming_event` | `time`, `event_name` | `location`, `travel_time`, `calendar_name` | event name and time | `time`, `travel_time` | Location and event name usually need detail space. |
-| `timer` | `timer_label`, `countdown` | `start_action`, `pause_action`, `cancel_action`, `total_duration`, `remaining_seconds` | countdown | `countdown`, `progress` | Start, pause, or cancel controls require rectangular rendering. |
-| `heart_rate` | `last_reading` | `time_since_last_reading`, `activity_high`, `activity_low`, `activity_type` | last reading | `last_reading`, `activity_high`, `activity_low` | Activity type and time since reading are detail fields. |
-| `last_message` | `sender`, `content` | `timestamp`, `app`, `unread_count` | sender and content | `unread_count` | Message preview needs rectangular text space. |
-| `iot_control` | `device_name`, `status` | `current_value`, `set_value`, `room`, `control_action` | device status | `status`, `current_value`, `set_value` | Control actions require rectangular rendering. |
-| `map_navigation` | `destination`, `traffic_condition`, `travel_time` | `time_to_leave`, `distance`, `next_step` | destination and travel time | `travel_time`, `time_to_leave`, `distance` | Destination, traffic, and next step need detail space. |
-| `sleep_summary` | `quality_rating`, `score`, `hours_asleep` | `trend`, `sleep_goal`, `previous_average` | sleep score or summary | `quality_rating`, `score`, `hours_asleep` | Trend and comparison fields need detail space. |
-| `music_control` | `song`, `play_pause_action` | `album`, `artist`, `next_action`, `previous_action`, `artwork` | song and playback state | playback state | Playback controls require rectangular rendering. |
-| `reminder` | `content` | `mark_complete_action`, `priority`, `list_name` | reminder content | `priority` | Reminder renders as a title plus radio-button to-do row. |
-| `weather` | `condition`, `current_temperature`, `high_temperature`, `low_temperature` | `rain_chance`, `wind`, `location` | current temperature and condition | `current_temperature`, `high_temperature`, `low_temperature`, `rain_chance` | Show rain chance when condition includes rain. Show wind only when specifically requested. |
-| `checklist` | `items` | `completed_items`, `title`, `progress`, `due_datetime` | checklist items | `progress`, `due_datetime` | Checklist is a locked full-face component; fill content only. |
+| `workout` (during workout) | `workout_type`, `elapsed_time`, `calories_burned` | `calorie_goal`, `target_duration` | `type`, `time`, `calorie` | — | — |
+| `workout` (after workout) | `workout_type`, `duration`, `calories_burned` | `calorie_goal`, `target_duration` | `type`, `time`, `calorie` | — | — |
+| `activity_summary` | `sitting_time`, `standing_time`, `walking_time` | — | `sitting`, `standing`, `walking` | — | — |
+| `upcoming_event` | `time`, `event_name` | `location`, `time_to_leave` | `upcoming_event` | `event_name`, `location` | — |
+| `timer` | `countdown`, `total_duration` | `timer_label`, `start_action`, `pause_action`, `cancel_action` | `countdown` | `timer_label` | `start_action`, `pause_action`, `cancel_action` |
+| `heart_rate` | `last_reading` | `time_since_last_reading`, `today_high`, `today_low` | `heart_rate` | `time_since_last_reading` | — |
+| `last_message` | `sender`, `content` | `timestamp` | `message` | `sender`, `content`, `timestamp` | — |
+| `iot_control` | `status`, `current_value` | `device_name`, `set_value`, `room`, `control_action` | `status`, `value` | `device_name`, `room` | `control_action` |
+| `map_navigation` | `destination`, `travel_time` | `traffic_condition`, `distance` | `map_navigation` | `destination`, `traffic_condition` | — |
+| `sleep_summary` | `score`, `sleep_label`, `hours_asleep` | `quality_rating`, `sleep_goal` | `quality`, `hours` | — | — |
+| `music_control` | `song`, `play_pause_action` | `album`, `artist`, `next_action`, `previous_action`, `artwork` | `playback` | `song`, `album`, `artist`, `artwork` | `play_pause_action`, `next_action`, `previous_action` |
+| `reminder` | `content`, `mark_complete_action` | — | `task` | `content` | `mark_complete_action` |
+| `weather` | `condition`, `current_temperature` | `high_temperature`, `low_temperature`, `rain_chance`, `precipitation_label`, `wind`, `wind_label` | `condition`, `temperature_range`, `precipitation`, `wind` | — | — |
+| `checklist` | `items`, `completed_items`, `title`, `mark_complete_action` | — | `list` | `title`, `items`, `completed_items` | `mark_complete_action` |
 
 ## Content Type Definitions
 
 ```yaml
 content_types:
   workout:
-    purpose: Show active or recent workout progress and effort.
+    purpose: "Show active or recent workout progress and effort."
     use_when:
-      - user asks about a workout
-      - context includes exercise, calories, elapsed time, or workout progress
-    metadata:
-      required:
-        workout_type: string
-        duration: duration
-        calories_burned: number
-      optional:
-        calorie_goal: number
-        past_week_average: number
-        elapsed_time: duration
-        progress: number
+      - "user asks about a workout"
+      - "context includes exercise, calories, elapsed time, or workout progress"
+    metric_groups:
+      during_workout:
+        - id: "type"
+          metadata:
+            required:
+              workout_type: "string_or_icon_or_both"
+            optional: {}
+        - id: "time"
+          metadata:
+            required:
+              elapsed_time: "duration"
+            optional:
+              target_duration: "duration"
+          derived_metrics:
+            - "time_progress"
+        - id: "calorie"
+          metadata:
+            required:
+              calories_burned: "number"
+            optional:
+              calorie_goal: "number"
+          derived_metrics:
+            - "calorie_progress"
+      after_workout:
+        - id: "type"
+          metadata:
+            required:
+              workout_type: "string_or_icon_or_both"
+            optional: {}
+        - id: "time"
+          metadata:
+            required:
+              duration: "duration"
+            optional:
+              target_duration: "duration"
+          derived_metrics:
+            - "time_progress"
+        - id: "calorie"
+          metadata:
+            required:
+              calories_burned: "number"
+            optional:
+              calorie_goal: "number"
+          derived_metrics:
+            - "calorie_progress"
     presentation_affordances:
-      primary: workout_summary
-      splittable_metrics:
-        - duration
-        - calories_burned
-        - progress
-      detail_fields:
-        - workout_type
-        - calorie_goal
-        - past_week_average
-    rules:
-      - Compact workout progress/status may use a circular Close Gauge.
-      - Workout or exercise summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use `generated_rectangular_widget` so the summary text and numbers remain readable.
-
+      detail_fields: []
+    derived_metrics:
+      time_progress:
+        available_when: "target_duration is positive and the applicable elapsed_time or duration is present; normalize both durations to the same unit before dividing."
+        formula_by_situation:
+          during_workout: "elapsed_time / target_duration"
+          after_workout: "duration / target_duration"
+        unavailable_when: "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined."
+        meaning: "Ratio of actual time to target duration; may exceed 1. A completed workout does not necessarily meet its target."
+      calorie_progress:
+        available_when: "calorie_goal is positive and calories_burned is present; use the same calorie unit for both values."
+        formula_by_situation:
+          during_workout: "calories_burned / calorie_goal"
+          after_workout: "calories_burned / calorie_goal"
+        unavailable_when: "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined."
+        meaning: "Ratio of calories burned to calorie goal; may exceed 1. A completed workout does not necessarily meet its calorie goal."
+    metadata_notes:
+      - "Use during_workout metadata for an ongoing workout and after_workout metadata for a completed workout; both use the workout content type."
+      - "elapsed_time is time completed so far during an ongoing workout; duration is the final total length of a completed workout. target_duration is the optional planned total length in either situation."
+      - "time_progress is derived from elapsed_time / target_duration during a workout or duration / target_duration after a workout. calorie_progress is derived from calories_burned / calorie_goal in both situations when the goal is positive; both progress metrics are derived, not input metadata."
   activity_summary:
-    purpose: Compare sitting, standing, and walking time to recent behavior.
-    metadata:
-      required:
-        sitting_time: duration
-        standing_time: duration
-        walking_time: duration
-      optional:
-        last_three_day_average: object
-        trend: string
+    purpose: "Show cumulative sitting, standing, and walking time."
+    metric_groups:
+      - id: "sitting"
+        metadata:
+          required:
+            sitting_time: "duration"
+          optional: {}
+      - id: "standing"
+        metadata:
+          required:
+            standing_time: "duration"
+          optional: {}
+      - id: "walking"
+        metadata:
+          required:
+            walking_time: "duration"
+          optional: {}
     presentation_affordances:
-      primary: activity_summary
-      splittable_metrics:
-        - sitting_time
-        - standing_time
-        - walking_time
-      detail_fields:
-        - last_three_day_average
-        - trend
-
+      detail_fields: []
   upcoming_event:
-    purpose: Show the next calendar event.
-    metadata:
-      required:
-        time: datetime_or_time
-        event_name: string
-      optional:
-        location: string
-        travel_time: duration
-        calendar_name: string
+    purpose: "Show the next calendar event."
+    metric_groups:
+      - id: "upcoming_event"
+        metadata:
+          required:
+            event_name: "string"
+            time: "datetime_or_time"
+          optional:
+            location: "string"
+            time_to_leave: "datetime_or_time"
     presentation_affordances:
-      primary: event_name_with_time
-      splittable_metrics:
-        - time
-        - travel_time
       detail_fields:
-        - event_name
-        - location
-        - calendar_name
-
+        - "event_name"
+        - "location"
+    metadata_notes:
+      - "time_to_leave is the recommended departure date/time to arrive at the event by its start time; it is not a travel duration."
   timer:
-    purpose: Show an inferred or active countdown.
-    metadata:
-      required:
-        timer_label: string
-        countdown: duration
-      optional:
-        start_action: action
-        pause_action: action
-        cancel_action: action
-        total_duration: duration
-        remaining_seconds: number
+    purpose: "Show an inferred or active countdown."
+    metric_groups:
+      - id: "countdown"
+        metadata:
+          required:
+            countdown: "duration"
+            total_duration: "duration"
+          optional:
+            timer_label: "string"
+            start_action: "action"
+            pause_action: "action"
+            cancel_action: "action"
+        derived_metrics:
+          - "remaining_progress"
     presentation_affordances:
-      primary: countdown
-      splittable_metrics:
-        - countdown
-        - progress
       detail_fields:
-        - timer_label
+        - "timer_label"
       control_fields:
-        - start_action
-        - pause_action
-        - cancel_action
-    rules:
-      - Visible controls require rectangular rendering.
-      - Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use `rectangular_layout_templates.timer_rectangular`.
-      - Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.
-      - Timer may render as a Close Gauge circular widget from `circular-widget-guidelines/circular-widget-catalog.json`, or as a rectangular widget using `rectangular_layout_templates.timer_rectangular` from `rectangular-widget-guidelines/rectangular-widget-catalog.json`.
-
+        - "start_action"
+        - "pause_action"
+        - "cancel_action"
+    derived_metrics:
+      remaining_progress:
+        available_when: "countdown is present and total_duration is positive; normalize both durations to the same unit before dividing."
+        formula: "min(1, max(0, countdown / total_duration))"
+        range:
+          - 0
+          - 1
+        meaning: "Remaining fraction of the timer: 1 means countdown equals total_duration; 0 means countdown is zero. Progress decreases as the timer counts down."
+        unavailable_when: "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined."
   heart_rate:
-    purpose: Show the latest heart rate reading and optional activity range.
-    metadata:
-      required:
-        last_reading: number
-      optional:
-        time_since_last_reading: duration
-        activity_high: number
-        activity_low: number
-        activity_type: string
+    purpose: "Show the latest heart rate reading and optional high and low recorded today."
+    metric_groups:
+      - id: "heart_rate"
+        metadata:
+          required:
+            last_reading: "number"
+          optional:
+            time_since_last_reading: "duration"
+            today_high: "number"
+            today_low: "number"
     presentation_affordances:
-      primary: last_reading
-      splittable_metrics:
-        - last_reading
-        - activity_high
-        - activity_low
       detail_fields:
-        - time_since_last_reading
-        - activity_type
-
+        - "time_since_last_reading"
+    metadata_notes:
+      - "Today means since midnight in the user's local timezone."
+      - "today_high and today_low are the highest and lowest recorded heart rate readings today; they do not imply continuous monitoring or depend on an activity."
   last_message:
-    purpose: Show the latest message preview.
-    metadata:
-      required:
-        sender: string
-        content: string
-      optional:
-        timestamp: datetime_or_time
-        app: string
-        unread_count: number
+    purpose: "Show the latest message preview."
+    metric_groups:
+      - id: "message"
+        metadata:
+          required:
+            sender: "string"
+            content: "string"
+          optional:
+            timestamp: "datetime_or_time"
     presentation_affordances:
-      primary: sender_and_content
-      splittable_metrics:
-        - unread_count
       detail_fields:
-        - sender
-        - content
-        - timestamp
-        - app
-    rules:
-      - Message previews need rectangular text space unless reduced to unread count.
-      - Sender and timestamp may use an optional message icon.
-      - Message content must render as text without an icon.
-
+        - "sender"
+        - "content"
+        - "timestamp"
   iot_control:
-    purpose: Show smart device status and optional setpoint or control state.
-    metadata:
-      required:
-        device_name: string
-        status: string
-      optional:
-        current_value: number_or_string
-        set_value: number_or_string
-        room: string
-        control_action: action
+    purpose: "Show smart device status and current value, with optional device information, setpoint, and control action."
+    metric_groups:
+      - id: "status"
+        metadata:
+          required:
+            status: "string"
+          optional:
+            device_name: "string_or_icon_or_both"
+            room: "string"
+      - id: "value"
+        metadata:
+          required:
+            current_value: "number_or_string"
+          optional:
+            set_value: "number_or_string"
+            control_action: "action"
     presentation_affordances:
-      primary: device_status
-      splittable_metrics:
-        - status
-        - current_value
-        - set_value
       detail_fields:
-        - device_name
-        - room
+        - "device_name"
+        - "room"
       control_fields:
-        - control_action
-    rules:
-      - Visible controls require rectangular rendering.
-      - Device control, toggle, turn on/off, setpoint, room, thermostat, temperature, light, fan, heater, AC, lock/unlock, or adjustment requests should use `generated_rectangular_widget` so device name, state, and action remain readable.
-      - Passive compact device status may use a circular widget only when no control action or setpoint/detail text is needed.
-
+        - "control_action"
   map_navigation:
-    purpose: Show navigation timing and travel conditions.
-    metadata:
-      required:
-        destination: string
-        traffic_condition: string
-        travel_time: duration
-      optional:
-        time_to_leave: datetime_or_time
-        distance: distance
-        next_step: string
+    purpose: "Show navigation timing and travel conditions."
+    metric_groups:
+      - id: "map_navigation"
+        metadata:
+          required:
+            destination: "string"
+            travel_time: "duration"
+          optional:
+            traffic_condition: "string"
+            distance: "distance"
     presentation_affordances:
-      primary: destination_and_travel_time
-      splittable_metrics:
-        - travel_time
-        - time_to_leave
-        - distance
       detail_fields:
-        - destination
-        - traffic_condition
-        - next_step
-
+        - "destination"
+        - "traffic_condition"
   sleep_summary:
-    purpose: Show sleep quality, score, duration, and optional trend.
-    metadata:
-      required:
-        quality_rating: string
-        score: number
-        hours_asleep: duration
-      optional:
-        trend: string
-        sleep_goal: duration
-        previous_average: duration
+    purpose: "Show sleep quality and hours asleep, with an optional sleep goal."
+    metric_groups:
+      - id: "quality"
+        metadata:
+          required:
+            score: "number"
+            sleep_label: "string_or_icon_or_both"
+          optional:
+            quality_rating: "string"
+      - id: "hours"
+        metadata:
+          required:
+            hours_asleep: "number"
+          optional:
+            sleep_goal: "number"
     presentation_affordances:
-      primary: sleep_score_or_summary
-      splittable_metrics:
-        - quality_rating
-        - score
-        - hours_asleep
-      detail_fields:
-        - trend
-        - sleep_goal
-        - previous_average
-
+      detail_fields: []
+    metadata_notes:
+      - "hours_asleep and sleep_goal are measured in hours and may include fractional hours, such as 7.5."
   music_control:
-    purpose: Show current music and playback controls.
-    metadata:
-      required:
-        song: string
-        play_pause_action: action
-      optional:
-        album: string
-        artist: string
-        next_action: action
-        previous_action: action
-        artwork: image
+    purpose: "Show current music and playback controls."
+    metric_groups:
+      - id: "playback"
+        metadata:
+          required:
+            song: "string"
+            play_pause_action: "action"
+          optional:
+            album: "string"
+            artist: "string"
+            next_action: "action"
+            previous_action: "action"
+            artwork: "image"
     presentation_affordances:
-      primary: song_and_playback_state
-      splittable_metrics:
-        - playback_state
       detail_fields:
-        - song
-        - album
-        - artist
-        - artwork
+        - "song"
+        - "album"
+        - "artist"
+        - "artwork"
       control_fields:
-        - play_pause_action
-        - next_action
-        - previous_action
-    rules:
-      - Visible playback controls require rectangular rendering.
-      - Must use `rectangular_layout_templates.music_control` from `rectangular-widget-guidelines/rectangular-widget-catalog.json` when rendered.
-
+        - "play_pause_action"
+        - "next_action"
+        - "previous_action"
   reminder:
-    purpose: Show a reminder to-do item with a completion affordance.
-    metadata:
-      required:
-        content: string
-      optional:
-        mark_complete_action: action
-        priority: string
-        list_name: string
+    purpose: "Show a reminder to-do item with a completion affordance."
+    metric_groups:
+      - id: "task"
+        metadata:
+          required:
+            content: "string"
+            mark_complete_action: "action"
+          optional: {}
     presentation_affordances:
-      primary: content
-      splittable_metrics:
-        - priority
       detail_fields:
-        - content
-        - list_name
+        - "content"
       control_fields:
-        - mark_complete_action
-    rules:
-      - Visible mark complete controls require rectangular rendering.
-      - Must use `rectangular_layout_templates.reminder` from `rectangular-widget-guidelines/rectangular-widget-catalog.json` when rendered.
-
+        - "mark_complete_action"
   weather:
-    purpose: Show current weather and daily temperature range.
-    metadata:
-      required:
-        condition: string
-        current_temperature: number
-        high_temperature: number
-        low_temperature: number
-      optional:
-        rain_chance: percent
-        wind: speed
-        location: string
+    purpose: "Show current weather and daily temperature range."
+    metric_groups:
+      - id: "condition"
+        metadata:
+          required:
+            condition: "string_or_icon_or_both"
+          optional: {}
+      - id: "temperature_range"
+        metadata:
+          required:
+            current_temperature: "number"
+          optional:
+            high_temperature: "number"
+            low_temperature: "number"
+      - id: "precipitation"
+        metadata:
+          required: {}
+          optional:
+            rain_chance: "percent"
+            precipitation_label: "icon"
+      - id: "wind"
+        metadata:
+          required: {}
+          optional:
+            wind: "speed"
+            wind_label: "icon"
     presentation_affordances:
-      primary: current_temperature_and_condition
-      splittable_metrics:
-        - current_temperature
-        - high_temperature
-        - low_temperature
-        - rain_chance
-      detail_fields:
-        - condition
-        - location
-    conditional_fields:
-      rain_chance: Show when condition includes rain.
-      wind: Show only when specifically requested from context input.
-    rules:
-      - When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.
-      - The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.
-      - Do not render Weather-only as one L circular widget; use a generated summary or three S circular widgets according to widget-selection-policy.json.
-
+      detail_fields: []
   checklist:
-    purpose: Show a scrollable list of checklist items.
-    metadata:
-      required:
-        items: array
-      optional:
-        completed_items: array
-        title: string
-        progress: number
-        due_datetime: datetime
+    purpose: "Show a scrollable list of checklist items."
+    metric_groups:
+      - id: "list"
+        metadata:
+          required:
+            items: "array"
+            completed_items: "array"
+            title: "string"
+            mark_complete_action: "action"
+          optional: {}
     presentation_affordances:
-      primary: checklist_items
-      splittable_metrics:
-        - progress
-        - due_datetime
       detail_fields:
-        - title
-        - items
-        - completed_items
-    rules:
-      - Checklist is a locked full-face component; fill content only.
-      - Must use `rectangular_layout_templates.checklist_full_face` from `rectangular-widget-guidelines/rectangular-widget-catalog.json`.
-      - Must be the only widget on the watch face.
-      - Must preserve the Figma component frame and slots: widget x=0 y=0 width=205 height=251; date x=16 y=16 width=70 height=22; time x=139 y=16 width=50 height=22, right-aligned SF Compact Regular 19pt; title x=16 y=42; list x=6 y=71 width=193.
-      - Do not generate a separate large time/date stack or any extra watch-face widgets around checklist.
+        - "title"
+        - "items"
+        - "completed_items"
+      control_fields:
+        - "mark_complete_action"
 ```

@@ -337,6 +337,9 @@
         white-space: pre-wrap;
       }
 
+      .generation-status { position: absolute; top: 16px; left: 16px; right: 16px; z-index: 2; text-align: center; font-size: 13px; line-height: 1.5; }
+      .generation-status[data-state="error"] { color: #b42318; }
+      #retry-generation { margin-left: 8px; cursor: pointer; }
       .preview-panel {
         position: relative;
         min-height: 0;
@@ -771,7 +774,7 @@
 
             <div class="context-actions">
               <button class="generate-button" id="generate-button" type="submit" form="context-form">Generate</button>
-              <button class="sample-layout-button" id="sample-layout-button" type="button">Load Sample Layout</button>
+              <button class="sample-layout-button" id="sample-layout-button" type="button">Developer preview</button>
             </div>
           </section>
 
@@ -799,6 +802,10 @@
         </div>
 
         <section class="panel preview-panel" data-node-id="650:2300" data-name="Preview Panel" aria-label="Preview">
+          <div class="generation-status" role="status" aria-live="polite">
+            <span id="generation-status">Enter context and generate a model result.</span>
+            <button id="retry-generation" type="button" hidden>Retry</button>
+          </div>
           <div class="watch-preview" aria-label="Watch preview">
             <img class="watch-image" src="assets/watch-bezel.png" alt="" width="300" height="470" />
             <div class="gen-watch-face" data-node-id="650:2307" data-name="Gen Watch Face" aria-label="Gen Watch Face container">
@@ -821,6 +828,9 @@
       const sampleLayoutButton = document.querySelector("#sample-layout-button");
       const tabButtons = [...document.querySelectorAll(".debug-tab")];
       const tabPanels = [...document.querySelectorAll("[role='tabpanel']")];
+      const generationStatus = document.querySelector("#generation-status");
+      const retryGeneration = document.querySelector("#retry-generation");
+      let previousPreview = [];
       let latestDebugBundle = "";
       let nextSampleLayoutIndex = 0;
       let isGenerating = false;
@@ -2656,9 +2666,9 @@
           result = null;
         }
         if (!response.ok) {
-          const summary = result?.validation?.summary || `backend returned ${response.status}`;
+          const summary = result?.error?.message || result?.validation?.summary || `backend returned ${response.status}`;
           const backendError = new Error(summary);
-          backendError.kind = result?.validation?.ok === false ? "validation" : response.status >= 500 ? "server" : "request";
+          backendError.kind = result?.error?.kind || (result?.validation?.ok === false ? "validation" : response.status >= 500 ? "server" : "request");
           backendError.status = response.status;
           backendError.result = result;
           throw backendError;
@@ -3645,6 +3655,10 @@
       }
 
       function setPipelineOutput(run) {
+        retryGeneration.hidden = true;
+        generationStatus.parentElement.dataset.state = "success";
+        const modelGenerated = !run.layout.metadata.fallbackUsed && run.layout.metadata.provider === "openai";
+        generationStatus.textContent = modelGenerated ? `Model-generated · ${run.model.model || "OpenAI"}` : "Developer preview · No model used";
         if (!run.validation.ok && !run.renderInvalidModelResult) {
           genWatchFace.replaceChildren(createElement("div", "watch-face-render"));
           layoutJson.textContent = JSON.stringify(run.layout, null, 2);
@@ -3696,6 +3710,7 @@
       function setGenerateWorkingState(context) {
         isGenerating = true;
         generateButton.disabled = true;
+        sampleLayoutButton.disabled = true;
         generateButton.setAttribute("aria-busy", "true");
         generateButton.textContent = "Generating...";
         showDebugPanel("logs-panel");
@@ -3707,12 +3722,17 @@
           `[generate] Context submitted: time=${context.timeOfDay}; location=${context.location}; activity=${context.activity}; goal=${context.goal || "none"}.`,
           "[generate] Pipeline is working. Please wait for an update."
         ].join("\n");
+        previousPreview = [...genWatchFace.childNodes].map(node => node.cloneNode(true));
+        generationStatus.textContent = "Generating with the model…";
+        generationStatus.parentElement.dataset.state = "working";
+        retryGeneration.hidden = true;
         renderWorkingState();
       }
 
       function clearGenerateWorkingState() {
         isGenerating = false;
         generateButton.disabled = false;
+        sampleLayoutButton.disabled = false;
         generateButton.removeAttribute("aria-busy");
         generateButton.textContent = "Generate";
         genWatchFace.removeAttribute("aria-busy");
@@ -3789,7 +3809,7 @@
       }
 
       timeField.value = currentTimeLabel();
-      refreshStaticOutput("Default context rendered.");
+      // The live demo begins empty; sample rendering requires explicit Developer preview.
 
       async function handleGenerate() {
         if (isGenerating) {
@@ -3799,33 +3819,32 @@
         setGenerateWorkingState(context);
         try {
           const result = await requestBackendGeneration(context);
-          const backendReason = result.renderInvalidModelResult
-            ? "Generate clicked; backend returned an OpenAI layout that failed validation and is rendered for debugging."
-            : result.layout?.metadata?.fallbackUsed
-              ? "Generate clicked; backend returned deterministic fallback layout."
-              : "Generate clicked; backend returned OpenAI layout.";
-          setPipelineOutput(buildRunFromApiResponse(result, context, backendReason));
-        } catch (error) {
-          const reasonByKind = {
-            validation: "Generate clicked; backend generation failed validation, so browser-local deterministic fallback was used.",
-            request: "Generate clicked; backend rejected the generation request, so browser-local deterministic fallback was used.",
-            server: "Generate clicked; backend returned a server error, so browser-local deterministic fallback was used.",
-            network: "Generate clicked; backend endpoint unavailable, so browser-local deterministic fallback was used."
-          };
-          const run = buildPipelineRun(reasonByKind[error.kind] || reasonByKind.network);
-          const validationDetails = error.result?.validation?.errors?.length
-            ? `; ${error.result.validation.errors.map((item) => `${item.path}: ${item.message}`).join(" | ")}`
-            : "";
-          run.pipelineSteps.unshift({
-            id: "call-backend-endpoint",
-            status: "failed",
-            detail: `/api/generate-watch-ui ${error.kind || "network"} failure${error.status ? ` (${error.status})` : ""}: ${error.message}${validationDetails}`
-          });
+          if (!result.layout || result.layout.metadata?.fallbackUsed || result.validation?.ok === false) {
+            const error = new Error("Generation did not return a valid model result. Please retry.");
+            error.kind = "invalid_output";
+            error.result = result;
+            throw error;
+          }
+          const run = buildRunFromApiResponse(result, context, "Generate clicked; backend returned a model-generated layout.");
           setPipelineOutput(run);
+          if (!run.validation.ok) throw new Error("Could not display the generated layout. Please retry.");
+        } catch (error) {
+          genWatchFace.replaceChildren(...previousPreview);
+          const hasPrevious = previousPreview.length > 0;
+          const message = error.kind === "network" ? "Could not connect to the generation server. Please retry." : error.message;
+          generationStatus.textContent = `${hasPrevious ? "Previous result · " : ""}${message}`;
+          generationStatus.parentElement.dataset.state = "error";
+          retryGeneration.hidden = false;
+          layoutJson.textContent = JSON.stringify(error.result || { error: message }, null, 2);
+          logs.textContent += `\n[generation-failed] ${message}\n[fallback] Automatic fallback is disabled.`;
+          latestDebugBundle = JSON.stringify({ context, error: message, response: error.result || null }, null, 2);
+
         } finally {
           clearGenerateWorkingState();
         }
       }
+
+      retryGeneration.addEventListener("click", handleGenerate);
 
       copyDebugButton.addEventListener("click", () => {
         copyDebugBundle().catch((error) => {

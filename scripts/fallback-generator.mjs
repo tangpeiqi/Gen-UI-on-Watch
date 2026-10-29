@@ -1,3 +1,4 @@
+import { runtimeTimelineMinute, latestReceivedMessage, nextCalendarEvent, latestSnapshot, heartRateAt, selectReminder } from "./timeline-context.mjs";
 import { fitTimeLayout } from "./time-layout.mjs";
 import fs from "node:fs";
 import { createLayoutValidator } from "./layout-validator.mjs";
@@ -89,8 +90,7 @@ export function loadDesignPack(cwd = process.cwd()) {
     materialSymbolsRegistry: readJson("design-pack/material-symbols-registry.json"),
     widgetSelectionPolicy: readJson("design-pack/widget-selection-policy.json"),
     generatedRectangularWidgetSchema: readJson("design-pack/rectangular-widget-guidelines/generated-rectangular-widget-schema.json"),
-    pseudoContextJson: readJson("demo-data/pseudo-context.json"),
-    pseudoContextMarkdown: fs.readFileSync(`${cwd}/demo-data/pseudo-context.md`, "utf8")
+    pseudoContextJson: readJson("demo-data/pseudo-context.json")
   };
 }
 
@@ -178,8 +178,11 @@ function inferSelectedContentTypes(context) {
   if (/(music|song|playlist|audio|podcast|playback)/.test(text)) selected.push("music_control");
   if (/(timer|countdown|pause|cancel|start timer|reset timer|set .*min|set .*minute|set .*hour|set .*sec)/.test(text)) selected.push("timer");
   if (/(remind|reminder|todo|to-do|complete task|mark complete)/.test(text)) selected.push("reminder");
-  if (/(run|running|walk|workout|gym|exercise|mobility)/.test(text)) selected.push("workout");
-  if (/(iot|device|thermostat|light|lights|lamp|lock|fan|ac|heater|temperature|turn on|turn off|set .*degree|set .*temp|control .*room|smart home)/.test(text)) selected.push("iot_control");
+  const activitySummaryRequested = /activity summary|sitting|standing|walking time|activity breakdown/.test(text);
+  if (activitySummaryRequested) selected.push("activity_summary");
+  if (/heart rate|heartbeat|bpm/.test(text)) selected.push("heart_rate");
+  if (!activitySummaryRequested && /(run|running|walk|workout|gym|exercise|mobility)/.test(text)) selected.push("workout");
+  if (/(iot|device|thermostat|light|lights|lamp|lock|fan|\bac\b|heater|temperature|turn on|turn off|set .*degree|set .*temp|control .*room|smart home)/.test(text)) selected.push("iot_control");
   if (/(dinner|meeting|appointment|pickup|commute|on time|schedule|call)/.test(text)) selected.push("upcoming_event");
   if (/(rain|weather|outside|outdoors|waterfront)/.test(text)) selected.push("weather");
   if (selected.length === 0) selected.push("upcoming_event");
@@ -209,20 +212,20 @@ function fallbackReasonLabel(reason) {
 
 function eventTitleFromContext(context, pseudoContext) {
   const text = `${context.activity || ""} ${context.goal || ""}`.toLowerCase();
-  if (/dinner/.test(text)) {
-    const dinner = pseudoContext.calendarEvents?.find((event) => /dinner/i.test(event.title));
-    return dinner ? `${dinner.title.replace("Dinner out with friends at ", "Dinner at ")} ${dinner.time}` : "Dinner at 7:30";
-  }
-  if (/meeting/.test(text)) return "Next meeting";
-  if (/commute|leave|on time/.test(text)) return "Leave on time";
-  return pseudoContext.calendarEvents?.find((event) => event.relativeDay === "today")?.title || "Next event";
+  let predicate = () => true;
+  if (/dinner/.test(text)) predicate = event => /dinner/i.test(event.title);
+  else if (/meeting/.test(text)) predicate = event => /meeting|sync|review|one-on-one/i.test(event.title);
+  else if (/commute/.test(text)) predicate = event => /commute/i.test(event.title);
+  const event = nextCalendarEvent(pseudoContext.timeline || [], context.timelineReference, predicate);
+  if (!event) return { title: "No upcoming event", time: "" };
+  const day = event.dateOffset === 1 ? "Tomorrow " : "";
+  return { title: event.title, time: `${day}${event.time}` };
 }
 
-function latestMessageFromContext(pseudoContext) {
-  const messages = pseudoContext.messageContext?.messages || [];
-  const latest = [...messages].reverse().find((message) => message.direction !== "sent") || messages.at(-1);
+function latestMessageFromContext(context, pseudoContext) {
+  const latest = latestReceivedMessage(pseudoContext.timeline || [], context.timelineReference);
   return {
-    sender: latest?.sender && latest.sender !== "persona" ? latest.sender : "Latest",
+    sender: latest?.sender || "",
     time: latest?.time || "",
     content: latest?.content || "No recent message"
   };
@@ -248,7 +251,7 @@ function shouldUseWorkoutRectangle(context) {
 
 function shouldUseIotControlRectangle(context) {
   const text = `${context.activity || ""} ${context.goal || ""}`.toLowerCase();
-  return /(control|action|turn on|turn off|toggle|set|adjust|change|increase|decrease|dim|lock|unlock|open|close|thermostat|temperature|temp|degree|degrees|room|kitchen|device|lights?|lamp|fan|heater|ac)/.test(text);
+  return /(control|action|turn on|turn off|toggle|set|adjust|change|increase|decrease|dim|lock|unlock|open|close|thermostat|temperature|temp|degree|degrees|room|kitchen|device|lights?|lamp|fan|heater|\bac\b)/.test(text);
 }
 
 function timerCountdownFromContext(context) {
@@ -388,8 +391,8 @@ function makeWeatherWidget(pseudoContext, frame, size = "S") {
 
 function makeWeatherOnlyWidgets(context, pseudoContext) {
   const weather = weatherEntryFromContext(context, pseudoContext);
-  const high = weather.highTemperatureF ?? weather.temperatureRangeF?.[1] ?? 67;
-  const low = weather.lowTemperatureF ?? weather.temperatureRangeF?.[0] ?? 52;
+  const high = weather.highTemperatureF ?? 67;
+  const low = weather.lowTemperatureF ?? 52;
   const rainChance = weather.rainChancePercent ?? weather.rainChance ?? 24;
   const conditionIcon = weatherIconForCondition(weather.condition);
   return [
@@ -462,41 +465,54 @@ function makeTimerWidget(frame, size = "S") {
   };
 }
 
-function makeHeartRateWidget(frame, size = "S") {
+function makeDataRectangle(type, title, lines, y = 124, height = 127) {
   return {
-    id: "fallback-heart",
-    contentType: "heart_rate",
-    shape: "circular",
-    component: "open_gauge",
-    variant: { property: "text", size },
-    data: {
-      value: "92",
-      label: "HR",
-      progress: 0.46,
-      metricKind: "heart_rate"
-    },
-    frame,
-    layer: "top",
-    decision: `fallback heart_rate -> open_gauge ${size} because heart rate moves within a range`
+    id: `fallback-${type}`, contentType: type, shape: "rectangular", template: "generated_rectangular_widget",
+    data: { value: title, label: type, metricKind: type },
+    composition: { layout: "vertical", padding: { top: 16, right: 16, bottom: 16, left: 16 }, gap: 8, verticalAlignment: "center",
+      blocks: [{ type: "text", unit: "secondary", text: title }, ...lines.map(text => ({ type: "text", unit: "body", text }))] },
+    frame: { x: 0, y, width: 205, height }, layer: "top", cornerRadius: 54, cornerSmoothing: 60,
+    verticalAlignment: y === 0 ? "top" : "bottom", decision: `fallback ${type} -> timestamp-selected context`
   };
 }
 
-function makeIotControlWidget(frame, size = "S") {
+function makeActivitySummary(context, pseudoContext) {
+  const entry = latestSnapshot(pseudoContext.timeline || [], context.timelineReference, "activity_summary", { sameDay: true });
+  if (!entry) return makeDataRectangle("activity_summary", "Activity", ["No activity summary yet"]);
+  const duration = field => { const d = entry.metadata[field]; return typeof d === "object" ? `${d.value} ${d.unit}` : String(d); };
+  const compact = field => duration(field).replace(" minutes", "m");
+  return makeDataRectangle("activity_summary", `Activity at ${entry.time}`, [
+    `Sit ${compact("sitting_time")} · Stand ${compact("standing_time")} · Walk ${compact("walking_time")}`
+  ]);
+}
+
+function makeHeartRateWidget(context, pseudoContext, frame, size = "S") {
+  const rate = heartRateAt(pseudoContext.timeline || [], context.timelineReference);
+  if (!rate) return makeDataRectangle("heart_rate", "Heart rate", ["No reading yet"]);
+  const span = rate.today_high - rate.today_low;
   return {
-    id: "fallback-iot",
-    contentType: "iot_control",
-    shape: "circular",
-    component: "close_gauge",
-    variant: { property: "icon", size },
-    data: {
-      icon: "thermometer",
-      progress: 1,
-      metricKind: "completion"
-    },
-    frame,
-    layer: "top",
-    decision: `fallback iot_control -> close_gauge ${size} icon because device state is compact and glanceable`
+    id: "fallback-heart", contentType: "heart_rate", shape: "circular", component: "open_gauge",
+    variant: { property: "text", size },
+    data: { value: String(rate.last_reading), label: "HR", progress: span ? (rate.last_reading - rate.today_low) / span : 0.5, metricKind: "heart_rate" },
+    frame, layer: "top", decision: `fallback heart_rate -> latest reading; ${rate.time_since_last_reading} min ago; recorded low/high ${rate.today_low}/${rate.today_high}`
   };
+}
+
+function iotSnapshot(context, pseudoContext) {
+  const text = `${context.goal || ""} ${context.activity || ""}`.toLowerCase();
+  return latestSnapshot(pseudoContext.timeline || [], context.timelineReference, "iot_snapshot", {
+    predicate: e => e.thermostat && (!/light|lamp|fan|lock/.test(text) || /thermostat/.test(text))
+  });
+}
+
+function makeIotControlWidget(context, pseudoContext, frame, size = "S") {
+  // Temperature is a range value; use the approved open gauge rather than inventing completion progress.
+  const entry = iotSnapshot(context, pseudoContext);
+  if (!entry) return makeDataRectangle("iot_control", "Device", ["No device reading yet"]);
+  const device = entry.thermostat;
+  return { id: "fallback-iot", contentType: "iot_control", shape: "circular", component: "open_gauge",
+    variant: { property: "icon", size }, data: { icon: "thermometer", value: String(device.currentTemperatureF), progress: Math.max(0, Math.min(1, (device.currentTemperatureF - 40) / 60)), metricKind: "temperature" },
+    frame, layer: "top", decision: `fallback iot_control -> latest device temperature at ${entry.time}; gauge scale 40–100 F` };
 }
 
 function makeTimerRectangle(context = {}, y = 112, height = 139) {
@@ -519,55 +535,13 @@ function makeTimerRectangle(context = {}, y = 112, height = 139) {
   };
 }
 
-function makeIotControlRectangle(context = {}, y = 124, height = 127) {
-  const text = `${context.activity || ""} ${context.goal || ""}`.toLowerCase();
-  const device = /light|lamp/.test(text) ? "Kitchen lights" : /fan/.test(text) ? "Kitchen fan" : "Thermostat";
-  const value = /light|lamp/.test(text) ? "ON" : /fan/.test(text) ? "2" : "70";
-  const unitLabel = /light|lamp/.test(text) ? "" : /fan/.test(text) ? "SPD" : "F";
-  return {
-    id: "fallback-iot-control",
-    contentType: "iot_control",
-    shape: "rectangular",
-    template: "generated_rectangular_widget",
-    data: {
-      icon: "thermometer",
-      value,
-      label: unitLabel || "ON",
-      metricKind: "iot_control"
-    },
-    composition: {
-      layout: "vertical",
-      padding: { top: 16, right: 16, bottom: 16, left: 16 },
-      gap: 8,
-      verticalAlignment: "center",
-      blocks: [
-        {
-          type: "inline_small_icon_text",
-          icon: "thermometer",
-          textUnit: "secondary",
-          text: device
-        },
-        {
-          type: "number_text_lockup",
-          value,
-          ...(unitLabel ? { unitLabel } : {}),
-          secondaryText: "set"
-        },
-        {
-          type: "text",
-          unit: "body",
-          text: "Control ready"
-        }
-      ]
-    },
-    frame: { x: 0, y, width: 205, height },
-    layer: "top",
-    cornerRadius: 54,
-    cornerSmoothing: 60,
-    surfaceMode: "accent_surface",
-    verticalAlignment: y === 0 ? "top" : "bottom",
-    decision: "fallback iot_control -> generated_rectangular_widget because device control needs readable state and action detail"
-  };
+function makeIotControlRectangle(context, pseudoContext, y = 124, height = 127) {
+  const entry = iotSnapshot(context, pseudoContext);
+  if (!entry) return makeDataRectangle("iot_control", "Device", ["No device reading yet"], y, height);
+  const device = entry.thermostat;
+  return makeDataRectangle("iot_control", device.deviceName, [
+    `${device.currentTemperatureF} F / set ${device.setTemperatureF} F`, device.status
+  ], y, height);
 }
 
 function makeMusicWidget(y = 111, height = 140) {
@@ -590,14 +564,15 @@ function makeMusicWidget(y = 111, height = 140) {
   };
 }
 
-function makeReminderWidget(y = 124, height = 127) {
+function makeReminderWidget(context, pseudoContext, y = 124, height = 127) {
+  const reminder = selectReminder(pseudoContext.timeline || [], context.timelineReference, context);
   return {
     id: "fallback-reminder",
     contentType: "reminder",
     shape: "rectangular",
     template: "reminder",
     data: {
-      content: "Bring umbrella",
+      content: reminder?.title || "No reminder for this day",
       label: "Reminder"
     },
     frame: { x: 0, y, width: 205, height },
@@ -632,6 +607,7 @@ function makeChecklistWidget() {
 }
 
 function makeEventRectangle(context, pseudoContext, y = 124, height = 127) {
+  const event = eventTitleFromContext(context, pseudoContext);
   return {
     id: "fallback-event",
     contentType: "upcoming_event",
@@ -639,8 +615,8 @@ function makeEventRectangle(context, pseudoContext, y = 124, height = 127) {
     template: "generated_rectangular_widget",
     data: {
       icon: "calendar",
-      value: "12",
-      label: "min",
+      value: event.title,
+      label: event.time,
       metricKind: "upcoming_event"
     },
     composition: {
@@ -653,13 +629,12 @@ function makeEventRectangle(context, pseudoContext, y = 124, height = 127) {
           type: "inline_small_icon_text",
           icon: "calendar",
           textUnit: "secondary",
-          text: eventTitleFromContext(context, pseudoContext)
+          text: event.title
         },
         {
-          type: "number_text_lockup",
-          value: "12",
-          unitLabel: "min",
-          secondaryText: "to leave"
+          type: "text",
+          unit: "body_emphasis",
+          text: event.time || "No matching future event"
         }
       ]
     },
@@ -672,8 +647,8 @@ function makeEventRectangle(context, pseudoContext, y = 124, height = 127) {
   };
 }
 
-function makeLastMessageRectangle(pseudoContext, y = 0, height = 108) {
-  const latest = latestMessageFromContext(pseudoContext);
+function makeLastMessageRectangle(context, pseudoContext, y = 0, height = 108) {
+  const latest = latestMessageFromContext(context, pseudoContext);
   const senderLine = [latest.sender, latest.time].filter(Boolean).join(" · ");
   const content = latest.content
     .replace(/^I can bring a couple /i, "")
@@ -734,17 +709,18 @@ function chooseFallbackId(selectedContentTypes, context = {}) {
 }
 
 function widgetForContentType(type, context, pseudoContext, frame) {
+  if (type === "activity_summary") return makeActivitySummary(context, pseudoContext);
   if (type === "workout") return shouldUseWorkoutRectangle(context)
     ? makeWorkoutSummaryRectangle(context)
     : makeWorkoutWidget(context, frame, "S");
   if (type === "weather") return makeWeatherWidget(pseudoContext, frame, "S");
   if (type === "timer") return shouldUseTimerRectangle(context) ? makeTimerRectangle(context) : makeTimerWidget(frame, "S");
-  if (type === "heart_rate") return makeHeartRateWidget(frame, "S");
-  if (type === "iot_control") return shouldUseIotControlRectangle(context) ? makeIotControlRectangle(context) : makeIotControlWidget(frame, "S");
+  if (type === "heart_rate") return makeHeartRateWidget(context, pseudoContext, frame, "S");
+  if (type === "iot_control") return shouldUseIotControlRectangle(context) ? makeIotControlRectangle(context, pseudoContext) : makeIotControlWidget(context, pseudoContext, frame, "S");
   if (type === "upcoming_event") return makeEventRectangle(context, pseudoContext);
-  if (type === "last_message") return makeLastMessageRectangle(pseudoContext);
+  if (type === "last_message") return makeLastMessageRectangle(context, pseudoContext);
   if (type === "music_control") return makeMusicWidget();
-  if (type === "reminder") return makeReminderWidget();
+  if (type === "reminder") return makeReminderWidget(context, pseudoContext);
   return null;
 }
 
@@ -779,6 +755,9 @@ function positionCircularWidgets(widgets) {
 }
 
 function buildFallbackWidgets(selectedContentTypes, context, pseudoContext) {
+  if (selectedContentTypes.includes("activity_summary")) {
+    return { widgets: [makeActivitySummary(context, pseudoContext)], omittedContentTypes: selectedContentTypes.filter(type => type !== "activity_summary") };
+  }
   if (selectedContentTypes.includes("checklist")) {
     return {
       widgets: [makeChecklistWidget()],
@@ -802,7 +781,7 @@ function buildFallbackWidgets(selectedContentTypes, context, pseudoContext) {
 
   if (selectedContentTypes.includes("iot_control") && shouldUseIotControlRectangle(context)) {
     return {
-      widgets: [makeIotControlRectangle(context)],
+      widgets: [makeIotControlRectangle(context, pseudoContext)],
       omittedContentTypes: selectedContentTypes.filter((type) => type !== "iot_control")
     };
   }
@@ -1067,7 +1046,8 @@ export function generateFallbackWatchUi({ context = {}, preferences = {}, design
   const pseudoContext = designPack.pseudoContextJson;
   const selectedContentTypes = inferSelectedContentTypes(context);
   const fallbackReason = fallbackReasonFromRequest(context, preferences);
-  const fallbackSelection = buildFallbackWidgets(selectedContentTypes, context, pseudoContext);
+  const lookupContext = { ...context, timelineReference: runtimeTimelineMinute(context, now, pseudoContext.timelineNotes?.timeZone || "America/Los_Angeles") };
+  const fallbackSelection = buildFallbackWidgets(selectedContentTypes, lookupContext, pseudoContext);
   const widgets = fallbackSelection.widgets;
   const fallbackId = preferences.fallbackId || fallbackIdFromWidgets(widgets) || chooseFallbackId(selectedContentTypes, context);
   const layout = buildLayout({ context, selectedContentTypes, widgets, fallbackId, fallbackReason, now });
@@ -1079,8 +1059,8 @@ export function generateFallbackWatchUi({ context = {}, preferences = {}, design
     widgetDecisions.push(`${contentType} -> omitted because fallback ${fallbackId} cannot legally render every selected content type while preserving validation`);
   }
   const pseudoContextSummary = [
-    `Loaded pseudo context JSON snapshot for ${pseudoContext.snapshot?.location || "demo location"}.`,
-    `Loaded pseudo context markdown (${designPack.pseudoContextMarkdown.length} characters) for future prompt assembly.`
+    `Loaded pseudo context timeline for ${pseudoContext.persona?.homeLocation || "demo location"}.`,
+    "Pseudo context JSON supplies the complete runtime context."
   ];
   const logs = [
     { id: "read-live-context", status: "complete", detail: `time=${context.timeOfDay || "runtime"}; location=${context.location || "unknown"}; activity=${context.activity || "none"}; goal=${context.goal || "none"}` },

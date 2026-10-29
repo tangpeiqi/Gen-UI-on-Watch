@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
   "purpose": "Agent-readable semantic widget content taxonomy. Defines metadata and presentation affordances; widget-selection-policy.json decides single, multi, or mixed rendering strategy from content count, metadata density, and available space.",
   "relatedDocuments": [
     "widget-selection-policy.json",
@@ -8,11 +8,9 @@
     "rectangular-widget-guidelines/rectangular-widget-catalog.json"
   ],
   "metadataRoleTypes": {
-    "primary": "The strongest single value or text group for a one-widget summary.",
-    "splittable_metrics": "Fields that can become separate compact widgets when layout budget allows.",
-    "detail_fields": "Fields that usually need rectangular text space.",
-    "control_fields": "Interactive actions; these require rectangular rendering when visible.",
-    "conditional_fields": "Fields that render only under specific context conditions."
+    "metric_groups": "Groups of related metadata within a content type. Each group lists required and optional metadata, plus derived metrics where applicable.",
+    "detail_fields": "Descriptive metadata such as names, labels, explanations, and comparisons.",
+    "control_fields": "Metadata representing interactive actions such as start, pause, or mark complete."
   },
   "contentTypes": [
     {
@@ -23,116 +21,206 @@
         "user asks about a workout",
         "context includes exercise, calories, elapsed time, or workout progress"
       ],
-      "metadata": {
-        "required": {
-          "workout_type": "string",
-          "duration": "duration",
-          "calories_burned": "number"
-        },
-        "optional": {
-          "calorie_goal": "number",
-          "past_week_average": "number",
-          "elapsed_time": "duration",
-          "progress": "number"
-        }
-      },
-      "presentationAffordances": {
-        "primary": "workout_summary",
-        "splittableMetrics": [
-          "duration",
-          "calories_burned",
-          "progress"
+      "metricGroups": {
+        "during_workout": [
+          {
+            "id": "type",
+            "metadata": {
+              "required": {
+                "workout_type": "string_or_icon_or_both"
+              },
+              "optional": {}
+            }
+          },
+          {
+            "id": "time",
+            "metadata": {
+              "required": {
+                "elapsed_time": "duration"
+              },
+              "optional": {
+                "target_duration": "duration"
+              }
+            },
+            "derivedMetrics": [
+              "time_progress"
+            ]
+          },
+          {
+            "id": "calorie",
+            "metadata": {
+              "required": {
+                "calories_burned": "number"
+              },
+              "optional": {
+                "calorie_goal": "number"
+              }
+            },
+            "derivedMetrics": [
+              "calorie_progress"
+            ]
+          }
         ],
-        "detailFields": [
-          "workout_type",
-          "calorie_goal",
-          "past_week_average"
+        "after_workout": [
+          {
+            "id": "type",
+            "metadata": {
+              "required": {
+                "workout_type": "string_or_icon_or_both"
+              },
+              "optional": {}
+            }
+          },
+          {
+            "id": "time",
+            "metadata": {
+              "required": {
+                "duration": "duration"
+              },
+              "optional": {
+                "target_duration": "duration"
+              }
+            },
+            "derivedMetrics": [
+              "time_progress"
+            ]
+          },
+          {
+            "id": "calorie",
+            "metadata": {
+              "required": {
+                "calories_burned": "number"
+              },
+              "optional": {
+                "calorie_goal": "number"
+              }
+            },
+            "derivedMetrics": [
+              "calorie_progress"
+            ]
+          }
         ]
       },
-      "rules": [
-        "Compact workout progress/status may use a circular Close Gauge.",
-        "Workout or exercise summary, recap, stats, details, calories, duration, distance, pace, completion, or comparison requests should use generated_rectangular_widget so the summary text and numbers remain readable."
+      "presentationAffordances": {
+        "detailFields": []
+      },
+      "derivedMetrics": {
+        "time_progress": {
+          "availableWhen": "target_duration is positive and the applicable elapsed_time or duration is present; normalize both durations to the same unit before dividing.",
+          "formulaBySituation": {
+            "during_workout": "elapsed_time / target_duration",
+            "after_workout": "duration / target_duration"
+          },
+          "unavailableWhen": "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined.",
+          "meaning": "Ratio of actual time to target duration; may exceed 1. A completed workout does not necessarily meet its target."
+        },
+        "calorie_progress": {
+          "availableWhen": "calorie_goal is positive and calories_burned is present; use the same calorie unit for both values.",
+          "formulaBySituation": {
+            "during_workout": "calories_burned / calorie_goal",
+            "after_workout": "calories_burned / calorie_goal"
+          },
+          "unavailableWhen": "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined.",
+          "meaning": "Ratio of calories burned to calorie goal; may exceed 1. A completed workout does not necessarily meet its calorie goal."
+        }
+      },
+      "metadataNotes": [
+        "Use during_workout metadata for an ongoing workout and after_workout metadata for a completed workout; both use the workout content type.",
+        "elapsed_time is time completed so far during an ongoing workout; duration is the final total length of a completed workout. target_duration is the optional planned total length in either situation.",
+        "time_progress is derived from elapsed_time / target_duration during a workout or duration / target_duration after a workout. calorie_progress is derived from calories_burned / calorie_goal in both situations when the goal is positive; both progress metrics are derived, not input metadata."
       ]
     },
     {
       "id": "activity_summary",
       "displayName": "Activity Summary",
-      "purpose": "Compare sitting, standing, and walking time to recent behavior.",
-      "metadata": {
-        "required": {
-          "sitting_time": "duration",
-          "standing_time": "duration",
-          "walking_time": "duration"
+      "purpose": "Show cumulative sitting, standing, and walking time.",
+      "metricGroups": [
+        {
+          "id": "sitting",
+          "metadata": {
+            "required": {
+              "sitting_time": "duration"
+            },
+            "optional": {}
+          }
         },
-        "optional": {
-          "last_three_day_average": "object",
-          "trend": "string"
+        {
+          "id": "standing",
+          "metadata": {
+            "required": {
+              "standing_time": "duration"
+            },
+            "optional": {}
+          }
+        },
+        {
+          "id": "walking",
+          "metadata": {
+            "required": {
+              "walking_time": "duration"
+            },
+            "optional": {}
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "activity_summary",
-        "splittableMetrics": [
-          "sitting_time",
-          "standing_time",
-          "walking_time"
-        ],
-        "detailFields": [
-          "last_three_day_average",
-          "trend"
-        ]
+        "detailFields": []
       }
     },
     {
       "id": "upcoming_event",
       "displayName": "Upcoming Event",
       "purpose": "Show the next calendar event.",
-      "metadata": {
-        "required": {
-          "time": "datetime_or_time",
-          "event_name": "string"
-        },
-        "optional": {
-          "location": "string",
-          "travel_time": "duration",
-          "calendar_name": "string"
+      "metricGroups": [
+        {
+          "id": "upcoming_event",
+          "metadata": {
+            "required": {
+              "event_name": "string",
+              "time": "datetime_or_time"
+            },
+            "optional": {
+              "location": "string",
+              "time_to_leave": "datetime_or_time"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "event_name_with_time",
-        "splittableMetrics": [
-          "time",
-          "travel_time"
-        ],
         "detailFields": [
           "event_name",
-          "location",
-          "calendar_name"
+          "location"
         ]
-      }
+      },
+      "metadataNotes": [
+        "time_to_leave is the recommended departure date/time to arrive at the event by its start time; it is not a travel duration."
+      ]
     },
     {
       "id": "timer",
       "displayName": "Timer",
       "purpose": "Show an inferred or active countdown.",
-      "metadata": {
-        "required": {
-          "timer_label": "string",
-          "countdown": "duration"
-        },
-        "optional": {
-          "start_action": "action",
-          "pause_action": "action",
-          "cancel_action": "action",
-          "total_duration": "duration",
-          "remaining_seconds": "number"
+      "metricGroups": [
+        {
+          "id": "countdown",
+          "metadata": {
+            "required": {
+              "countdown": "duration",
+              "total_duration": "duration"
+            },
+            "optional": {
+              "timer_label": "string",
+              "start_action": "action",
+              "pause_action": "action",
+              "cancel_action": "action"
+            }
+          },
+          "derivedMetrics": [
+            "remaining_progress"
+          ]
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "countdown",
-        "splittableMetrics": [
-          "countdown",
-          "progress"
-        ],
         "detailFields": [
           "timer_label"
         ],
@@ -142,104 +230,105 @@
           "cancel_action"
         ]
       },
-      "renderingConstraints": {
-        "allowedShapes": [
-          "circular",
-          "rectangular"
-        ],
-        "circularComponent": "close_gauge",
-        "rectangularTemplate": "rectangular_layout_templates.timer_rectangular",
-        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
-      },
-      "rules": [
-        "Visible controls require rectangular rendering.",
-        "Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use rectangular_layout_templates.timer_rectangular.",
-        "Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.",
-        "Timer may render as a Close Gauge circular widget, or as a rectangular widget using rectangular_layout_templates.timer_rectangular."
-      ]
+      "derivedMetrics": {
+        "remaining_progress": {
+          "availableWhen": "countdown is present and total_duration is positive; normalize both durations to the same unit before dividing.",
+          "formula": "min(1, max(0, countdown / total_duration))",
+          "range": [
+            0,
+            1
+          ],
+          "meaning": "Remaining fraction of the timer: 1 means countdown equals total_duration; 0 means countdown is zero. Progress decreases as the timer counts down.",
+          "unavailableWhen": "The numerator is absent, or the denominator is absent or nonpositive; no derived ratio is defined."
+        }
+      }
     },
     {
       "id": "heart_rate",
       "displayName": "Heart Rate",
-      "purpose": "Show the latest heart rate reading and optional activity range.",
-      "metadata": {
-        "required": {
-          "last_reading": "number"
-        },
-        "optional": {
-          "time_since_last_reading": "duration",
-          "activity_high": "number",
-          "activity_low": "number",
-          "activity_type": "string"
+      "purpose": "Show the latest heart rate reading and optional high and low recorded today.",
+      "metricGroups": [
+        {
+          "id": "heart_rate",
+          "metadata": {
+            "required": {
+              "last_reading": "number"
+            },
+            "optional": {
+              "time_since_last_reading": "duration",
+              "today_high": "number",
+              "today_low": "number"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "last_reading",
-        "splittableMetrics": [
-          "last_reading",
-          "activity_high",
-          "activity_low"
-        ],
         "detailFields": [
-          "time_since_last_reading",
-          "activity_type"
+          "time_since_last_reading"
         ]
-      }
+      },
+      "metadataNotes": [
+        "Today means since midnight in the user's local timezone.",
+        "today_high and today_low are the highest and lowest recorded heart rate readings today; they do not imply continuous monitoring or depend on an activity."
+      ]
     },
     {
       "id": "last_message",
       "displayName": "Last Message",
       "purpose": "Show the latest message preview.",
-      "metadata": {
-        "required": {
-          "sender": "string",
-          "content": "string"
-        },
-        "optional": {
-          "timestamp": "datetime_or_time",
-          "app": "string",
-          "unread_count": "number"
+      "metricGroups": [
+        {
+          "id": "message",
+          "metadata": {
+            "required": {
+              "sender": "string",
+              "content": "string"
+            },
+            "optional": {
+              "timestamp": "datetime_or_time"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "sender_and_content",
-        "splittableMetrics": [
-          "unread_count"
-        ],
         "detailFields": [
           "sender",
           "content",
-          "timestamp",
-          "app"
+          "timestamp"
         ]
-      },
-      "rules": [
-        "Message previews need rectangular text space unless reduced to unread count."
-      ]
+      }
     },
     {
       "id": "iot_control",
       "displayName": "IoT Control",
-      "purpose": "Show smart device status and optional setpoint or control state.",
-      "metadata": {
-        "required": {
-          "device_name": "string",
-          "status": "string"
+      "purpose": "Show smart device status and current value, with optional device information, setpoint, and control action.",
+      "metricGroups": [
+        {
+          "id": "status",
+          "metadata": {
+            "required": {
+              "status": "string"
+            },
+            "optional": {
+              "device_name": "string_or_icon_or_both",
+              "room": "string"
+            }
+          }
         },
-        "optional": {
-          "current_value": "number_or_string",
-          "set_value": "number_or_string",
-          "room": "string",
-          "control_action": "action"
+        {
+          "id": "value",
+          "metadata": {
+            "required": {
+              "current_value": "number_or_string"
+            },
+            "optional": {
+              "set_value": "number_or_string",
+              "control_action": "action"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "device_status",
-        "splittableMetrics": [
-          "status",
-          "current_value",
-          "set_value"
-        ],
         "detailFields": [
           "device_name",
           "room"
@@ -247,95 +336,93 @@
         "controlFields": [
           "control_action"
         ]
-      },
-      "rules": [
-        "Visible controls require rectangular rendering.",
-        "Device control, toggle, turn on/off, setpoint, room, thermostat, temperature, light, fan, heater, AC, lock/unlock, or adjustment requests should use generated_rectangular_widget so device name, state, and action remain readable.",
-        "Passive compact device status may use a circular widget only when no control action or setpoint/detail text is needed."
-      ]
+      }
     },
     {
       "id": "map_navigation",
       "displayName": "Map Navigation",
       "purpose": "Show navigation timing and travel conditions.",
-      "metadata": {
-        "required": {
-          "destination": "string",
-          "traffic_condition": "string",
-          "travel_time": "duration"
-        },
-        "optional": {
-          "time_to_leave": "datetime_or_time",
-          "distance": "distance",
-          "next_step": "string"
+      "metricGroups": [
+        {
+          "id": "map_navigation",
+          "metadata": {
+            "required": {
+              "destination": "string",
+              "travel_time": "duration"
+            },
+            "optional": {
+              "traffic_condition": "string",
+              "distance": "distance"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "destination_and_travel_time",
-        "splittableMetrics": [
-          "travel_time",
-          "time_to_leave",
-          "distance"
-        ],
         "detailFields": [
           "destination",
-          "traffic_condition",
-          "next_step"
+          "traffic_condition"
         ]
       }
     },
     {
       "id": "sleep_summary",
       "displayName": "Sleep Summary",
-      "purpose": "Show sleep quality, score, duration, and optional trend.",
-      "metadata": {
-        "required": {
-          "quality_rating": "string",
-          "score": "number",
-          "hours_asleep": "duration"
+      "purpose": "Show sleep quality and hours asleep, with an optional sleep goal.",
+      "metricGroups": [
+        {
+          "id": "quality",
+          "metadata": {
+            "required": {
+              "score": "number",
+              "sleep_label": "string_or_icon_or_both"
+            },
+            "optional": {
+              "quality_rating": "string"
+            }
+          }
         },
-        "optional": {
-          "trend": "string",
-          "sleep_goal": "duration",
-          "previous_average": "duration"
+        {
+          "id": "hours",
+          "metadata": {
+            "required": {
+              "hours_asleep": "number"
+            },
+            "optional": {
+              "sleep_goal": "number"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "sleep_score_or_summary",
-        "splittableMetrics": [
-          "quality_rating",
-          "score",
-          "hours_asleep"
-        ],
-        "detailFields": [
-          "trend",
-          "sleep_goal",
-          "previous_average"
-        ]
-      }
+        "detailFields": []
+      },
+      "metadataNotes": [
+        "hours_asleep and sleep_goal are measured in hours and may include fractional hours, such as 7.5."
+      ]
     },
     {
       "id": "music_control",
       "displayName": "Music Control",
       "purpose": "Show current music and playback controls.",
-      "metadata": {
-        "required": {
-          "song": "string",
-          "play_pause_action": "action"
-        },
-        "optional": {
-          "album": "string",
-          "artist": "string",
-          "next_action": "action",
-          "previous_action": "action",
-          "artwork": "image"
+      "metricGroups": [
+        {
+          "id": "playback",
+          "metadata": {
+            "required": {
+              "song": "string",
+              "play_pause_action": "action"
+            },
+            "optional": {
+              "album": "string",
+              "artist": "string",
+              "next_action": "action",
+              "previous_action": "action",
+              "artwork": "image"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "song_and_playback_state",
-        "splittableMetrics": [
-          "playback_state"
-        ],
         "detailFields": [
           "song",
           "album",
@@ -347,141 +434,119 @@
           "next_action",
           "previous_action"
         ]
-      },
-      "renderingConstraints": {
-        "allowedShapes": [
-          "rectangular"
-        ],
-        "rectangularTemplate": "rectangular_layout_templates.music_control",
-        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
-      },
-      "rules": [
-        "Visible playback controls require rectangular rendering.",
-        "Must use rectangular_layout_templates.music_control when rendered."
-      ]
+      }
     },
     {
       "id": "reminder",
       "displayName": "Reminder",
       "purpose": "Show a reminder to-do item with a completion affordance.",
-      "metadata": {
-        "required": {
-          "content": "string"
-        },
-        "optional": {
-          "mark_complete_action": "action",
-          "priority": "string",
-          "list_name": "string"
+      "metricGroups": [
+        {
+          "id": "task",
+          "metadata": {
+            "required": {
+              "content": "string",
+              "mark_complete_action": "action"
+            },
+            "optional": {}
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "content",
-        "splittableMetrics": [
-          "priority"
-        ],
         "detailFields": [
-          "content",
-          "list_name"
+          "content"
         ],
         "controlFields": [
           "mark_complete_action"
         ]
-      },
-      "renderingConstraints": {
-        "allowedShapes": [
-          "rectangular"
-        ],
-        "rectangularTemplate": "rectangular_layout_templates.reminder",
-        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
-      },
-      "rules": [
-        "Visible mark complete controls require rectangular rendering.",
-        "Must use rectangular_layout_templates.reminder when rendered."
-      ]
+      }
     },
     {
       "id": "weather",
       "displayName": "Weather",
       "purpose": "Show current weather and daily temperature range.",
-      "metadata": {
-        "required": {
-          "condition": "string",
-          "current_temperature": "number",
-          "high_temperature": "number",
-          "low_temperature": "number"
+      "metricGroups": [
+        {
+          "id": "condition",
+          "metadata": {
+            "required": {
+              "condition": "string_or_icon_or_both"
+            },
+            "optional": {}
+          }
         },
-        "optional": {
-          "rain_chance": "percent",
-          "wind": "speed",
-          "location": "string"
+        {
+          "id": "temperature_range",
+          "metadata": {
+            "required": {
+              "current_temperature": "number"
+            },
+            "optional": {
+              "high_temperature": "number",
+              "low_temperature": "number"
+            }
+          }
+        },
+        {
+          "id": "precipitation",
+          "metadata": {
+            "required": {},
+            "optional": {
+              "rain_chance": "percent",
+              "precipitation_label": "icon"
+            }
+          }
+        },
+        {
+          "id": "wind",
+          "metadata": {
+            "required": {},
+            "optional": {
+              "wind": "speed",
+              "wind_label": "icon"
+            }
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "current_temperature_and_condition",
-        "splittableMetrics": [
-          "current_temperature",
-          "high_temperature",
-          "low_temperature",
-          "rain_chance"
-        ],
-        "detailFields": [
-          "condition",
-          "location"
-        ],
-        "conditionalFields": {
-          "rain_chance": "Show when condition includes rain.",
-          "wind": "Show only when specifically requested from context input."
-        }
-      },
-      "rules": [
-        "When Weather is the only selected content type, prioritize either one rectangular weather summary or three circular weather widgets.",
-        "The three-circular weather option must split content into weather condition, temperature range, and chance of precipitation.",
-        "Do not render Weather-only as one L circular widget; use a generated summary or three S circular widgets according to widget-selection-policy.json."
-      ]
+        "detailFields": []
+      }
     },
     {
       "id": "checklist",
       "displayName": "Checklist",
       "purpose": "Show a scrollable list of checklist items.",
-      "metadata": {
-        "required": {
-          "items": "array"
-        },
-        "optional": {
-          "completed_items": "array",
-          "title": "string",
-          "progress": "number",
-          "due_datetime": "datetime"
+      "metricGroups": [
+        {
+          "id": "list",
+          "metadata": {
+            "required": {
+              "items": "array",
+              "completed_items": "array",
+              "title": "string",
+              "mark_complete_action": "action"
+            },
+            "optional": {}
+          }
         }
-      },
+      ],
       "presentationAffordances": {
-        "primary": "checklist_items",
-        "splittableMetrics": [
-          "progress",
-          "due_datetime"
-        ],
         "detailFields": [
           "title",
           "items",
           "completed_items"
-        ]
-      },
-      "renderingConstraints": {
-        "allowedShapes": [
-          "full_watch_face_rectangular"
         ],
-        "rectangularTemplate": "rectangular_layout_templates.checklist_full_face",
-        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json",
-        "mustBeOnlyWidget": true
-      },
-      "rules": [
-        "Checklist is a locked full-face Figma component; fill content only.",
-        "Must use rectangular_layout_templates.checklist_full_face.",
-        "Must be the only widget on the watch face.",
-        "Must preserve widget frame x=0 y=0 width=205 height=251; date slot x=16 y=16 width=70 height=22; time slot x=139 y=16 width=50 height=22 right-aligned SF Compact Regular 19pt; title slot x=16 y=42; list region x=6 y=71 width=193.",
-        "Do not generate a separate large watch-face time/date stack or any extra widgets around checklist."
-      ]
+        "controlFields": [
+          "mark_complete_action"
+        ]
+      }
     }
   ],
-  "selectionPolicy": "widget-selection-policy.json"
+  "selectionPolicy": "widget-selection-policy.json",
+  "metricGroupDescription": "Each content type defines metricGroups containing metadata.required and metadata.optional. Workout defines these groups separately for during_workout and after_workout. Derived metrics are calculated from metadata. Splitting and combining groups is defined in widget-selection-policy.json.",
+  "metadataValueTypes": {
+    "string_or_icon_or_both": "A text string, an object with an icon token, or an object with both text and an icon token. Examples: \"Running\", {\"icon\": \"workout_running\"}, {\"text\": \"Running\", \"icon\": \"workout_running\"}. Rendered icons must use an approved icon token for the content type.",
+    "icon": "An approved icon token for the content type."
+  },
+  "optionalMetadataRule": "Required metadata is the core content; optional metadata is additional information that may be available."
 }

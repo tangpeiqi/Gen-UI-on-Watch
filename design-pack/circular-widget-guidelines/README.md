@@ -175,3 +175,21 @@ console.log(gaugeColorGuidance.open_gauge.variantRules?.offset);
 - open_gauge property=text requires data.value and a short bottom data.label. property=icon requires data.value and data.icon, with value centered and icon in the bottom slot. range requires lowLabel and highLabel; offset requires referenceValue. Never leave a required visible slot empty.
 - Use semantic icon tokens from material-symbols-registry.json, compatible with the widget content type. Prioritize required metadata over optional detail. Populate real available data only; do not invent missing values.
 - Consume the face theme and accent inputs selected by generation-guide.md; apply them through circular-widget-visual-specs.json. Do not choose a competing face theme.
+
+## Derived metric rendering
+
+Widget selection and circular eligibility remain owned by `../widget-selection-policy.json`. The formulas and data meaning are defined in `../widget-content-types.json`.
+
+| Content / metric | Circular representation |
+|---|---|
+| Workout: `time_progress`, `calorie_progress` | Close Gauge; use `min(1, max(0, ratio))` for visual fill. |
+| Timer: `remaining_progress` | Close Gauge; use the defined 0–1 remaining fraction directly. Full at the start, empty at zero. |
+
+
+Required metadata takes priority over optional metadata; include optional values when available and space permits. Rendering must not change the underlying derived metric. Keep ratios above 1 intact even when a bounded visual fill is capped. A completed workout must not be drawn as 100% solely because it ended.
+
+When a numeric progress label is used, format the actual ratio as a percentage; do not cap the label at 100%. Preserve actual time or calorie values in visible value labels. Keep all labels within the approved component slots and sizes.
+
+When a goal or total duration is missing or nonpositive, do not invent progress or substitute zero. Show the available raw value using a representation that does not require progress; if no approved circular representation can express it, use the selection policy to choose an appropriate widget. In particular, do not emit a Close Gauge without its required progress value.
+
+Activity-summary comparisons remain subject to the policy's rectangular-only eligibility; these rendering rules do not grant circular eligibility.

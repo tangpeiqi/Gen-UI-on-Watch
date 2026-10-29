@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { generateFallbackWatchUi, loadDesignPack } from "./fallback-generator.mjs";
+import { loadDesignPack } from "./fallback-generator.mjs";
 import { createLayoutValidator } from "./layout-validator.mjs";
 import { generateOpenAiWatchUi, openAiConfigured, openAiModel } from "./openai-provider.mjs";
 
@@ -233,6 +233,16 @@ function sendGenerationResult(response, status, result, options = {}) {
   sendJson(response, status, result);
 }
 
+function generationFailure(kind, message, logs = [], validation = null) {
+  return {
+    layout: null,
+    error: { kind, message },
+    logs: [...logs, { id: "generation", status: "failed", detail: message }],
+    validation: validation || { ok: false, stage: "generation", summary: message, errors: [], warnings: [] },
+    model: { provider: "openai", model: openAiModel(), fallbackUsed: false }
+  };
+}
+
 async function handleGenerateWatchUi(request, response) {
   try {
     const rawBody = await readBody(request);
@@ -241,18 +251,14 @@ async function handleGenerateWatchUi(request, response) {
     const preferences = body.preferences || {};
     const currentTime = body.currentTime || new Date().toISOString();
     if (!openAiConfigured()) {
-      const fallbackResult = generateFallbackWatchUi({
-        context,
-        preferences,
-        designPack
-      });
-      sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, fallbackResult, { context });
+      const result = generationFailure("model_unavailable", "Model generation is unavailable. Configure the model connection and retry.");
+      sendGenerationResult(response, 503, result, { context, failureKind: "model_unavailable" });
       return;
     }
 
     const openAiLogs = [
       { id: "read-live-context", status: "complete", detail: `time=${context.timeOfDay || "runtime"}; location=${context.location || "unknown"}; activity=${context.activity || "none"}; goal=${context.goal || "none"}` },
-      { id: "load-pseudo-context", status: "complete", detail: `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"} and prompt markdown (${designPack.pseudoContextMarkdown.length} characters).` }
+      { id: "load-pseudo-context", status: "complete", detail: `Loaded pseudo context timeline for ${designPack.pseudoContextJson.persona?.homeLocation || "demo location"} from the complete JSON context.` }
     ];
 
     let aiResult;
@@ -280,30 +286,13 @@ async function handleGenerateWatchUi(request, response) {
           retryCount: attempt
         });
       } catch (error) {
-        const fallbackReason = classifyGenerationFailure(error);
-        const fallbackResult = generateFallbackWatchUi({
-          context,
-          preferences: { ...preferences, fallbackReason },
-          designPack
-        });
-        const logs = [
-          ...openAiLogs,
-          ...attemptLogs,
-          { id: "call-openai", status: "failed", detail: error.message },
-          { id: "fallback", status: "complete", detail: "OpenAI generation failed, so the deterministic backend fallback is returned." },
-          ...fallbackResult.logs
-        ];
-        const result = {
-          ...fallbackResult,
-          logs,
-          model: {
-            ...fallbackResult.model,
-            attemptedProvider: "openai",
-            attemptedModel: openAiModel(),
-            promptVersion: "watch-face-phase-9-openai-v1"
-          }
-        };
-        sendGenerationResult(response, fallbackResult.validation.ok ? 200 : 422, result, { context, failureKind: fallbackReason });
+        const kind = classifyGenerationFailure(error);
+        const message = kind === "timeout" ? "Model request timed out. Please retry."
+          : kind === "budget_exhausted" ? "Model usage limit reached. Please retry later."
+          : "Could not reach the model service or complete generation. Please retry.";
+        const result = generationFailure(kind, message, [...openAiLogs, ...attemptLogs,
+          { id: "call-openai", status: "failed", detail: error.message }]);
+        sendGenerationResult(response, kind === "timeout" ? 504 : 503, result, { context, failureKind: kind });
         return;
       }
 
@@ -341,35 +330,9 @@ async function handleGenerateWatchUi(request, response) {
     }
 
     if (!validation.ok) {
-      const logs = [
-        ...openAiLogs,
-        ...attemptLogs,
-        { id: "select-content-types", status: "complete", detail: selectedContentTypes.join(", ") },
-        { id: "choose-widgets", status: "complete", detail: widgetDecisions.join(" | ") },
-        { id: "validation-failed", status: "warning", detail: `OpenAI layout failed validation after configured attempt(s): ${validationSummaryForLog(validation)}` },
-        { id: "fallback", status: "skipped", detail: "Deterministic fallback was not used; the invalid OpenAI layout is returned for preview and debugging." },
-        { id: "render", status: "pending", detail: "Frontend may render the invalid model layout with validation failure visible in debug." }
-      ];
-      const result = {
-        layout: aiResult.layout,
-        logs,
-        validation,
-        selectedContentTypes,
-        widgetDecisions,
-        pseudoContextSummary: [
-          `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"}.`,
-          `Loaded pseudo context markdown (${designPack.pseudoContextMarkdown.length} characters) for prompt assembly.`
-        ],
-        model: {
-          ...aiResult.model,
-          retryCount: maxValidationRetries,
-          validationFailedRendered: true
-        },
-        aiValidation: validation,
-        validationAttempts,
-        renderInvalidModelResult: true
-      };
-      sendGenerationResult(response, 200, result, { context, validationAttempts, aiValidation: validation, failureKind: "invalid_output" });
+      const result = generationFailure("invalid_output", "Generated layout failed validation. Please retry.", [...openAiLogs, ...attemptLogs], validation);
+      result.validationAttempts = validationAttempts;
+      sendGenerationResult(response, 422, result, { context, validationAttempts, aiValidation: validation, failureKind: "invalid_output" });
       return;
     }
 
@@ -392,8 +355,8 @@ async function handleGenerateWatchUi(request, response) {
       selectedContentTypes,
       widgetDecisions,
       pseudoContextSummary: [
-        `Loaded pseudo context JSON snapshot for ${designPack.pseudoContextJson.snapshot?.location || "demo location"}.`,
-        `Loaded pseudo context markdown (${designPack.pseudoContextMarkdown.length} characters) for prompt assembly.`
+        `Loaded pseudo context timeline for ${designPack.pseudoContextJson.persona?.homeLocation || "demo location"}.`,
+        "The complete pseudo context JSON is included in the generation prompt."
       ],
       model: {
         ...aiResult.model,
@@ -404,46 +367,10 @@ async function handleGenerateWatchUi(request, response) {
 
     sendGenerationResult(response, 200, result, { context, validationAttempts });
   } catch (error) {
-    try {
-      const result = generateFallbackWatchUi({
-        context: {},
-        preferences: { fallbackReason: "api_failure" },
-        designPack
-      });
-      const responseBody = {
-        ...result,
-        logs: [
-          { id: "request", status: "failed", detail: error.message },
-          { id: "fallback", status: "complete", detail: "Unexpected request handling error; deterministic fallback layout is returned when possible." },
-          ...result.logs
-        ]
-      };
-      sendGenerationResult(response, result.validation.ok ? 200 : 422, responseBody, { failureKind: "api_failure" });
-    } catch {
-      const responseBody = {
-        layout: null,
-        logs: [
-          { id: "read-request", status: "failed", detail: error.message },
-          { id: "fallback", status: "blocked", detail: "Request could not be parsed, so no fallback layout was generated." }
-        ],
-        validation: {
-          ok: false,
-          stage: "request",
-          summary: error.message,
-          errors: [
-            {
-              severity: "error",
-              stage: "request",
-              code: "invalid_request",
-              path: "request.body",
-              message: error.message
-            }
-          ],
-          warnings: []
-        }
-      };
-      sendGenerationResult(response, 400, responseBody, { failureKind: "invalid_request" });
-    }
+    const invalidRequest = error instanceof SyntaxError;
+    const result = generationFailure(invalidRequest ? "invalid_request" : "server_error",
+      invalidRequest ? "The generation request could not be read. Please retry." : "Generation failed on the server. Please retry.");
+    sendGenerationResult(response, invalidRequest ? 400 : 500, result, { failureKind: result.error.kind });
   }
 }
 
@@ -485,6 +412,6 @@ const server = http.createServer((request, response) => {
 server.listen(port, "127.0.0.1", () => {
   console.log(`Gen UI on Watch simulator: http://127.0.0.1:${port}/`);
   console.log(openAiConfigured()
-    ? `POST /api/generate-watch-ui will try OpenAI model ${openAiModel()} and fall back if needed.`
-    : "POST /api/generate-watch-ui is available without OPENAI_API_KEY.");
+    ? `POST /api/generate-watch-ui will try OpenAI model ${openAiModel()} without automatic fallback.`
+    : "Model generation is unavailable until OPENAI_API_KEY is configured.");
 });

@@ -630,3 +630,22 @@ The following sections are intentionally left as placeholders for the next desig
 checklist_full_face is a locked full-face component. Its frame is {x:0,y:0,width:205,height:251}, verticalAlignment is top, surfaceMode is accent_surface, cornerRadius is 54, and cornerSmoothing is 60. Model-authored widget content is data.title, data.items, and supported checked/completed state only. Preserve the fixed visual-spec title/list structure.
 
 The component supplies the top-level date slot {x:16,y:16,width:70,height:22} and time slot {x:139,y:16,width:50,height:22}. Time uses one right-aligned compact container with SF Compact Regular 19pt. Do not add an external large time/date stack. These fixed slots override general face stacking, anchoring, prominence, and widget/date-overlap rules. Selection and standalone eligibility remain owned by widget-selection-policy.json.
+
+## Derived metric rendering
+
+Shape selection and fixed-template requirements remain owned by `../widget-selection-policy.json`. Read formulas and data meaning from `../widget-content-types.json`.
+
+| Content / metric | Rectangular representation |
+|---|---|
+| Workout: `time_progress`, `calorie_progress` | Linear progress bar, with actual values and targets in labels when shown. |
+| Activity summary: `sitting_time_vs_average`, `standing_time_vs_average`, `walking_time_vs_average` | Linear comparison bar and a percentage labeled as a comparison with the last three days average. |
+| Timer: `remaining_progress` | Linear progress bar for remaining time, full at 1 and empty at 0, within the required timer template. |
+
+
+Required metadata takes priority over optional metadata; include optional values when available and space permits. Rendering must not change the underlying derived metric. Keep ratios above 1 intact even when a bounded visual fill is capped. A completed workout must not be drawn as 100% solely because it ended.
+
+Use `min(1, max(0, ratio))` for bounded bar fill. Preserve the actual ratio in percentage labels: a ratio of 1.5 is labeled “150% of average” for activity comparisons even when the bar is full. Do not describe an activity average as a goal or completion target. Timer progress already has a defined range of 0–1; use it directly, decreasing as the timer counts down.
+
+When the denominator is missing or nonpositive, show available raw values without a derived bar or percentage. Do not invent progress or substitute zero. Follow existing fixed-template rules and do not add new slots to a locked template.
+
+For upcoming events, format `time_to_leave` in the user's local timezone as a departure time, for example “Leave at 2:30 PM,” rather than as a travel duration.

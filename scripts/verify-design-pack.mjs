@@ -12,6 +12,10 @@ assert.ok(buildSystemPrompt(pack).includes(pack.runtimeWorkflow), "The system pr
 assert.strictEqual(payload.generationGuide, fs.readFileSync("design-pack/generation-guide.md", "utf8"));
 assert.strictEqual(payload.runtimeWorkflow, pack.runtimeWorkflow);
 assert.strictEqual(payload.widgetContentTypes, pack.widgetContentTypes);
+assert.deepEqual(payload.pseudoContextJson, JSON.parse(fs.readFileSync("demo-data/pseudo-context.json", "utf8")), "Prompt must contain the complete pseudo context JSON");
+assert.ok(!Object.hasOwn(payload, "pseudoContextMarkdownSummary"), "Prompt must not include the Markdown review copy");
+assert.ok(!Object.hasOwn(payload, "pseudoContextMarkdown"), "Prompt must not include raw pseudo context Markdown");
+
 assert.strictEqual(payload.layoutSchema, pack.schema);
 assert.strictEqual(payload.generatedRectangularWidgetSchema, pack.generatedRectangularWidgetSchema);
 assert.strictEqual(payload.widgetDesignResources, pack.widgetDesignResources);

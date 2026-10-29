@@ -1,4 +1,4 @@
-   {
+{
   "persona": {
     "description": "This fictional persona lives in Kirkland, WA, works in Bellevue, WA, and has a busy, active lifestyle in the greater Seattle area.",
     "homeLocation": "Kirkland, WA",
@@ -8,7 +8,7 @@
       "Keeps a packed weekday schedule",
       "Works out a few times a week",
       "Listens to music or podcasts during commute and workouts",
-      "Pays attention to food and health",
+      "Pays attention to his workout and exercise schedule to stay physically healthy and fit",
       "Spends spare time connecting with family and friends",
       "Gets outdoors and stays close to nature",
       "Tries to live a balanced life"
@@ -21,359 +21,238 @@
       "Low-friction schedule support"
     ]
   },
-  "snapshot": {
-    "mode": "fictional_demo_baseline",
-    "snapshotDate": "Tuesday, June 9, 2026",
-    "snapshotTime": "2:34 PM",
-    "location": "Kirkland, WA",
-    "region": "Greater Seattle area",
-    "currentActivity": "Between meetings, working from office",
-    "currentFocus": "Wrap up afternoon work, remember errands, and fit in an evening run if weather allows",
-    "preferredAudio": {
-      "commute": "Podcasts",
-      "workout": "Upbeat playlists"
-    },
-    "runtimeAnchoring": {
-      "useActualDateTimeInDemo": true,
-      "dateOffsetReference": "runtime today",
-      "timeOffsetReference": "runtime now",
-      "nightOffsetReference": "most recently completed night of sleep"
-    }
-  },
-  "routine": [
-    "Morning commute from Kirkland to Bellevue office",
-    "Deep work block for product planning",
-    "Lunch walk near the office",
-    "Afternoon meetings",
-    "Grocery stop after work",
-    "Optional evening run if rain stays light",
-    "Video call with family later tonight"
-  ],
-  "calendarEvents": [
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "8:30 AM",
-      "title": "Commute to office",
-      "location": "Kirkland to Bellevue"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "9:15 AM",
-      "title": "Weekly planning sync",
-      "location": "Bellevue office, 5th floor conference room"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "10:30 AM",
-      "title": "Focus block for project proposal",
-      "location": "Bellevue office, quiet desk area"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "12:15 PM",
-      "title": "Lunch walk",
-      "location": "Downtown Bellevue Park loop"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "1:30 PM",
-      "title": "Design review",
-      "location": "Bellevue office, design studio"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "3:00 PM",
-      "title": "One-on-one with manager",
-      "location": "Bellevue office, small meeting room"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "4:30 PM",
-      "title": "Wrap-up and inbox triage",
-      "location": "Bellevue office, desk"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "6:15 PM",
-      "title": "Grocery pickup",
-      "location": "PCC Community Markets, Bellevue"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "7:15 PM",
-      "title": "Easy run or indoor mobility session",
-      "location": "Kirkland waterfront or home living room"
-    },
-    {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "time": "8:30 PM",
-      "title": "Family video call",
-      "location": "Home, Kirkland"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "7:45 AM",
-      "title": "School drop-off favor for neighbor",
-      "location": "Peter Kirk Elementary, Kirkland"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "8:30 AM",
-      "title": "Commute to work",
-      "location": "Kirkland to Bellevue"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "9:00 AM",
-      "title": "Dental appointment in downtown Bellevue",
-      "location": "Bellevue Dental Arts"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "10:30 AM",
-      "title": "Email catch-up and coffee",
-      "location": "Bellden Cafe, Bellevue"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "11:00 AM",
-      "title": "Focus block for prototype flow",
-      "location": "Bellevue office, quiet desk area"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "12:30 PM",
-      "title": "Lunch with coworker",
-      "location": "Cactus, Bellevue Square"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "2:00 PM",
-      "title": "Roadmap review",
-      "location": "Bellevue office, 4th floor conference room"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "3:30 PM",
-      "title": "Quiet work block for design-pack notes",
-      "location": "Bellevue office, desk"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "5:45 PM",
-      "title": "Strength workout at gym",
-      "location": "PRO Club, Bellevue"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "7:30 PM",
-      "title": "Dinner out with friends at Tipsy Cow",
-      "location": "Tipsy Cow, Redmond"
-    },
-    {
-      "relativeDay": "tomorrow",
-      "dateOffset": 1,
-      "time": "9:15 PM",
-      "title": "Finance check-in and bill review",
-      "location": "Home, Kirkland"
-    }
-  ],
-  "heartRate": {
-    "latestReading": {
-      "bpm": 76,
-      "timeSinceLastReadingMinutes": 6,
-      "activityType": "seated work",
-      "highWithinSameActivityTypeTodayBpm": 84,
-      "lowWithinSameActivityTypeTodayBpm": 68,
-      "watchFriendlySummary": "Heart rate is normal for seated work after lunch"
-    },
-    "recentRanges": [
-      {
-        "label": "Last hour",
-        "timeOffsetStartHours": 0,
-        "timeOffsetEndHours": -1,
-        "bpmRange": [72, 78],
-        "context": "Seated work after lunch"
-      },
-      {
-        "label": "Previous hour",
-        "timeOffsetStartHours": -1,
-        "timeOffsetEndHours": -2,
-        "bpmRange": [82, 112],
-        "context": "Brisk walk, lunch, and return to office"
-      },
-      {
-        "label": "Three hours ago",
-        "timeOffsetStartHours": -2,
-        "timeOffsetEndHours": -3,
-        "bpmRange": [68, 106],
-        "context": "Meeting wrap-up followed by lunch walk"
-      }
-    ],
-    "currentRangeNote": "Heart rate has settled into a low seated-work range after the lunch walk"
-  },
-  "sleepQuality": {
-    "entries": [
-      {
-        "relativeNight": "last night",
-        "nightOffset": -1,
-        "durationMinutes": 388,
-        "quality": "fair",
-        "sleepScore": 71
-      },
-      {
-        "relativeNight": "2 nights ago",
-        "nightOffset": -2,
-        "durationMinutes": 425,
-        "quality": "good",
-        "sleepScore": 80
-      },
-      {
-        "relativeNight": "3 nights ago",
-        "nightOffset": -3,
-        "durationMinutes": 402,
-        "quality": "fair",
-        "sleepScore": 74
-      },
-      {
-        "relativeNight": "4 nights ago",
-        "nightOffset": -4,
-        "durationMinutes": 438,
-        "quality": "good",
-        "sleepScore": 82
-      }
-    ],
-    "trend": "Slightly under-rested today, but not severely fatigued"
-  },
-  "activity": {
-    "averageActiveCaloriesBurnedPerDayFromLastWeek": 621,
-    "days": [
-      {
-      "relativeDay": "today",
-      "dateOffset": 0,
-      "observedActivities": [
-        {
-          "type": "sitting",
-          "durationMinutes": 275,
-          "calories": 58
-        },
-        {
-          "type": "standing",
-          "durationMinutes": 78,
-          "calories": 46
-        },
-        {
-          "type": "walking",
-          "durationMinutes": 47,
-          "calories": 176,
-          "steps": 5180
-        },
-        {
-          "type": "light mobility",
-          "durationMinutes": 12,
-          "calories": 42
-        }
-      ],
-      "totalActiveCaloriesBurned": 322,
-      "timeMixPercent": {
-        "moving": 11,
-        "exercising": 3,
-        "standing": 18,
-        "sitting": 68
-      },
-      "exerciseCalorieGoal": 300,
-      "exerciseCaloriesForGoal": 322,
-      "exerciseGoalProgressPercent": 107,
-      "summary": "Goal reached, but sitting time is high; a short walk before the 3:00 PM meeting would rebalance the afternoon"
-      }
-    ]
-  },
   "weather": [
     {
       "relativeDay": "today",
       "dateOffset": 0,
       "condition": "Cloudy with light rain",
-      "currentTemperatureF": 58,
       "highTemperatureF": 63,
       "lowTemperatureF": 51,
-      "temperatureRangeF": [51, 63],
       "rainChancePercent": 68,
       "wind": {
         "speedMph": 8,
         "direction": "southwest"
       },
-      "watchFriendlySummary": "Light rain likely; bring a shell for the evening"
+      "currentTemperatureSource": "timeline: weather_temperature_reading; latest reading at or before requested time"
     },
     {
       "relativeDay": "tomorrow",
       "dateOffset": 1,
       "condition": "Partly cloudy",
-      "currentTemperatureF": null,
       "highTemperatureF": 67,
       "lowTemperatureF": 52,
-      "temperatureRangeF": [52, 67],
       "rainChancePercent": 24,
       "wind": {
         "speedMph": 6,
         "direction": "west"
       },
-      "watchFriendlySummary": "Better outdoor window after lunch"
+      "forecastOnly": true,
+      "metadataNote": "Forecast only. No current temperature observation exists for tomorrow; do not invent one."
     }
   ],
-  "groceryChecklist": [
-    {
-      "item": "Greek yogurt"
+  "timelineNotes": {
+    "description": "timeline is a combined chronological demo timeline. kind distinguishes calendar events, reminders, messages, heart-rate readings, sleep summaries, activity summaries, IoT snapshots, and outdoor weather-temperature readings; only calendar_event entries are appointments.",
+    "heartRateSampleIntervalMinutes": 30,
+    "timeZone": "America/Los_Angeles",
+    "fictionalReadings": true,
+    "availabilityRule": "Today\u2019s heart-rate readings are scripted demo samples. At runtime, only readings at or before the current timestamp are available; future samples are not current measurements. No heart-rate readings are supplied for tomorrow.",
+    "heartRateMetadataRule": "Use the latest available reading for last_reading, compute time_since_last_reading from its timestamp, and derive today_high and today_low only from available readings since local midnight.",
+    "sleepSummaryRule": "Today starts with the preceding night\u2019s sleep summary, without an exact timestamp. The containing day identifies the night; nightOffset is relative to runtime today. No sleep summary is supplied for tomorrow.",
+    "activitySummaryRule": "Activity summaries contain cumulative sitting, standing, and walking times since local midnight. Select the latest summary at or before the requested time; do not add snapshots together or use a future snapshot.",
+    "iotSnapshotRule": "Select the most recent IoT snapshot at or before the requested timestamp; later snapshots are not yet available.",
+    "runtimeAnchoring": "Today and tomorrow are relative to the date selected at runtime in America/Los_Angeles. Use the runtime time, location, and optional goal to select relevant context.",
+    "locationRule": "Each timeline entry location describes the persona location or current location phase. eventLocation preserves a scheduled event venue or route when different. thermostat.location is the home device location, even when the persona is elsewhere. Tomorrow has event locations but no location phase timeline.",
+    "weatherTemperatureRule": "Use the latest weather_temperature_reading on the requested day at or before the requested time for current_temperature. Never use a future reading or a thermostat temperature. Before the first reading, current temperature is unavailable. Tomorrow remains forecast-only; do not invent a current observation.",
+    "weatherTemperatureSampleIntervalMinutes": 60
+  },
+  "additionalContext": {
+    "sleep": {
+      "sleep_goal": 8,
+      "unit": "hours",
+      "period": "per day",
+      "goalType": "minimum"
     },
-    {
-      "item": "Blueberries"
+    "groceryChecklist": {
+      "title": "Grocery pickup list",
+      "items": [
+        {
+          "item": "Greek yogurt"
+        },
+        {
+          "item": "Blueberries"
+        },
+        {
+          "item": "Bananas"
+        },
+        {
+          "item": "Spinach"
+        },
+        {
+          "item": "Eggs"
+        },
+        {
+          "item": "Salmon"
+        },
+        {
+          "item": "Brown rice"
+        },
+        {
+          "item": "Sparkling water"
+        },
+        {
+          "item": "Coffee beans"
+        },
+        {
+          "item": "Trail mix"
+        }
+      ],
+      "completed_items": [],
+      "mark_complete_action": "mark selected item complete"
     },
-    {
-      "item": "Bananas"
+    "futureReminders": [
+      {
+        "title": "Buy coffee beans if running low",
+        "service": {
+          "relativeDay": "the day after tomorrow",
+          "time": "morning"
+        },
+        "due": {
+          "relativeDay": "the day after tomorrow",
+          "time": "afternoon"
+        },
+        "mark_complete_action": "mark reminder complete"
+      },
+      {
+        "title": "Plan weekend trail route",
+        "service": {
+          "relativeDay": "four days later",
+          "time": "evening"
+        },
+        "due": {
+          "relativeDay": "four days later",
+          "time": "9 PM"
+        },
+        "mark_complete_action": "mark reminder complete"
+      }
+    ],
+    "timerContext": {
+      "activeTimer": null,
+      "behaviorRule": "No timer is active by default. Infer whether a timer would be useful from the current activity and additional context supplied by the user at runtime. Suggest a timer when it makes sense. Produce both countdown and total_duration in the same duration unit. Use the duration specified by the user; otherwise, choose an appropriate duration in minutes. A newly suggested timer starts with countdown equal to total_duration."
     },
-    {
-      "item": "Spinach"
+    "musicPlaylist": {
+      "genre": "R&B",
+      "tracks": [
+        {
+          "title": "Cranes in the Sky",
+          "album": "A Seat at the Table",
+          "artist": "Solange"
+        },
+        {
+          "title": "Get You",
+          "album": "Freudian",
+          "artist": "Daniel Caesar featuring Kali Uchis"
+        },
+        {
+          "title": "Come Through and Chill",
+          "album": "War & Leisure",
+          "artist": "Miguel featuring J. Cole and Salaam Remi"
+        },
+        {
+          "title": "Focus",
+          "album": "Take Me Apart",
+          "artist": "Kelela"
+        },
+        {
+          "title": "Best Part",
+          "album": "Freudian",
+          "artist": "Daniel Caesar featuring H.E.R."
+        },
+        {
+          "title": "Good Days",
+          "album": "SOS",
+          "artist": "SZA"
+        },
+        {
+          "title": "Pink + White",
+          "album": "Blonde",
+          "artist": "Frank Ocean"
+        }
+      ],
+      "nowPlaying": {
+        "song": "Good Days",
+        "album": "SOS",
+        "artist": "SZA",
+        "playbackState": "paused",
+        "play_pause_action": "play",
+        "next_action": "next track",
+        "previous_action": "previous track"
+      }
     },
-    {
-      "item": "Eggs"
-    },
-    {
-      "item": "Salmon"
-    },
-    {
-      "item": "Brown rice"
-    },
-    {
-      "item": "Sparkling water"
-    },
-    {
-      "item": "Coffee beans"
-    },
-    {
-      "item": "Trail mix"
+    "workoutContext": {
+      "generationRule": "When the runtime goal specifies another workout type, generate plausible demo metadata appropriate to that workout type. Include workout_type, calories_burned, and elapsed_time during the workout or final duration after it. Generate appropriate target_duration and calorie_goal when useful; the easy-run targets are specific to the easy run and must not be reused automatically for other workout types."
     }
-  ],
-  "reminders": [
+  },
+  "timeline": [
     {
+      "kind": "sleep_summary",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "nightOffset": -1,
+      "fictionalDemoData": true,
+      "metadata": {
+        "sleep_label": "Last night's sleep",
+        "hours_asleep": 6.466666666666667,
+        "quality_rating": "fair",
+        "score": 71
+      },
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:00 AM",
+      "moment": "After waking up",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Heating toward set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 66,
+        "setTemperatureF": 70,
+        "homeStatus": "Home",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:00 AM",
+      "location": "Home, Kirkland",
+      "currentTemperatureF": 52
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:00 AM",
+      "bpm": 72,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:00 AM",
+      "location": "Home, Kirkland",
+      "currentTemperatureF": 53
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:10 AM",
       "title": "Choose podcast for morning commute",
       "service": {
         "relativeDay": "today",
@@ -382,9 +261,65 @@
       "due": {
         "relativeDay": "today",
         "time": "8:10 AM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Home, Kirkland"
     },
     {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:30 AM",
+      "title": "Commute to office",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Kirkland to Bellevue"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:30 AM",
+      "bpm": 82,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:30 AM",
+      "moment": "Leaving home",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Idle; above away set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 70,
+        "setTemperatureF": 64,
+        "homeStatus": "Away during workday",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:00 AM",
+      "bpm": 78,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:00 AM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 54
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:05 AM",
       "title": "Refill water bottle before planning sync",
       "service": {
         "relativeDay": "today",
@@ -393,9 +328,48 @@
       "due": {
         "relativeDay": "today",
         "time": "9:05 AM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Bellevue office"
     },
     {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:15 AM",
+      "title": "Weekly planning sync",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Bellevue office, 5th floor conference room"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:30 AM",
+      "bpm": 74,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "10:00 AM",
+      "bpm": 72,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "10:00 AM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 55
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "10:15 AM",
       "title": "Review project proposal notes",
       "service": {
         "relativeDay": "today",
@@ -404,9 +378,94 @@
       "due": {
         "relativeDay": "today",
         "time": "10:15 AM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Bellevue office"
     },
     {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "10:30 AM",
+      "title": "Focus block for project proposal",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Bellevue office, quiet desk area"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "10:30 AM",
+      "bpm": 70,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "11:00 AM",
+      "bpm": 73,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "11:00 AM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 56
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "11:30 AM",
+      "bpm": 76,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:00 PM",
+      "bpm": 79,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "activity_summary",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:00 PM",
+      "metadata": {
+        "sitting_time": {
+          "value": 180,
+          "unit": "minutes"
+        },
+        "standing_time": {
+          "value": 60,
+          "unit": "minutes"
+        },
+        "walking_time": {
+          "value": 25,
+          "unit": "minutes"
+        }
+      },
+      "measurementPeriod": "Cumulative time since local midnight up to this timestamp.",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 58
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:10 PM",
       "title": "Take a lunch walk if rain is light",
       "service": {
         "relativeDay": "today",
@@ -415,9 +474,156 @@
       "due": {
         "relativeDay": "today",
         "time": "12:10 PM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Bellevue office"
     },
     {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:15 PM",
+      "title": "Lunch walk",
+      "location": "Downtown Bellevue Park",
+      "kind": "calendar_event",
+      "eventLocation": "Downtown Bellevue Park loop"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "12:30 PM",
+      "bpm": 108,
+      "location": "Downtown Bellevue Park"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "1:00 PM",
+      "bpm": 86,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "1:00 PM",
+      "moment": "After lunch",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Idle; above away set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 65,
+        "setTemperatureF": 64,
+        "homeStatus": "Away during workday",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "1:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 60
+    },
+    {
+      "kind": "message",
+      "dateOffset": 0,
+      "direction": "received",
+      "sender": "Maya",
+      "relativeDay": "today",
+      "time": "1:18 PM",
+      "content": "Can everyone still do Saturday evening? I can bring drinks.",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "message",
+      "dateOffset": 0,
+      "direction": "received",
+      "sender": "Jordan",
+      "relativeDay": "today",
+      "time": "1:24 PM",
+      "content": "I can make the playlist if someone handles snacks.",
+      "location": "Bellevue office"
+    },
+    {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "1:30 PM",
+      "title": "Design review",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Bellevue office, design studio"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "1:30 PM",
+      "bpm": 78,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "message",
+      "dateOffset": 0,
+      "direction": "sent",
+      "sender": "persona",
+      "relativeDay": "today",
+      "time": "1:31 PM",
+      "content": "Saturday works for me. I can bring chips, fruit, and sparkling water.",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "message",
+      "dateOffset": 0,
+      "direction": "received",
+      "sender": "Priya",
+      "relativeDay": "today",
+      "time": "1:42 PM",
+      "content": "Perfect. Should we start around 6:30?",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "2:00 PM",
+      "bpm": 75,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "2:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 62
+    },
+    {
+      "kind": "message",
+      "dateOffset": 0,
+      "direction": "received",
+      "sender": "Alex",
+      "relativeDay": "today",
+      "time": "2:05 PM",
+      "content": "I can bring a couple board games and extra cups.",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "2:30 PM",
+      "bpm": 76,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "2:45 PM",
       "title": "Review notes before one-on-one",
       "service": {
         "relativeDay": "today",
@@ -427,9 +633,80 @@
         "relativeDay": "today",
         "time": "2:45 PM"
       },
-      "markCompleteActionAvailable": true
+      "mark_complete_action": "mark reminder complete",
+      "location": "Bellevue office"
     },
     {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "3:00 PM",
+      "title": "One-on-one with manager",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Bellevue office, small meeting room"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "3:00 PM",
+      "bpm": 74,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "3:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 63
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "3:30 PM",
+      "bpm": 73,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "4:00 PM",
+      "bpm": 77,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "4:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 62
+    },
+    {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "4:30 PM",
+      "title": "Wrap-up and inbox triage",
+      "location": "Bellevue office",
+      "kind": "calendar_event",
+      "eventLocation": "Bellevue office, desk"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "4:30 PM",
+      "bpm": 75,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "4:45 PM",
       "title": "Send dinner timing poll to friends",
       "service": {
         "relativeDay": "today",
@@ -438,9 +715,111 @@
       "due": {
         "relativeDay": "today",
         "time": "4:45 PM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Bellevue office"
     },
     {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "5:00 PM",
+      "bpm": 80,
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "activity_summary",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "5:00 PM",
+      "metadata": {
+        "sitting_time": {
+          "value": 390,
+          "unit": "minutes"
+        },
+        "standing_time": {
+          "value": 105,
+          "unit": "minutes"
+        },
+        "walking_time": {
+          "value": 60,
+          "unit": "minutes"
+        }
+      },
+      "measurementPeriod": "Cumulative time since local midnight up to this timestamp.",
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "5:00 PM",
+      "moment": "Leaving the office",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Heating toward set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 64,
+        "setTemperatureF": 70,
+        "homeStatus": "Away; returning home",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Bellevue office"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "5:00 PM",
+      "location": "Bellevue office",
+      "currentTemperatureF": 61
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "5:30 PM",
+      "bpm": 82,
+      "location": "Bellevue, after-work errands"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:00 PM",
+      "bpm": 78,
+      "location": "Bellevue, after-work errands"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:00 PM",
+      "location": "Bellevue, after-work errands",
+      "currentTemperatureF": 59
+    },
+    {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:15 PM",
+      "title": "Grocery pickup",
+      "location": "PCC Community Markets, Bellevue",
+      "navigationContext": {
+        "destination": "PCC Community Markets, Bellevue",
+        "trafficCondition": "Moderate traffic on NE 8th St, light congestion near Bellevue Way",
+        "travelTimeMinutes": 12,
+        "origin": "Bellevue office",
+        "timeToLeave": "6:00 PM",
+        "arrivalNote": "Arrive by the 6:15 PM grocery pickup window",
+        "distanceMiles": 2.6
+      },
+      "kind": "calendar_event"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:15 PM",
       "title": "Pick up groceries after work",
       "service": {
         "relativeDay": "today",
@@ -449,9 +828,90 @@
       "due": {
         "relativeDay": "today",
         "time": "6:15 PM"
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "PCC Community Markets, Bellevue"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:30 PM",
+      "bpm": 84,
+      "location": "Travelling home to Kirkland"
+    },
+    {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "6:45 PM",
+      "moment": "Arriving home",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Heating toward set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 69,
+        "setTemperatureF": 70,
+        "homeStatus": "Home",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:00 PM",
+      "bpm": 80,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:00 PM",
+      "location": "Home, Kirkland",
+      "currentTemperatureF": 57
+    },
+    {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:15 PM",
+      "title": "Easy run or indoor mobility session",
+      "location": "Kirkland waterfront or home living room",
+      "kind": "calendar_event",
+      "workoutContext": {
+        "workout_type": "Easy run",
+        "target_duration": {
+          "value": 28,
+          "unit": "minutes"
+        },
+        "calories_burned": "Please improvise",
+        "calorie_goal": 300,
+        "elapsed_time": "Please improvise"
       }
     },
     {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "7:30 PM",
+      "bpm": 142,
+      "location": "Kirkland waterfront or home living room"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:00 PM",
+      "bpm": 104,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:00 PM",
       "title": "Reply to family group chat",
       "service": {
         "relativeDay": "today",
@@ -460,9 +920,85 @@
       "due": {
         "relativeDay": "today",
         "time": "8:00 PM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Home, Kirkland"
     },
     {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:00 PM",
+      "location": "Home, Kirkland",
+      "currentTemperatureF": 55
+    },
+    {
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:30 PM",
+      "title": "Family video call",
+      "location": "Home, Kirkland",
+      "kind": "calendar_event"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "8:30 PM",
+      "bpm": 82,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:00 PM",
+      "bpm": 76,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "weather_temperature_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:00 PM",
+      "location": "Home, Kirkland",
+      "currentTemperatureF": 54
+    },
+    {
+      "kind": "heart_rate_reading",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:30 PM",
+      "bpm": 72,
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "activity_summary",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:30 PM",
+      "metadata": {
+        "sitting_time": {
+          "value": 510,
+          "unit": "minutes"
+        },
+        "standing_time": {
+          "value": 165,
+          "unit": "minutes"
+        },
+        "walking_time": {
+          "value": 95,
+          "unit": "minutes"
+        }
+      },
+      "measurementPeriod": "Cumulative time since local midnight up to this timestamp.",
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:30 PM",
       "title": "Stretch for 10 minutes if evening run is skipped",
       "service": {
         "relativeDay": "today",
@@ -471,9 +1007,32 @@
       "due": {
         "relativeDay": "today",
         "time": "9:30 PM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Home, Kirkland"
     },
     {
+      "kind": "iot_snapshot",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "9:30 PM",
+      "moment": "End of day",
+      "thermostat": {
+        "deviceName": "Home thermostat",
+        "status": "Idle; above overnight set temperature",
+        "location": "Home, Kirkland",
+        "currentTemperatureF": 70,
+        "setTemperatureF": 66,
+        "homeStatus": "Home; preparing for bed",
+        "controlAction": "adjust set temperature"
+      },
+      "location": "Home, Kirkland"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "today",
+      "dateOffset": 0,
+      "time": "before bedtime",
       "title": "Charge watch before bed",
       "service": {
         "relativeDay": "today",
@@ -482,9 +1041,31 @@
       "due": {
         "relativeDay": "today",
         "time": "before bedtime"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Home, Kirkland"
     },
     {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "7:45 AM",
+      "title": "School drop-off favor for neighbor",
+      "location": "Peter Kirk Elementary, Kirkland",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "8:30 AM",
+      "title": "Commute to work",
+      "location": "Kirkland to Bellevue",
+      "kind": "calendar_event"
+    },
+    {
+      "kind": "reminder",
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "8:45 AM",
       "title": "Confirm dental appointment paperwork",
       "service": {
         "relativeDay": "tomorrow",
@@ -493,197 +1074,81 @@
       "due": {
         "relativeDay": "tomorrow",
         "time": "8:45 AM"
-      }
+      },
+      "mark_complete_action": "mark reminder complete",
+      "location": "Home, Kirkland"
     },
     {
-      "title": "Buy coffee beans if running low",
-      "service": {
-        "relativeDay": "the day after tomorrow",
-        "time": "morning"
-      },
-      "due": {
-        "relativeDay": "the day after tomorrow",
-        "time": "afternoon"
-      }
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "9:00 AM",
+      "title": "Dental appointment in downtown Bellevue",
+      "location": "Bellevue Dental Arts",
+      "kind": "calendar_event"
     },
     {
-      "title": "Plan weekend trail route",
-      "service": {
-        "relativeDay": "four days later",
-        "time": "evening"
-      },
-      "due": {
-        "relativeDay": "four days later",
-        "time": "9 PM"
-      }
-    }
-  ],
-  "timerContext": {
-    "behaviorRule": "No timer is active by default. If a timer widget is shown, the AI should choose one timer opportunity that fits the live context, explain the choice in generation logs, and set the countdown from that opportunity's suggested duration.",
-    "activeTimer": null,
-    "opportunities": [
-      {
-        "id": "lunch_prep",
-        "label": "Lunch prep timer",
-        "watchFriendlyLabel": "Prep lunch",
-        "suggestedDurationMinutes": 20,
-        "bestContext": [
-          "evening meal prep",
-          "preparing lunch for tomorrow"
-        ],
-        "sourceContext": [
-          "reminder to prep lunch",
-          "grocery checklist"
-        ]
-      },
-      {
-        "id": "mobility_stretch",
-        "label": "Mobility stretch timer",
-        "watchFriendlyLabel": "Stretch",
-        "suggestedDurationMinutes": 10,
-        "bestContext": [
-          "evening recovery",
-          "skipped run",
-          "high sitting time"
-        ],
-        "sourceContext": [
-          "stretch reminder",
-          "activity summary",
-          "recovery note"
-        ]
-      },
-      {
-        "id": "salmon_cook",
-        "label": "Salmon cook timer",
-        "watchFriendlyLabel": "Salmon",
-        "suggestedDurationMinutes": 18,
-        "bestContext": [
-          "cooking dinner after grocery pickup"
-        ],
-        "sourceContext": [
-          "grocery item salmon",
-          "healthy eating persona"
-        ]
-      },
-      {
-        "id": "laundry_transfer",
-        "label": "Laundry transfer timer",
-        "watchFriendlyLabel": "Laundry",
-        "suggestedDurationMinutes": 35,
-        "bestContext": [
-          "at home in the evening between chores"
-        ],
-        "sourceContext": [
-          "balanced-life routine",
-          "evening home context"
-        ]
-      },
-      {
-        "id": "focus_sprint",
-        "label": "Focus sprint timer",
-        "watchFriendlyLabel": "Focus",
-        "suggestedDurationMinutes": 25,
-        "bestContext": [
-          "focus block",
-          "quiet work block",
-          "inbox triage"
-        ],
-        "sourceContext": [
-          "calendar focus blocks",
-          "full-time work schedule"
-        ]
-      }
-    ]
-  },
-  "musicPlaylist": {
-    "genre": "R&B",
-    "tracks": [
-      {
-        "title": "Cranes in the Sky",
-        "album": "A Seat at the Table",
-        "artist": "Solange"
-      },
-      {
-        "title": "Get You",
-        "album": "Freudian",
-        "artist": "Daniel Caesar featuring Kali Uchis"
-      },
-      {
-        "title": "Come Through and Chill",
-        "album": "War & Leisure",
-        "artist": "Miguel featuring J. Cole and Salaam Remi"
-      },
-      {
-        "title": "Focus",
-        "album": "Take Me Apart",
-        "artist": "Kelela"
-      },
-      {
-        "title": "Best Part",
-        "album": "Freudian",
-        "artist": "Daniel Caesar featuring H.E.R."
-      },
-      {
-        "title": "Good Days",
-        "album": "SOS",
-        "artist": "SZA"
-      },
-      {
-        "title": "Pink + White",
-        "album": "Blonde",
-        "artist": "Frank Ocean"
-      }
-    ]
-  },
-  "messageContext": {
-    "groupChat": "Weekend Party Planning",
-    "messages": [
-      {
-        "direction": "received",
-        "sender": "Maya",
-        "relativeDay": "today",
-        "time": "1:18 PM",
-        "content": "Can everyone still do Saturday evening? I can bring drinks."
-      },
-      {
-        "direction": "received",
-        "sender": "Jordan",
-        "relativeDay": "today",
-        "time": "1:24 PM",
-        "content": "I can make the playlist if someone handles snacks."
-      },
-      {
-        "direction": "sent",
-        "sender": "persona",
-        "relativeDay": "today",
-        "time": "1:31 PM",
-        "content": "Saturday works for me. I can bring chips, fruit, and sparkling water."
-      },
-      {
-        "direction": "received",
-        "sender": "Priya",
-        "relativeDay": "today",
-        "time": "1:42 PM",
-        "content": "Perfect. Should we start around 6:30?"
-      },
-      {
-        "direction": "received",
-        "sender": "Alex",
-        "relativeDay": "today",
-        "time": "2:05 PM",
-        "content": "I can bring a couple board games and extra cups."
-      }
-    ]
-  },
-  "iot": {
-    "thermostat": {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "10:30 AM",
+      "title": "Email catch-up and coffee",
+      "location": "Bellden Cafe, Bellevue",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "11:00 AM",
+      "title": "Focus block for prototype flow",
+      "location": "Bellevue office, quiet desk area",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "12:30 PM",
+      "title": "Lunch with coworker",
+      "location": "Cactus, Bellevue Square",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "2:00 PM",
+      "title": "Roadmap review",
+      "location": "Bellevue office, 4th floor conference room",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "3:30 PM",
+      "title": "Quiet work block for design-pack notes",
+      "location": "Bellevue office, desk",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "5:45 PM",
+      "title": "Strength workout at gym",
+      "location": "PRO Club, Bellevue",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "7:30 PM",
+      "title": "Dinner out with friends at Tipsy Cow",
+      "location": "Tipsy Cow, Redmond",
+      "kind": "calendar_event"
+    },
+    {
+      "relativeDay": "tomorrow",
+      "dateOffset": 1,
+      "time": "9:15 PM",
+      "title": "Finance check-in and bill review",
       "location": "Home, Kirkland",
-      "currentTemperatureF": 68,
-      "setTemperatureF": 70,
-      "mode": "heat",
-      "fan": "auto",
-      "homeStatus": "away during workday",
-      "watchFriendlySummary": "Home is slightly cool; warming to 70°F before evening return"
+      "kind": "calendar_event"
     }
-  }
+  ]
 }
