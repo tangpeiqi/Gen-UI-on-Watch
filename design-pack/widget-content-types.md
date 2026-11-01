@@ -39,7 +39,7 @@ A dash (—) means no metadata is currently labeled with that role.
 |---|---|---|---|---|---|
 | `workout` (during workout) | `workout_type`, `elapsed_time`, `calories_burned` | `calorie_goal`, `target_duration` | `type`, `time`, `calorie` | — | — |
 | `workout` (after workout) | `workout_type`, `duration`, `calories_burned` | `calorie_goal`, `target_duration` | `type`, `time`, `calorie` | — | — |
-| `activity_summary` | `sitting_time`, `standing_time`, `walking_time` | — | `sitting`, `standing`, `walking` | — | — |
+| `activity_summary` | `sitting_time`, `sitting_time_goal`, `standing_time`, `standing_time_goal`, `walking_time`, `walking_time_goal` | — | `sitting`, `standing`, `walking` | — | — |
 | `upcoming_event` | `time`, `event_name` | `location`, `time_to_leave` | `upcoming_event` | `event_name`, `location` | — |
 | `timer` | `countdown`, `total_duration` | `timer_label`, `start_action`, `pause_action`, `cancel_action` | `countdown` | `timer_label` | `start_action`, `pause_action`, `cancel_action` |
 | `heart_rate` | `last_reading` | `time_since_last_reading`, `today_high`, `today_low` | `heart_rate` | `time_since_last_reading` | — |
@@ -128,25 +128,53 @@ content_types:
       - "elapsed_time is time completed so far during an ongoing workout; duration is the final total length of a completed workout. target_duration is the optional planned total length in either situation."
       - "time_progress is derived from elapsed_time / target_duration during a workout or duration / target_duration after a workout. calorie_progress is derived from calories_burned / calorie_goal in both situations when the goal is positive; both progress metrics are derived, not input metadata."
   activity_summary:
-    purpose: "Show cumulative sitting, standing, and walking time."
+    purpose: "Compare today’s cumulative sitting, standing, and walking time with daily goals."
     metric_groups:
       - id: "sitting"
         metadata:
           required:
             sitting_time: "duration"
+            sitting_time_goal: "duration"
           optional: {}
+        derived_metrics:
+          - "sitting_time_progress"
       - id: "standing"
         metadata:
           required:
             standing_time: "duration"
+            standing_time_goal: "duration"
           optional: {}
+        derived_metrics:
+          - "standing_time_progress"
       - id: "walking"
         metadata:
           required:
             walking_time: "duration"
+            walking_time_goal: "duration"
           optional: {}
+        derived_metrics:
+          - "walking_time_progress"
     presentation_affordances:
       detail_fields: []
+    derived_metrics:
+      sitting_time_progress:
+        available_when: "sitting_time is present and sitting_time_goal is positive; normalize both durations to the same unit before dividing."
+        formula: "sitting_time / sitting_time_goal"
+        unavailable_when: "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined."
+        meaning: "Fraction of the daily sitting limit used; a ratio above 1 means the limit has been exceeded."
+      standing_time_progress:
+        available_when: "standing_time is present and standing_time_goal is positive; normalize both durations to the same unit before dividing."
+        formula: "standing_time / standing_time_goal"
+        unavailable_when: "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined."
+        meaning: "Fraction of the daily standing target reached; the ratio may exceed 1."
+      walking_time_progress:
+        available_when: "walking_time is present and walking_time_goal is positive; normalize both durations to the same unit before dividing."
+        formula: "walking_time / walking_time_goal"
+        unavailable_when: "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined."
+        meaning: "Fraction of the daily walking target reached; the ratio may exceed 1."
+    metadata_notes:
+      - "Accumulated times cover the current local day up to the requested timestamp. Goals apply to the whole local day and come from Additional Context → Activity Goal."
+      - "sitting_time_goal is a daily maximum; standing_time_goal and walking_time_goal are daily minimum targets. These are configurable fictional demo goals, not medical recommendations."
   upcoming_event:
     purpose: "Show the next calendar event."
     metric_groups:

@@ -133,39 +133,75 @@
     {
       "id": "activity_summary",
       "displayName": "Activity Summary",
-      "purpose": "Show cumulative sitting, standing, and walking time.",
+      "purpose": "Compare today\u2019s cumulative sitting, standing, and walking time with daily goals.",
       "metricGroups": [
         {
           "id": "sitting",
           "metadata": {
             "required": {
-              "sitting_time": "duration"
+              "sitting_time": "duration",
+              "sitting_time_goal": "duration"
             },
             "optional": {}
-          }
+          },
+          "derivedMetrics": [
+            "sitting_time_progress"
+          ]
         },
         {
           "id": "standing",
           "metadata": {
             "required": {
-              "standing_time": "duration"
+              "standing_time": "duration",
+              "standing_time_goal": "duration"
             },
             "optional": {}
-          }
+          },
+          "derivedMetrics": [
+            "standing_time_progress"
+          ]
         },
         {
           "id": "walking",
           "metadata": {
             "required": {
-              "walking_time": "duration"
+              "walking_time": "duration",
+              "walking_time_goal": "duration"
             },
             "optional": {}
-          }
+          },
+          "derivedMetrics": [
+            "walking_time_progress"
+          ]
         }
       ],
       "presentationAffordances": {
         "detailFields": []
-      }
+      },
+      "derivedMetrics": {
+        "sitting_time_progress": {
+          "availableWhen": "sitting_time is present and sitting_time_goal is positive; normalize both durations to the same unit before dividing.",
+          "formula": "sitting_time / sitting_time_goal",
+          "unavailableWhen": "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined.",
+          "meaning": "Fraction of the daily sitting limit used; a ratio above 1 means the limit has been exceeded."
+        },
+        "standing_time_progress": {
+          "availableWhen": "standing_time is present and standing_time_goal is positive; normalize both durations to the same unit before dividing.",
+          "formula": "standing_time / standing_time_goal",
+          "unavailableWhen": "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined.",
+          "meaning": "Fraction of the daily standing target reached; the ratio may exceed 1."
+        },
+        "walking_time_progress": {
+          "availableWhen": "walking_time is present and walking_time_goal is positive; normalize both durations to the same unit before dividing.",
+          "formula": "walking_time / walking_time_goal",
+          "unavailableWhen": "The accumulated time is absent, or the daily goal is absent or nonpositive; no derived ratio is defined.",
+          "meaning": "Fraction of the daily walking target reached; the ratio may exceed 1."
+        }
+      },
+      "metadataNotes": [
+        "Accumulated times cover the current local day up to the requested timestamp. Goals apply to the whole local day and come from Additional Context \u2192 Activity Goal.",
+        "sitting_time_goal is a daily maximum; standing_time_goal and walking_time_goal are daily minimum targets. These are configurable fictional demo goals, not medical recommendations."
+      ]
     },
     {
       "id": "upcoming_event",

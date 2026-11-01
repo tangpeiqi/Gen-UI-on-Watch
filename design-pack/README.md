@@ -32,6 +32,10 @@ Follow these stages in order within each generation request; they are not separa
 
 The generation guide permits negative letter spacing and intentional overlap between individual digit containers, with coordinated per-digit gradients as a design option. Negative letterSpacing is already represented in the current schema and renderer. The current contract still anchors segmented containers independently and enforces shared treatment; the fitter reserves space between time parts and the renderer has no time-gradient fields. Before enabling the full segmented effect, align schema, validation, fitting, and rendering for group anchoring, intentional digit overlap, per-digit gradients, time-coverage measurement for the one-third gradient threshold, and explicit digit stacking order. Do not invent unsupported output fields during generation.
 
+## Two-rectangle contract alignment
+
+The generation guide caps the combined frame heights of two rectangles at 216px, reserves the middle band for required time, and permits date omission in that case. The current schema and runtime still require a date object and date stacking. In the final alignment pass, update schema, fitting, normalization, validators, renderer, examples, and verification together to represent an optional date and support middle-band time placement. Do not fake omission with invisible or off-canvas date content.
+
 ## Editing and verification
 
 1. Update the owner of the decision. Reference another owner instead of repeating its rules.

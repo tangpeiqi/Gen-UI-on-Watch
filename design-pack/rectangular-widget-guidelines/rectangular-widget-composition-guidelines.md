@@ -638,13 +638,13 @@ Shape selection and fixed-template requirements remain owned by `../widget-selec
 | Content / metric | Rectangular representation |
 |---|---|
 | Workout: `time_progress`, `calorie_progress` | Linear progress bar, with actual values and targets in labels when shown. |
-| Activity summary: `sitting_time_vs_average`, `standing_time_vs_average`, `walking_time_vs_average` | Linear comparison bar and a percentage labeled as a comparison with the last three days average. |
+| Activity summary: `sitting_time_progress`, `standing_time_progress`, `walking_time_progress` | Linear progress bars comparing accumulated daily time with the corresponding daily goal. Label sitting as limit used; standing and walking as target reached. |
 | Timer: `remaining_progress` | Linear progress bar for remaining time, full at 1 and empty at 0, within the required timer template. |
 
 
 Required metadata takes priority over optional metadata; include optional values when available and space permits. Rendering must not change the underlying derived metric. Keep ratios above 1 intact even when a bounded visual fill is capped. A completed workout must not be drawn as 100% solely because it ended.
 
-Use `min(1, max(0, ratio))` for bounded bar fill. Preserve the actual ratio in percentage labels: a ratio of 1.5 is labeled “150% of average” for activity comparisons even when the bar is full. Do not describe an activity average as a goal or completion target. Timer progress already has a defined range of 0–1; use it directly, decreasing as the timer counts down.
+Use `min(1, max(0, ratio))` for bounded bar fill. Preserve the actual ratio in percentage labels: a ratio of 1.5 is labeled “150% of daily limit” for sitting or “150% of daily goal” for standing/walking, even when the bar is full. Exceeding the sitting limit must not be presented as positive goal achievement. Timer progress already has a defined range of 0–1; use it directly, decreasing as the timer counts down.
 
 When the denominator is missing or nonpositive, show available raw values without a derived bar or percentage. Do not invent progress or substitute zero. Follow existing fixed-template rules and do not add new slots to a locked template.
 

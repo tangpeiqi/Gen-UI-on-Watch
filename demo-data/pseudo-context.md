@@ -224,6 +224,13 @@ Ongoing goals and other supporting information that are not tied to a specific e
 #### Sleep Goal
 - Sleep goal: At least 8 hours of sleep per day (`sleep_goal`: 8 hours).
 
+#### Activity Goal
+Daily goals for the current local day (configurable fictional demo values):
+- Sitting time goal: No more than 8 hours per day (`sitting_time_goal`: 480 minutes).
+- Standing time goal: At least 3 hours per day (`standing_time_goal`: 180 minutes).
+- Walking time goal: At least 1 hour per day (`walking_time_goal`: 60 minutes).
+- Combine these goals with the latest available activity snapshot. Divide each accumulated time by its corresponding daily goal using the same units; sitting progress measures the limit used, while standing and walking progress measure the target reached.
+
 #### Grocery Checklist
 - Checklist title: Grocery pickup list
 - Completed items: None

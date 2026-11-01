@@ -21,7 +21,8 @@ This is the sole owner of the overall watch-face composition: widget placement, 
 - With one or two circular widgets and no rectangular widget, place each circle at any of the four watch-face corners. Choose distinct corners for two circles and preserve non-overlap and mask fit.
 - With two circular widgets and a rectangular widget, arrange the circles side by side in one horizontal row against the top or bottom watch-face edge. Preserve their sizes and keep the row clear of the rectangle.
 - With three circular widgets, arrange them vertically in one column against the left or right watch-face edge. Distribute the column over the watch-face height without overlap; align the first circle to the top edge and the last circle to the bottom edge. Do not arrange three circles horizontally.
-- Rectangular widgets attach directly to the top or bottom watch-face edge: top-aligned y=0; bottom-aligned y=251-height. Their finalized full-width frames use x=0. With two rectangles, place one at each edge and preserve space for time/date between them.
+- Rectangular widgets attach directly to the top or bottom watch-face edge: top-aligned y=0; bottom-aligned y=251-height. Their finalized full-width frames use x=0. With two rectangles, place one at each edge. Do not shrink fixed typography or clip required content to force the selected widgets to fit.
+- With two rectangular widgets, time is required and date may be omitted to preserve time legibility. In all other layouts, keep the date unless the selected full-face component provides its own date slot.
 - Place time/date opposite the visual weight of widgets when possible. Favor useful hierarchy and balanced negative space over merely packing boxes into the canvas.
 - Widgets render above time/date: widget layer is top, time/date layer is bottom, and IDs appear in the matching layers.top/layers.bottom arrays.
 - Widgets must not overlap other widgets. Outside checklist, date must not overlap widgets; time/widget overlap is permitted only up to 10px and must preserve legibility.
@@ -33,11 +34,11 @@ Follow these steps in order. checklist_full_face retains its component-owned slo
 ### 1. Apply fixed typography and date format
 
 - Use SF Compact for all time and date text.
-- Date uses Regular 19pt and a three-letter uppercase weekday followed by the numeric day, such as SUN 2.
+- When shown, date uses Regular 19pt and a three-letter uppercase weekday followed by the numeric day, such as SUN 2.
 
 ### 2. Identify available regions
 
-- Find the space inside the 205 x 251 watch mask not occupied by the completed widgets. Reserve room for both time and its date stack.
+- Find the space inside the 205 x 251 watch mask not occupied by the completed widgets. Reserve room for time and, when shown, its date stack. With two rectangles, use the middle band between their finalized frames.
 - Available regions are layout space, not final text containers. Date must not overlap widgets; time may overlap widgets by at most 10px when legibility is preserved.
 
 ### 3. Choose the time mode from the region's shape
@@ -48,10 +49,11 @@ Follow these steps in order. checklist_full_face retains its component-owned slo
 
 ### 4. Place and anchor time together with date
 
+- With two rectangles, place time in the reserved middle band and center it horizontally; this takes precedence over the canvas-edge anchoring rules below. If date is omitted, do not reserve a date slot or apply date-stacking rules.
 - For combined time using a full-width region, choose top or bottom alignment and center it horizontally. For non-full-width time, including individual hour/minute containers, choose corner anchoring. Anchor segmented_digits as one group.
 - Apply external padding from each anchored canvas edge: 16px when the fitted time width is less than 105px, otherwise 0px. For segmented_digits, use the group's width. Move text farther inward only where the rounded mask requires it; padding stays outside text bounds.
-- Stack date vertically with one referenced time container at zero gap. If time owns the top/bottom anchor, put date inward: below top-anchored time or above bottom-anchored time. Alternatively, corner-anchor date with 16px padding from both adjacent edges and put its referenced time container inward.
-- Set date.stackedWithTimeContainerId, stackGap 0, and edgePaddingWhenStackedFromEdge 16. Keep date clear of widgets.
+- When date is shown, stack it vertically with one referenced time container at zero gap. If time owns the top/bottom anchor, put date inward: below top-anchored time or above bottom-anchored time. Alternatively, corner-anchor date with 16px padding from both adjacent edges and put its referenced time container inward.
+- When date is shown, set date.stackedWithTimeContainerId, stackGap 0, and edgePaddingWhenStackedFromEdge 16. Keep date clear of widgets.
 
 ### 5. Finalize time styling and fit the text bounds
 
@@ -112,7 +114,8 @@ Use the exact light/dark accent pair below for each content type; do not substit
 ## Output and final validation
 
 - The supplied layout schema owns output fields. Return layout JSON and content; the renderer owns visual implementation. Always include colorSystem, layers, and time.containers.
-- Use time.value/date.value and time.style/date.style; never time.text, date.text, time.fontSize, or date.fontSize. time.frame is the bounding union of its containers.
+- Use time.value/time.style and, when date is shown, date.value/date.style; never time.text, date.text, time.fontSize, or date.fontSize. time.frame is the bounding union of its containers.
 - Do not output top-level composition, deferredContentTypes, reasoning, or notes. Widget composition fields follow the rectangular grammar.
+- If date is omitted, do not include a visible date element or its ID in the rendered layers; the schema must support this optional-date case.
 - Recheck schema, mask fit, text bounds, layering, legibility, and permitted overlap for the whole face. Respect the selection policy and each completed widget's contract.
 - If previousValidationFailures is present, repair those exact failures without introducing new ones. Return to the owning stage when the repair changes selection or widget design.

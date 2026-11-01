@@ -58,7 +58,7 @@
     "availabilityRule": "Today\u2019s heart-rate readings are scripted demo samples. At runtime, only readings at or before the current timestamp are available; future samples are not current measurements. No heart-rate readings are supplied for tomorrow.",
     "heartRateMetadataRule": "Use the latest available reading for last_reading, compute time_since_last_reading from its timestamp, and derive today_high and today_low only from available readings since local midnight.",
     "sleepSummaryRule": "Today starts with the preceding night\u2019s sleep summary, without an exact timestamp. The containing day identifies the night; nightOffset is relative to runtime today. No sleep summary is supplied for tomorrow.",
-    "activitySummaryRule": "Activity summaries contain cumulative sitting, standing, and walking times since local midnight. Select the latest summary at or before the requested time; do not add snapshots together or use a future snapshot.",
+    "activitySummaryRule": "Activity summaries contain cumulative sitting, standing, and walking times since local midnight. Select the latest summary at or before the requested time; do not add snapshots together or use a future snapshot. Combine the selected snapshot with additionalContext.activityGoal to supply all three required time goals. Derive sitting_time_progress, standing_time_progress, and walking_time_progress by dividing accumulated time by the corresponding goal in the same units.",
     "iotSnapshotRule": "Select the most recent IoT snapshot at or before the requested timestamp; later snapshots are not yet available.",
     "runtimeAnchoring": "Today and tomorrow are relative to the date selected at runtime in America/Los_Angeles. Use the runtime time, location, and optional goal to select relevant context.",
     "locationRule": "Each timeline entry location describes the persona location or current location phase. eventLocation preserves a scheduled event venue or route when different. thermostat.location is the home device location, even when the persona is elsewhere. Tomorrow has event locations but no location phase timeline.",
@@ -190,6 +190,27 @@
     },
     "workoutContext": {
       "generationRule": "When the runtime goal specifies another workout type, generate plausible demo metadata appropriate to that workout type. Include workout_type, calories_burned, and elapsed_time during the workout or final duration after it. Generate appropriate target_duration and calorie_goal when useful; the easy-run targets are specific to the easy run and must not be reused automatically for other workout types."
+    },
+    "activityGoal": {
+      "sitting_time_goal": {
+        "value": 480,
+        "unit": "minutes"
+      },
+      "standing_time_goal": {
+        "value": 180,
+        "unit": "minutes"
+      },
+      "walking_time_goal": {
+        "value": 60,
+        "unit": "minutes"
+      },
+      "period": "per local day",
+      "goalTypes": {
+        "sitting_time_goal": "maximum",
+        "standing_time_goal": "minimum",
+        "walking_time_goal": "minimum"
+      },
+      "note": "Configurable fictional demo goals."
     }
   },
   "timeline": [

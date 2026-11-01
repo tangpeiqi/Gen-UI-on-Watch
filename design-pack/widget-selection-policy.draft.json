@@ -1,0 +1,333 @@
+{
+  "schemaVersion": "2.0.0-draft.1",
+  "status": "draft_not_active",
+  "purpose": "Draft replacement for widget-selection-policy.json, organized around five decisions. Eligibility defines available information; later decisions determine what deserves presentation and how it renders.",
+  "sourceDocuments": [
+    "../demo-data/pseudo-context.md",
+    "../demo-data/pseudo-context.json",
+    "widget-content-types.json",
+    "generation-guide.md",
+    "circular-widget-guidelines/circular-widget-catalog.json",
+    "rectangular-widget-guidelines/rectangular-widget-catalog.json"
+  ],
+  "migration": {
+    "activePolicy": "widget-selection-policy.json",
+    "activationRule": "Keep the existing policy active until all five decisions have been reviewed, existing rules have been accounted for, and runtime references and validation have been updated together.",
+    "ruleDisposition": "For each decision, migrate relevant existing rules, review additions, and record replaced sections. Remove duplicates only after their authoritative replacement is established.",
+    "eligibilitySources": [
+      "semanticInputs: context-reading steps"
+    ],
+    "remainingRules": "Global constraints, ranking, scope, rendering, composition, fallback, and existing examples still require migration and review. Empty draft sections do not repeal active policy rules."
+  },
+  "globalConstraints": {
+    "status": "pending_migration",
+    "rules": []
+  },
+  "decisionSequence": [
+    {
+      "step": 1,
+      "decision": "eligibility",
+      "question": "What information is available at the requested time?"
+    },
+    {
+      "step": 2,
+      "decision": "ranking",
+      "question": "Which available content is most useful?"
+    },
+    {
+      "step": 3,
+      "decision": "contentScope",
+      "question": "Which metric groups and supporting details should be shown?"
+    },
+    {
+      "step": 4,
+      "decision": "rendering",
+      "question": "Which widget forms and legal composition represent that content?"
+    },
+    {
+      "step": 5,
+      "decision": "fitFallback",
+      "question": "What should change if the completed widgets cannot fit with time and date?"
+    }
+  ],
+  "decisions": {
+    "eligibility": {
+      "status": "draft_for_review",
+      "scope": "Build the available information pool. Availability does not guarantee selection, require every historical record to be shown, or establish widget count, shape, or metadata completeness.",
+      "liveInputs": {
+        "source": "Live demo web page",
+        "fields": [
+          "time",
+          "location",
+          "optional goal"
+        ],
+        "rules": [
+          "Use the user-entered time as the request-time cutoff, not the machine's current clock.",
+          "Take the time of day from the user's web page input and the date from the current day at the user's location. Combine them in that location's timezone to establish the requested timestamp. Every request is anchored to today's pseudo context; changing the entered time does not change the date. Tomorrow and other relative-day offsets in pseudo-context.json are relative to this local today.",
+          "Use the user-entered location as the current location when it differs from the pseudo-context location phase. Preserve event venues, routes, and device locations as distinct information.",
+          "Include the optional goal when supplied; its absence does not prevent context-based selection."
+        ]
+      },
+      "historicalInformation": {
+        "source": "pseudo-context.json timeline and its Markdown companion",
+        "cutoff": "record timestamp <= requested timestamp",
+        "rules": [
+          "All information that has happened at or before the requested time is eligible. Include records exactly at the requested time.",
+          "Future observations, messages, activity summaries, and device snapshots are unavailable until their timestamps are reached, even though they are present in the scripted demo file.",
+          "The preceding night's untimed sleep summary is available from the beginning of its containing day, following the source's sleepSummaryRule.",
+          "All records at or before the entered time remain available. Use the latest applicable record for current values, and earlier records when needed for summaries or comparisons.",
+          "When deriving values from supplied history, use only eligible inputs. Preserve source rules such as calculating today's heart-rate high and low only from available readings since local midnight. Content scope may also calculate derived metrics from permitted synthetic demo inputs, preserving their synthetic status."
+        ]
+      },
+      "informationKnownInAdvance": {
+        "rule": "The following information remains eligible even when its forecast, scheduled occurrence, service time, or due time is later than the requested time.",
+        "categories": [
+          {
+            "id": "weather_forecasts",
+            "source": "weather",
+            "rule": "Include supplied weather forecasts for today and future days. Forecast information does not make future outdoor-temperature observations available and must not be represented as a current measurement."
+          },
+          {
+            "id": "reminders",
+            "source": "timeline entries with kind reminder; additionalContext.futureReminders",
+            "rule": "Include future reminders with their service and due information, including reminders later today and on future days. Eligibility does not mean they are due now."
+          },
+          {
+            "id": "additional_context",
+            "source": "additionalContext",
+            "rule": "Include the entire additional context section: sleep goal, grocery checklist, future reminders, music playlist and supplied playback state, timer context, and workout context. Future applicability or a future checklist deadline does not hide this supporting information. Preserve each source's meaning and generation instructions."
+          },
+          {
+            "id": "planned_events_and_goals",
+            "source": "timeline entries with kind calendar_event; persona.lifestyle; associated planning metadata",
+            "rule": "Include upcoming planned events in the lifestyle schedule, with their scheduled times, venues, routes, and supplied planning context. Include planned workout targets such as calorie_goal and target_duration before the workout starts, keeping them attached to the relevant workout. Lifestyle supplies background context; it does not by itself establish a new scheduled event."
+          }
+        ],
+        "fieldBoundary": "Evaluate availability at field level. A future planned event can expose its plan and goals without exposing future measured results. A calorie goal is a target, not calories already burned; a scheduled workout is not evidence that the workout has started or finished."
+      },
+      "supportingContextAndInference": {
+        "rules": [
+          "Persona and lifestyle information is available as background context independently of the request-time cutoff.",
+          "Source instructions permitting a suggested timer or plausible workout demo metadata remain available. They are generation permissions, not already-observed facts or permission to read future scripted observations.",
+          "Preserve the distinction between supplied observations, plans, forecasts, targets, and synthetic demo values. For this prototype, content scope may generate reasonable values for essential missing metadata of selected metric groups. This exception does not make future scripted observations eligible or turn generated values into supplied observations."
+        ]
+      },
+      "handoff": "Pass live inputs, eligible history, information known in advance, and supporting context to ranking with their source and temporal meaning preserved. Do not rank, truncate to three content types, choose shapes, or exclude available information solely because it seems less relevant at this stage."
+    },
+    "ranking": {
+      "status": "draft_for_review",
+      "scope": "Determine the relative importance of eligible content for the user's request and current context.",
+      "priorities": [
+        {
+          "priority": 1,
+          "name": "Explicit user intent",
+          "definition": "Content directly serving the user's optional goal comes first. Interpret the meaning of the goal, not just keywords."
+        },
+        {
+          "priority": 2,
+          "name": "Immediate action or deadline",
+          "definition": "Content requiring action now or soon, especially when delay matters."
+        },
+        {
+          "priority": 3,
+          "name": "Current activity",
+          "definition": "Content supporting what the user is doing, based on the entered time, location, optional goal, and eligible context."
+        },
+        {
+          "priority": 4,
+          "name": "Relevant supporting information",
+          "definition": "Content helping with the user's primary activity or next decision."
+        },
+        {
+          "priority": 5,
+          "name": "General background information",
+          "definition": "Available information without an immediate connection to the current situation."
+        }
+      ],
+      "rules": [
+        "Assign each candidate content type to the highest priority it qualifies for; qualifying for several priorities does not give it an additional bonus.",
+        "Order candidates by priority, then use contextual judgment to order candidates within the same priority. Do not apply numerical weights or additional formal sub-tiers.",
+        "When no optional goal is supplied, rank using the remaining priorities without inventing an explicit user goal.",
+        "Availability alone does not establish importance. Rank using only information admitted by eligibility. A recent heart-rate sample should not automatically outrank an upcoming departure simply because the sample is available or fresh.",
+        "Rank semantic content before choosing widget count, shape, size, template, or position. Do not promote lower-priority content because its widget is easier to fit. Higher-ranked content requiring a rectangle must not lose priority to less useful content merely because that content fits in a circle.",
+        "Produce an ordered list of useful content candidates, not a quota of widgets. Do not add content merely to fill three slots; later decisions determine how many candidates become rendered widgets."
+      ],
+      "handoff": "Pass the ordered content candidates to content scope and rendering. Ranking does not automatically fill three widget slots; candidate limits and composition rules remain pending migration and review."
+    },
+    "contentScope": {
+      "status": "draft_for_review",
+      "scope": "Determine the useful information to present for the highest-ranked content types.",
+      "rules": [
+        "Apply content scope to up to the top three candidates assigned priorities 1 through 4, preserving ranked order. Do not add priority 5 general background content to fill remaining slots. If no candidate has priority 1 through 4, scope the single highest-ranked priority 5 candidate so the watch face still has content alongside time and date. Three is a ceiling, not a target.",
+        "For each candidate, select metric groups from widget-content-types.json that are useful to the request and current context. Use situation-specific groups where defined, such as during_workout or after_workout.",
+        "Include the required metadata for each selected group. Required metadata applies within the selected group; selecting a content type does not require selecting all of its metric groups.",
+        "Include optional metadata when it adds useful context. Optional fields may remain omitted; their existence does not require their inclusion.",
+        "Select detailFields and controlFields for display when they are necessary to fulfill the user's goal, identify or interpret the information, or support a relevant action. Let the model judge optional fields by their usefulness to the request and context; availability or a high content ranking alone does not require their display. Required metadata within a selected group remains included.",
+        "Include useful derived metrics when their inputs are available, including synthetic inputs permitted by prototypeDataCompletion. Follow the taxonomy formulas, unit normalization, and validity conditions; calculate results from inputs rather than inventing derived results independently.",
+        "Preserve relationships among values, goals, labels, controls, and derived metrics within each selected group. For example, selecting workout time progress does not automatically require the calorie group.",
+        "Preserve the original content ranking. Leave widget shapes, templates, sizes, expansion into multiple widgets, and final composition to rendering."
+      ],
+      "prototypeDataCompletion": {
+        "rule": "When essential metadata for a selected metric group is missing from eligible context, generate a reasonable, context-consistent demo value so the selected content type can still be presented. Treat it as synthetic demo data, not a supplied observation.",
+        "constraints": [
+          "Use supplied eligible data first. Fill essential gaps without overwriting available values or disqualifying an important content type solely because essential data is missing.",
+          "Keep generated values consistent with the entered time, location, goal, activity, applicable metadata types and units, and related supplied or generated values.",
+          "Generate missing essential inputs before calculating derived metrics. Do not invent optional fields merely to populate the taxonomy.",
+          "Do not read or copy future scripted observations to fill gaps. Keep future plans, forecasts, and targets distinct from current observations and synthetic demo values.",
+          "Preserve the distinction between supplied and synthetic values through later decisions; this permission is for prototype data completion."
+        ]
+      },
+      "handoff": "Pass the scoped candidates in their original ranked order, with selected groups, metadata, calculated derived metrics, and explicit selections of detail and control fields for display, to rendering. Rendering decides whether to retain three, two, or one content type and how many widgets represent them. If space requires dropping content, drop lower-ranked candidates first rather than substituting lower-ranked content because its shape is easier to fit; strict standalone exceptions require explicit rendering rules."
+    },
+    "rendering": {
+      "status": "partial_draft_for_review",
+      "scope": "Determine which content types will be rendered, whether each uses rectangular or circular widgets, and how many widgets represent each retained type.",
+      "sequence": [
+        {
+          "step": 1,
+          "decision": "determine_rectangle_requirements",
+          "rule": "Inspect the top three scoped content types, or all scoped candidates if fewer than three, in their original ranked order. Determine which require rectangular rendering using the content-type constraints and the information selected for display."
+        },
+        {
+          "step": 2,
+          "decision": "apply_content_type_limit",
+          "rule": "If at least two of the scoped content types require rectangles, drop the third-ranked content type if present. Otherwise retain the scoped candidates, subject to legal composition, standalone requirements, and whole-face fit. Do not substitute lower-ranked candidates to obtain easier shapes."
+        },
+        {
+          "step": 3,
+          "decision": "choose_retained_representations",
+          "rule": "Choose the representation of each retained content type independently according to its scoped information and rendering constraints. Dropping the third-ranked type does not force both retained types into rectangles. If both require rectangles, use two rectangles; if only one does, the other may use one circle or expand into two circles when its selected metric groups benefit from separate presentation. When a content type uses multiple circles, use exactly one circle for each selected metric group; the number of circles must match the number of selected groups. Prefer circular widgets whenever the content type and selected information do not require rectangular rendering. Initial representations remain provisional until required widget dimensions are resolved."
+        },
+        {
+          "step": 4,
+          "decision": "resolve_two_rectangle_height",
+          "rule": "When two rectangular widgets are proposed, obtain the higher-ranked rectangle's required height from widget design using its selected content and applicable widget contracts. If its height exceeds 108px, preserve it and convert the lower-ranked content type to exactly one circular widget only if its content-type constraints and all selected information permit that representation. Otherwise drop the lower-ranked content type. Do not remove selected controls or details merely to enable conversion, and do not use multiple circles for this fallback. A height of 108px or less does not trigger this rule; whole-face fit must still be checked."
+        },
+        {
+          "step": 5,
+          "decision": "check_composition",
+          "rule": "Apply the widget-count and shape limits to the resulting widgets, including any expansion. Retained content-type count and rendered widget count are distinct. Whole-face fit remains necessary even when the composition satisfies these limits."
+        }
+      ],
+      "rectangleRequirements": [
+        "Only workout, timer, heart_rate, iot_control, and weather are eligible for circular rendering under the existing circular whitelist. Other content types require their permitted rectangular representation.",
+        "Visible control fields require rectangular rendering. Available controls that were not selected for display do not independently force a rectangle.",
+        "Selected detail fields require readable text space. Use a rectangle when the scoped detail cannot fit legibly in an approved circular component or when a content-specific rule requires one. A compact detail field does not universally force a rectangle.",
+        "Apply strict template constraints: music_control uses music_control, reminder uses reminder, checklist uses checklist_full_face, and a rectangular timer uses timer_rectangular. Do not borrow these templates for other content types.",
+        "A passive timer may use a circular close_gauge when labels, controls, and setup details are not selected. A displayed timer label, visible control, or timer creation/duration setup requires timer_rectangular.",
+        "Choose shape from the selected information, not merely from the existence of available detail or control fields. Numeric values, targets, and derived progress alone do not force rectangular rendering.",
+        "Prefer circular rendering when a content type is circular-eligible and its selected information does not require a rectangle. This preference must preserve selected content and comply with strict templates, approved circular components, and composition limits."
+      ],
+      "compositionLimits": {
+        "maxWidgets": 3,
+        "allowedCompositions": [
+          "Up to three circular widgets with no rectangles.",
+          "One rectangular widget plus up to two circular widgets.",
+          "Two rectangular widgets with no additional widgets."
+        ],
+        "standaloneRule": "When checklist is rendered, checklist_full_face must be the only widget. The decision for resolving a checklist candidate alongside higher-ranked content remains pending review."
+      },
+      "expansionRules": [
+        "One retained content type may occupy multiple widgets when its selected metric groups benefit from separate presentation. Do not automatically create one widget per metric group.",
+        "Preserve related values, goals, labels, controls, and derived metrics together. Reuse identifying metadata where needed.",
+        "Expansion must respect circular eligibility, strict templates, the composition limits, and whole-face fit. Do not expand a content type at the expense of a higher-ranked retained type.",
+        "When rendering one content type across multiple circular widgets, assign exactly one circle to each selected metric group. Do not combine multiple selected groups in one circle or split one group across circles in this mode. Reused identifying metadata does not count as an additional group. If this one-circle-per-group mapping exceeds the composition limits or cannot fit, reconsider the representation or return to content scope to revise the selected groups; do not silently merge or omit groups."
+      ],
+      "pendingReview": [
+        "Detailed circular component and size selection, content-specific exceptions, and remaining active-policy rendering rules still require migration and review.",
+        "Resolve standalone checklist precedence and define the fit-fallback sequence."
+      ],
+      "handoff": "Finalize the retained content types, each type\u2019s rectangular or circular representation, and the number of widgets per type after obtaining required dimensions from widget design and applying the two-rectangle height check. Preserve selected groups and fields in those representations. Pass completed widget designs to face composition; whole-face fit failures return to fitFallback once its rules are defined."
+    },
+    "fitFallback": {
+      "status": "pending",
+      "scope": "Define ordered recovery when completed widgets cannot fit with time and date, coordinating with widget design and the generation guide.",
+      "rules": []
+    }
+  },
+  "examples": [
+    {
+      "id": "eligibility-at-0900",
+      "request": {
+        "time": "09:00",
+        "location": "Bellevue office"
+      },
+      "eligible": [
+        "Today's heart-rate and outdoor-temperature readings through 9:00 AM, including the 9:00 AM readings",
+        "The preceding night's sleep summary and earlier IoT snapshots",
+        "The 9:15 AM planning sync and other upcoming calendar events, including tomorrow's schedule",
+        "Later reminders, supplied weather forecasts, and all additionalContext",
+        "The planned easy run's 300-calorie goal and 28-minute target duration"
+      ],
+      "unavailable": [
+        "The 9:30 AM heart-rate reading and later scripted observations",
+        "The 5:00 PM activity summary as an observed result",
+        "Future workout results presented as already measured"
+      ],
+      "selection": "Deferred to the remaining decisions."
+    },
+    {
+      "id": "two-rectangle-requirements-preserve-ranking",
+      "rankedContentTypes": [
+        "workout",
+        "reminder",
+        "last_message"
+      ],
+      "rectangleRequirements": {
+        "workout": false,
+        "reminder": true,
+        "last_message": true
+      },
+      "retainedContentTypes": [
+        "workout",
+        "reminder"
+      ],
+      "omittedContentTypes": [
+        "last_message"
+      ],
+      "permittedCompositions": [
+        "One reminder rectangle and one workout circle.",
+        "One reminder rectangle and two workout circles for selected time and calorie groups when separate presentation is useful."
+      ],
+      "rule": "Two of the top three candidates require rectangles, so drop the third-ranked type. The retained workout is not forced into a rectangle. All widgets must still fit."
+    },
+    {
+      "id": "exclude-priority-five-background",
+      "rankedCandidates": [
+        {
+          "contentType": "workout",
+          "priority": 1
+        },
+        {
+          "contentType": "sleep_summary",
+          "priority": 5
+        },
+        {
+          "contentType": "music_control",
+          "priority": 5
+        }
+      ],
+      "scopedContentTypes": [
+        "workout"
+      ],
+      "rule": "Scope only workout. General background candidates remain excluded even when fewer than three content types will be presented."
+    },
+    {
+      "id": "all-background-fallback",
+      "rankedCandidates": [
+        {
+          "contentType": "sleep_summary",
+          "priority": 5
+        },
+        {
+          "contentType": "weather",
+          "priority": 5
+        }
+      ],
+      "scopedContentTypes": [
+        "sleep_summary"
+      ],
+      "rule": "When every candidate has priority 5, scope only the highest-ranked candidate rather than leaving the watch face with no widget content."
+    }
+  ]
+}
