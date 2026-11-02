@@ -186,37 +186,53 @@
         {
           "step": 1,
           "decision": "determine_rectangle_requirements",
-          "rule": "Inspect the top three scoped content types, or all scoped candidates if fewer than three, in their original ranked order. Determine which require rectangular rendering using the content-type constraints and the information selected for display."
+          "rule": "First apply decisions.rendering.compositionLimits.standaloneRule to the scoped candidates using their original ranks. If checklist renders alone, skip the ordinary composition branches. Otherwise apply decisions.rendering.rectangleRequirements to the remaining scoped candidates in their original order."
         },
         {
           "step": 2,
           "decision": "apply_content_type_limit",
-          "rule": "If at least two of the scoped content types require rectangles, drop the third-ranked content type if present. Otherwise retain the scoped candidates, subject to legal composition, standalone requirements, and whole-face fit. Do not substitute lower-ranked candidates to obtain easier shapes."
+          "rule": "Among candidates remaining after checklist precedence, if at least two require rectangles, drop the lowest-ranked candidate when three remain. Otherwise retain the remaining scoped candidates, subject to legal composition and whole-face fit. Do not substitute lower-ranked candidates to obtain easier shapes."
         },
         {
           "step": 3,
-          "decision": "choose_retained_representations",
-          "rule": "Choose the representation of each retained content type independently according to its scoped information and rendering constraints. Dropping the third-ranked type does not force both retained types into rectangles. If both require rectangles, use two rectangles; if only one does, the other may use one circle or expand into two circles when its selected metric groups benefit from separate presentation. When a content type uses multiple circles, use exactly one circle for each selected metric group; the number of circles must match the number of selected groups. Prefer circular widgets whenever the content type and selected information do not require rectangular rendering. Initial representations remain provisional until required widget dimensions are resolved."
+          "decision": "choose_representations_by_rectangle_count",
+          "rule": "After step 2, count the retained content types that require rectangular rendering, then follow the matching scenario. Count retained types rather than the original top three. Apply decisions.rendering.compositionLimits and decisions.rendering.expansionRules throughout. Initial representations remain provisional until required dimensions are resolved. Apply standalone requirements separately.",
+          "scenarios": {
+            "two_required_rectangles": {
+              "rule": "Propose two rectangular widgets and obtain the higher-ranked rectangle\u2019s required height from widget design using its selected content and applicable widget contracts.",
+              "heightAtMost108px": "Retain both proposed rectangles, subject to whole-face fit.",
+              "heightAbove108px": "Preserve the higher-ranked rectangle. Recheck whether the lower-ranked content type can legally represent all selected information in exactly one circular widget. If so, convert it to one circle; otherwise drop it. A genuinely required rectangle cannot pass this conversion check, so drop it if the requirement still holds. Do not remove selected controls or details to enable conversion, and do not use multiple circles for this fallback."
+            },
+            "one_required_rectangle": {
+              "rule": "Use the required rectangle and obtain its required height from widget design before choosing the number and size of companion circles. If no other content type remains, render only the rectangle.",
+              "heightAtMost108px": "Allow up to two M-size circular widgets alongside the rectangle. With two other retained content types, use one M circle per type. With one other retained type, use one M circle or expand it into two under decisions.rendering.expansionRules. Every companion circle in this scenario must use M; S and L are not permitted.",
+              "heightAbove108px": "Allow only one S-size circular widget alongside the rectangle, for at most two rendered content types. Retain the highest-ranked other content type as the proposed companion and omit any lower-ranked companion. Render it only if its complete scoped content can legally fit in that one S circle. Do not expand the companion into multiple circles.",
+              "constraints": "Preserve selected fields and content-type constraints. Do not silently remove controls or details to fit a circle, and do not substitute a lower-ranked companion merely because it fits more easily. If the highest-ranked companion cannot legally fit the permitted circular representation, return to content scope or fit fallback rather than silently selecting another companion. Whole-face fit remains required."
+            },
+            "zero_required_rectangles": {
+              "rule": "Use circular widgets for the retained content types. Start with one circle per type; if capacity remains, consider expansion under decisions.rendering.expansionRules.",
+              "circularSizeRule": "Choose circular size from the final rendered circle count after any metric-group expansion, not the number of content types: one circle uses L; two circles both use M; three circles all use S. This rule applies only when no rectangle is rendered; mixed compositions follow their own size rules. Whole-face fit remains required."
+            }
+          },
+          "sharedRules": [
+            "Choose each retained representation according to decisions.rendering.rectangleRequirements. Dropping the third-ranked type does not force both retained types into rectangles.",
+            "Circular eligibility alone does not permit conversion: all selected information must fit legally in the circular representation. Do not silently omit selected details or controls."
+          ]
         },
         {
           "step": 4,
-          "decision": "resolve_two_rectangle_height",
-          "rule": "When two rectangular widgets are proposed, obtain the higher-ranked rectangle's required height from widget design using its selected content and applicable widget contracts. If its height exceeds 108px, preserve it and convert the lower-ranked content type to exactly one circular widget only if its content-type constraints and all selected information permit that representation. Otherwise drop the lower-ranked content type. Do not remove selected controls or details merely to enable conversion, and do not use multiple circles for this fallback. A height of 108px or less does not trigger this rule; whole-face fit must still be checked."
-        },
-        {
-          "step": 5,
           "decision": "check_composition",
-          "rule": "Apply the widget-count and shape limits to the resulting widgets, including any expansion. Retained content-type count and rendered widget count are distinct. Whole-face fit remains necessary even when the composition satisfies these limits."
+          "rule": "Apply decisions.rendering.compositionLimits and the applicable scenario rules in choose_representations_by_rectangle_count to the resulting widgets, including any expansion. The scenario rules further constrain widget counts and circular sizes. Retained content-type count and rendered widget count are distinct. Whole-face fit remains necessary even when the composition satisfies these limits."
         }
       ],
       "rectangleRequirements": [
-        "Only workout, timer, heart_rate, iot_control, and weather are eligible for circular rendering under the existing circular whitelist. Other content types require their permitted rectangular representation.",
+        "workout, activity_summary, timer, heart_rate, iot_control, sleep_summary, and weather are eligible for circular rendering. Other content types require their permitted rectangular representation.",
         "Visible control fields require rectangular rendering. Available controls that were not selected for display do not independently force a rectangle.",
         "Selected detail fields require readable text space. Use a rectangle when the scoped detail cannot fit legibly in an approved circular component or when a content-specific rule requires one. A compact detail field does not universally force a rectangle.",
         "Apply strict template constraints: music_control uses music_control, reminder uses reminder, checklist uses checklist_full_face, and a rectangular timer uses timer_rectangular. Do not borrow these templates for other content types.",
-        "A passive timer may use a circular close_gauge when labels, controls, and setup details are not selected. A displayed timer label, visible control, or timer creation/duration setup requires timer_rectangular.",
+        "A passive timer may use a circular widget when labels, controls, and setup details are not selected. A displayed timer label, visible control, or timer creation/duration setup requires timer_rectangular.",
         "Choose shape from the selected information, not merely from the existence of available detail or control fields. Numeric values, targets, and derived progress alone do not force rectangular rendering.",
-        "Prefer circular rendering when a content type is circular-eligible and its selected information does not require a rectangle. This preference must preserve selected content and comply with strict templates, approved circular components, and composition limits."
+        "Prefer circular rendering when a content type is circular-eligible and its selected information does not require a rectangle. Preserve selected content and comply with strict templates and approved circular components."
       ],
       "compositionLimits": {
         "maxWidgets": 3,
@@ -225,19 +241,31 @@
           "One rectangular widget plus up to two circular widgets.",
           "Two rectangular widgets with no additional widgets."
         ],
-        "standaloneRule": "When checklist is rendered, checklist_full_face must be the only widget. The decision for resolving a checklist candidate alongside higher-ranked content remains pending review."
+        "standaloneRule": "Apply checklist precedence before the ordinary rectangle-count and composition rules, using its original position in the ranked list. If checklist ranks first, render checklist_full_face alone and omit all other content types. If checklist ranks second or lower, drop checklist and continue with the other scoped candidates without backfilling from outside the scoped set. Do not promote checklist to first after other candidates are omitted."
       },
       "expansionRules": [
-        "One retained content type may occupy multiple widgets when its selected metric groups benefit from separate presentation. Do not automatically create one widget per metric group.",
-        "Preserve related values, goals, labels, controls, and derived metrics together. Reuse identifying metadata where needed.",
-        "Expansion must respect circular eligibility, strict templates, the composition limits, and whole-face fit. Do not expand a content type at the expense of a higher-ranked retained type.",
-        "When rendering one content type across multiple circular widgets, assign exactly one circle to each selected metric group. Do not combine multiple selected groups in one circle or split one group across circles in this mode. Reused identifying metadata does not count as an additional group. If this one-circle-per-group mapping exceeds the composition limits or cannot fit, reconsider the representation or return to content scope to revise the selected groups; do not silently merge or omit groups."
+        "One retained content type may occupy multiple widgets when its selected metric groups benefit from separate presentation. Expansion is optional, not an automatic consequence of selecting multiple groups.",
+        "Preserve related values, goals, labels, controls, and derived metrics together. Reuse identifying metadata where needed; reused identifying metadata does not count as an additional group.",
+        "Expansion must respect decisions.rendering.rectangleRequirements, decisions.rendering.compositionLimits, the applicable scenario\u2019s count and size restrictions, and whole-face fit. Do not expand a content type at the expense of a higher-ranked retained type.",
+        "When rendering one content type across multiple circular widgets, assign exactly one circle to each selected metric group. Do not combine multiple selected groups in one circle or split one group across circles in this mode. If this mapping exceeds the limits or cannot fit, reconsider the representation or return to content scope to revise the selected groups; do not silently merge or omit groups."
       ],
       "pendingReview": [
-        "Detailed circular component and size selection, content-specific exceptions, and remaining active-policy rendering rules still require migration and review.",
-        "Resolve standalone checklist precedence and define the fit-fallback sequence."
+        "Review old content-specific exceptions and account for remaining active-policy rules as preserved, replaced, or intentionally removed.",
+        "Define the general fit-fallback sequence."
       ],
-      "handoff": "Finalize the retained content types, each type\u2019s rectangular or circular representation, and the number of widgets per type after obtaining required dimensions from widget design and applying the two-rectangle height check. Preserve selected groups and fields in those representations. Pass completed widget designs to face composition; whole-face fit failures return to fitFallback once its rules are defined."
+      "handoff": "Finalize the retained content types, each type\u2019s rectangular or circular representation, and the number of widgets per type after obtaining required dimensions from widget design and applying the two-rectangle height check. Preserve selected groups and fields in those representations. Pass completed widget designs to face composition; whole-face fit failures return to fitFallback once its rules are defined.",
+      "widgetDesignDelegation": {
+        "rule": "This policy owns retained content types, rectangular or circular representation, widget count, circular size, and strict-template selection. Delegate component and property-variant choices and widget-internal design to the applicable widget resources; do not prescribe circular gauge components or variants here, including for timer.",
+        "circularResources": [
+          "circular-widget-guidelines/circular-widget-catalog.json",
+          "circular-widget-guidelines/circular-widget-visual-specs.json",
+          "circular-widget-guidelines/README.md"
+        ],
+        "rectangularResources": [
+          "rectangular-widget-guidelines/rectangular-widget-catalog.json",
+          "rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md"
+        ]
+      }
     },
     "fitFallback": {
       "status": "pending",
@@ -328,6 +356,31 @@
         "sleep_summary"
       ],
       "rule": "When every candidate has priority 5, scope only the highest-ranked candidate rather than leaving the watch face with no widget content."
+    },
+    {
+      "id": "checklist-first",
+      "rankedContentTypes": [
+        "checklist",
+        "weather",
+        "timer"
+      ],
+      "retainedContentTypes": [
+        "checklist"
+      ],
+      "rule": "Render checklist_full_face alone."
+    },
+    {
+      "id": "checklist-second",
+      "rankedContentTypes": [
+        "workout",
+        "checklist",
+        "weather"
+      ],
+      "retainedContentTypes": [
+        "workout",
+        "weather"
+      ],
+      "rule": "Drop checklist before counting rectangle requirements; preserve the other scoped candidates without backfilling."
     }
   ]
 }
