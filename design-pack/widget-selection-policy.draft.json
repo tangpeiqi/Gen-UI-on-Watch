@@ -17,11 +17,30 @@
     "eligibilitySources": [
       "semanticInputs: context-reading steps"
     ],
-    "remainingRules": "Global constraints, ranking, scope, rendering, composition, fallback, and existing examples still require migration and review. Empty draft sections do not repeal active policy rules."
+    "remainingRules": "Old-policy comparison is recorded in widget-selection-policy-review.md. Resolve the terminal fit-fallback outcome and reconcile runtime prompts, validators, schemas, and widget resources before activation.",
+    "retiredExceptions": {
+      "weatherOnly": {
+        "decision": "Remove the old weather-only exception when activating this draft. Weather follows the same content-scope, prototype-data completion, rendering, expansion, and size rules as other content types.",
+        "supersededRules": [
+          "Forcing weather-only content into one generated rectangle or exactly three S circles for condition, temperature range, and precipitation.",
+          "Prohibiting a single L circular weather widget.",
+          "Forcing a rectangular summary when data for the prescribed three-circle option is missing."
+        ],
+        "sourceSections": [
+          "circularSelectionDelegation.focusedOneWidgetRule",
+          "generativeContentRules.rule",
+          "contentExpansionRules.rule"
+        ]
+      }
+    }
   },
   "globalConstraints": {
-    "status": "pending_migration",
-    "rules": []
+    "status": "draft_for_review",
+    "rules": [
+      "Apply the five decisions in order; preserve content priority through rendering and recovery. The named decision sections own their detailed constraints.",
+      "Include only retained widgets in the final layout JSON. Do not add omission reasons or other fields that the layout schema does not support.",
+      "Widget resources own internal design and fixed geometry; generation-guide.md owns face placement, time/date, and color. Revisit the owning decision when a fit repair changes selection or content."
+    ]
   },
   "decisionSequence": [
     {
@@ -152,7 +171,7 @@
         "Rank semantic content before choosing widget count, shape, size, template, or position. Do not promote lower-priority content because its widget is easier to fit. Higher-ranked content requiring a rectangle must not lose priority to less useful content merely because that content fits in a circle.",
         "Produce an ordered list of useful content candidates, not a quota of widgets. Do not add content merely to fill three slots; later decisions determine how many candidates become rendered widgets."
       ],
-      "handoff": "Pass the ordered content candidates to content scope and rendering. Ranking does not automatically fill three widget slots; candidate limits and composition rules remain pending migration and review."
+      "handoff": "Pass the ordered candidates and their assigned priorities to content scope. Content scope applies the candidate limit and priority-5 fallback; rendering determines the final widget composition."
     },
     "contentScope": {
       "status": "draft_for_review",
@@ -199,9 +218,9 @@
           "rule": "After step 2, count the retained content types that require rectangular rendering, then follow the matching scenario. Count retained types rather than the original top three. Apply decisions.rendering.compositionLimits and decisions.rendering.expansionRules throughout. Initial representations remain provisional until required dimensions are resolved. Apply standalone requirements separately.",
           "scenarios": {
             "two_required_rectangles": {
-              "rule": "Propose two rectangular widgets and obtain the higher-ranked rectangle\u2019s required height from widget design using its selected content and applicable widget contracts.",
+              "rule": "Propose two rectangular widgets and obtain the higher-ranked rectangle’s required height from widget design using its selected content and applicable widget contracts.",
               "heightAtMost108px": "Retain both proposed rectangles, subject to whole-face fit.",
-              "heightAbove108px": "Preserve the higher-ranked rectangle. Recheck whether the lower-ranked content type can legally represent all selected information in exactly one circular widget. If so, convert it to one circle; otherwise drop it. A genuinely required rectangle cannot pass this conversion check, so drop it if the requirement still holds. Do not remove selected controls or details to enable conversion, and do not use multiple circles for this fallback."
+              "heightAbove108px": "Preserve the higher-ranked rectangle. Recheck whether the lower-ranked content type can legally represent all selected information in exactly one circular widget. If so, convert it to one circle; otherwise drop it. A genuinely required rectangle cannot pass this conversion check, so drop it if the requirement still holds. Do not remove selected controls or details to enable conversion, and do not use multiple circles for this fallback. If rechecking permits conversion, apply the one_required_rectangle heightAbove108px branch: the single companion circle must use S."
             },
             "one_required_rectangle": {
               "rule": "Use the required rectangle and obtain its required height from widget design before choosing the number and size of companion circles. If no other content type remains, render only the rectangle.",
@@ -230,6 +249,7 @@
         "Visible control fields require rectangular rendering. Available controls that were not selected for display do not independently force a rectangle.",
         "Selected detail fields require readable text space. Use a rectangle when the scoped detail cannot fit legibly in an approved circular component or when a content-specific rule requires one. A compact detail field does not universally force a rectangle.",
         "Apply strict template constraints: music_control uses music_control, reminder uses reminder, checklist uses checklist_full_face, and a rectangular timer uses timer_rectangular. Do not borrow these templates for other content types.",
+        "For rectangular content without a strict template, use generated_rectangular_widget under generated-rectangular-widget-schema.json and the rectangular widget resources. Do not customize locked strict templates.",
         "A passive timer may use a circular widget when labels, controls, and setup details are not selected. A displayed timer label, visible control, or timer creation/duration setup requires timer_rectangular.",
         "Choose shape from the selected information, not merely from the existence of available detail or control fields. Numeric values, targets, and derived progress alone do not force rectangular rendering.",
         "Prefer circular rendering when a content type is circular-eligible and its selected information does not require a rectangle. Preserve selected content and comply with strict templates and approved circular components."
@@ -246,14 +266,14 @@
       "expansionRules": [
         "One retained content type may occupy multiple widgets when its selected metric groups benefit from separate presentation. Expansion is optional, not an automatic consequence of selecting multiple groups.",
         "Preserve related values, goals, labels, controls, and derived metrics together. Reuse identifying metadata where needed; reused identifying metadata does not count as an additional group.",
-        "Expansion must respect decisions.rendering.rectangleRequirements, decisions.rendering.compositionLimits, the applicable scenario\u2019s count and size restrictions, and whole-face fit. Do not expand a content type at the expense of a higher-ranked retained type.",
+        "Expansion must respect decisions.rendering.rectangleRequirements, decisions.rendering.compositionLimits, the applicable scenario’s count and size restrictions, and whole-face fit. Do not expand a content type at the expense of a higher-ranked retained type.",
         "When rendering one content type across multiple circular widgets, assign exactly one circle to each selected metric group. Do not combine multiple selected groups in one circle or split one group across circles in this mode. If this mapping exceeds the limits or cannot fit, reconsider the representation or return to content scope to revise the selected groups; do not silently merge or omit groups."
       ],
       "pendingReview": [
-        "Review old content-specific exceptions and account for remaining active-policy rules as preserved, replaced, or intentionally removed.",
-        "Define the general fit-fallback sequence."
+        "Resolve the terminal fit-fallback outcome documented in decisions.fitFallback.pendingReview.",
+        "Before activation, reconcile the runtime and widget resources identified in widget-selection-policy-review.md."
       ],
-      "handoff": "Finalize the retained content types, each type\u2019s rectangular or circular representation, and the number of widgets per type after obtaining required dimensions from widget design and applying the two-rectangle height check. Preserve selected groups and fields in those representations. Pass completed widget designs to face composition; whole-face fit failures return to fitFallback once its rules are defined.",
+      "handoff": "Finalize the retained content types, each type’s rectangular or circular representation, and the number of widgets per type after obtaining required dimensions from widget design and applying the two-rectangle height check. Preserve selected groups and fields in those representations. Pass completed widget designs to face composition; whole-face fit failures return to decisions.fitFallback.",
       "widgetDesignDelegation": {
         "rule": "This policy owns retained content types, rectangular or circular representation, widget count, circular size, and strict-template selection. Delegate component and property-variant choices and widget-internal design to the applicable widget resources; do not prescribe circular gauge components or variants here, including for timer.",
         "circularResources": [
@@ -263,124 +283,623 @@
         ],
         "rectangularResources": [
           "rectangular-widget-guidelines/rectangular-widget-catalog.json",
-          "rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md"
+          "rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md",
+          "rectangular-widget-guidelines/rectangular-widget-visual-specs.json",
+          "rectangular-widget-guidelines/generated-rectangular-widget-schema.json"
         ]
       }
     },
     "fitFallback": {
-      "status": "pending",
-      "scope": "Define ordered recovery when completed widgets cannot fit with time and date, coordinating with widget design and the generation guide.",
-      "rules": []
+      "status": "draft_for_review",
+      "scope": "Recover when a selected composition cannot physically fit under the generation guide and widget contracts.",
+      "sequence": [
+        {
+          "step": 1,
+          "decision": "retry_legal_placement",
+          "rule": "Try another legal placement under generation-guide.md while preserving the selected widgets and their content."
+        },
+        {
+          "step": 2,
+          "decision": "drop_lowest_ranked_content_type",
+          "rule": "If placement still fails and more than one content type remains, drop the single lowest-ranked retained content type. Rerun rendering and check fit before proceeding. Do not repeatedly drop types in this step before trying the remaining recovery steps."
+        },
+        {
+          "step": 3,
+          "decision": "reduce_lower_ranked_metric_groups",
+          "rule": "If the composition still does not fit, return to content scope to drop less useful selected metric groups from remaining content types other than the original highest-ranked type. Start with the lowest-ranked remaining type. Preserve at least one useful group per retained type and all required metadata within each retained group. Recompute expansion and rendering after each reduction; stop when the composition fits."
+        },
+        {
+          "step": 4,
+          "decision": "reduce_lower_ranked_optional_metadata",
+          "rule": "If the composition still does not fit, remove optional metadata from remaining content types other than the original highest-ranked type, starting with the least useful fields on the lowest-ranked type. Preserve required metadata and fields essential to the user’s goal. Recompute affected derived metrics and widget designs, rerun rendering, and check fit after each reduction."
+        },
+        {
+          "step": 5,
+          "decision": "reduce_top_ranked_optional_metadata",
+          "rule": "Only if the earlier steps fail, remove optional metadata from the original highest-ranked content type, starting with the least useful fields. Preserve required metadata and fields essential to the user’s goal. Recompute affected derived metrics and widget designs, rerun rendering, and check fit after each reduction."
+        }
+      ],
+      "rules": [
+        "Apply the recovery steps in order, skipping inapplicable steps and stopping as soon as the composition fits. Keep the original content ranking throughout.",
+        "Rerun the rendering rules whenever content types, selected groups, or fields change, including rectangle requirements, expansion, the 108px rules, and circle sizes. Return completed widget designs to face composition for a fresh fit check.",
+        "Preserve fixed widget typography, strict templates, approved geometry, and the circular sizes required by rendering. Do not squeeze widgets or substitute lower-ranked content solely because it fits more easily.",
+        "Treat removal of groups or optional metadata as an explicit revision to content scope. Preserve relationships among remaining values, goals, controls, and derived metrics; remove a derived metric if its required inputs are removed."
+      ],
+      "pendingReview": [
+        "Define the terminal outcome if the composition still cannot fit after all five steps without violating required content or widget contracts."
+      ]
     }
   },
   "examples": [
     {
-      "id": "eligibility-at-0900",
+      "id": "rank-preservation-and-height-boundary",
+      "purpose": "Show how two rectangle requirements among the original three can produce one rectangle plus circles after dropping the third type.",
       "request": {
-        "time": "09:00",
-        "location": "Bellevue office"
+        "time": "19:25",
+        "location": "Kirkland waterfront",
+        "goal": "Show my run progress and the next planned event."
       },
-      "eligible": [
-        "Today's heart-rate and outdoor-temperature readings through 9:00 AM, including the 9:00 AM readings",
-        "The preceding night's sleep summary and earlier IoT snapshots",
-        "The 9:15 AM planning sync and other upcoming calendar events, including tomorrow's schedule",
-        "Later reminders, supplied weather forecasts, and all additionalContext",
-        "The planned easy run's 300-calorie goal and 28-minute target duration"
-      ],
-      "unavailable": [
-        "The 9:30 AM heart-rate reading and later scripted observations",
-        "The 5:00 PM activity summary as an observed result",
-        "Future workout results presented as already measured"
-      ],
-      "selection": "Deferred to the remaining decisions."
-    },
-    {
-      "id": "two-rectangle-requirements-preserve-ranking",
-      "rankedContentTypes": [
-        "workout",
-        "reminder",
-        "last_message"
-      ],
-      "rectangleRequirements": {
-        "workout": false,
-        "reminder": true,
-        "last_message": true
+      "eligibility": {
+        "available": "The planned easy-run targets and future family call are known in advance. Workout progress may be completed with synthetic demo values; a recent message is a hypothetical eligible input in this example.",
+        "excluded": "Future heart-rate samples and future measured workout results."
       },
-      "retainedContentTypes": [
-        "workout",
-        "reminder"
-      ],
-      "omittedContentTypes": [
-        "last_message"
-      ],
-      "permittedCompositions": [
-        "One reminder rectangle and one workout circle.",
-        "One reminder rectangle and two workout circles for selected time and calorie groups when separate presentation is useful."
-      ],
-      "rule": "Two of the top three candidates require rectangles, so drop the third-ranked type. The retained workout is not forced into a rectangle. All widgets must still fit."
-    },
-    {
-      "id": "exclude-priority-five-background",
       "rankedCandidates": [
         {
           "contentType": "workout",
-          "priority": 1
+          "priority": 1,
+          "reason": "Run progress is central to the goal."
         },
         {
-          "contentType": "sleep_summary",
-          "priority": 5
+          "contentType": "upcoming_event",
+          "priority": 1,
+          "reason": "Next event is also explicitly requested; the model ranks it second."
         },
         {
-          "contentType": "music_control",
-          "priority": 5
+          "contentType": "last_message",
+          "priority": 4,
+          "reason": "Assume a recent relevant coordination message is available."
         }
       ],
-      "scopedContentTypes": [
-        "workout"
+      "contentScope": [
+        {
+          "contentType": "workout",
+          "selectedGroups": [
+            "time",
+            "calorie"
+          ],
+          "requiredMetadata": {
+            "elapsed_time": {
+              "value": 10,
+              "unit": "minutes"
+            },
+            "calories_burned": 105
+          },
+          "optionalMetadata": {
+            "target_duration": {
+              "value": 28,
+              "unit": "minutes"
+            },
+            "calorie_goal": 300
+          },
+          "displayedDetailFields": [],
+          "displayedControlFields": []
+        },
+        {
+          "contentType": "upcoming_event",
+          "selectedGroups": [
+            "upcoming_event"
+          ],
+          "requiredMetadata": {
+            "event_name": "Family video call",
+            "time": "today 20:30"
+          },
+          "optionalMetadata": {},
+          "displayedDetailFields": [
+            "event_name"
+          ],
+          "displayedControlFields": []
+        },
+        {
+          "contentType": "last_message",
+          "selectedGroups": [
+            "message"
+          ],
+          "requiredMetadata": {
+            "sender": "Family",
+            "content": "See you on the call."
+          },
+          "optionalMetadata": {},
+          "displayedDetailFields": [
+            "sender",
+            "content"
+          ],
+          "displayedControlFields": []
+        }
       ],
-      "rule": "Scope only workout. General background candidates remain excluded even when fewer than three content types will be presented."
+      "dataProvenance": "Workout elapsed time and calories burned and the message are illustrative synthetic demo values, not supplied observations. Targets and event come from pseudo context. Derived time_progress = 10/28; calorie_progress = 105/300.",
+      "rendering": {
+        "requiresRectangle": {
+          "workout": false,
+          "upcoming_event": true,
+          "last_message": true
+        },
+        "omittedContentTypes": [
+          "last_message"
+        ],
+        "reason": "Two of the original top three require rectangles, so omit rank three and preserve the top two.",
+        "heightCases": [
+          {
+            "assumption": "Widget design returns a 108px event rectangle; separate workout time and calorie presentation is useful. Whole-face fit check is assumed to pass.",
+            "widgets": [
+              {
+                "contentType": "upcoming_event",
+                "shape": "rectangular",
+                "template": "generated_rectangular_widget",
+                "requiredHeightPx": 108
+              },
+              {
+                "contentType": "workout",
+                "shape": "circular",
+                "size": "M",
+                "metricGroups": [
+                  "time"
+                ]
+              },
+              {
+                "contentType": "workout",
+                "shape": "circular",
+                "size": "M",
+                "metricGroups": [
+                  "calorie"
+                ]
+              }
+            ],
+            "retainedContentTypeCount": 2,
+            "widgetCount": 3,
+            "fitFallback": "Not needed."
+          },
+          {
+            "assumption": "For a narrower variation requesting workout time progress and the next event, content scope selects only the workout time group (elapsed_time and target_duration; time_progress = 10/28) before rendering. Widget design returns a 120px event rectangle and a valid S circle for that time group. Whole-face fit is assumed to pass.",
+            "widgets": [
+              {
+                "contentType": "upcoming_event",
+                "shape": "rectangular",
+                "template": "generated_rectangular_widget",
+                "requiredHeightPx": 120
+              },
+              {
+                "contentType": "workout",
+                "shape": "circular",
+                "size": "S",
+                "metricGroups": [
+                  "time"
+                ]
+              }
+            ],
+            "retainedContentTypeCount": 2,
+            "widgetCount": 2,
+            "fitFallback": "Not needed under the stated fit assumption. The narrower group selection is made in content scope, not silently removed during rendering."
+          }
+        ]
+      }
     },
     {
-      "id": "all-background-fallback",
+      "id": "weather-follows-general-rules",
+      "purpose": "Show priority-5 exclusion, group expansion, and ordinary circular sizes without a weather exception.",
+      "request": {
+        "time": "09:00",
+        "location": "Bellevue office",
+        "goal": "Show the temperature range and chance of rain."
+      },
+      "eligibility": {
+        "available": "The 09:00 outdoor-temperature reading and today’s forecast.",
+        "excluded": "Outdoor-temperature observations after 09:00; indoor thermostat temperature is not outdoor weather."
+      },
       "rankedCandidates": [
         {
-          "contentType": "sleep_summary",
-          "priority": 5
+          "contentType": "weather",
+          "priority": 1,
+          "reason": "Directly serves the request."
         },
         {
-          "contentType": "weather",
-          "priority": 5
+          "contentType": "sleep_summary",
+          "priority": 5,
+          "reason": "Background only for this request."
         }
       ],
-      "scopedContentTypes": [
-        "sleep_summary"
+      "contentScope": [
+        {
+          "contentType": "weather",
+          "selectedGroups": [
+            "temperature_range",
+            "precipitation"
+          ],
+          "requiredMetadata": {
+            "current_temperature": 54
+          },
+          "optionalMetadata": {
+            "high_temperature": 63,
+            "low_temperature": 51,
+            "rain_chance": 68
+          },
+          "displayedDetailFields": [],
+          "displayedControlFields": []
+        }
       ],
-      "rule": "When every candidate has priority 5, scope only the highest-ranked candidate rather than leaving the watch face with no widget content."
+      "dataProvenance": "Illustrative snapshot of supplied pseudo-context values: temperatures in Fahrenheit, rain chance in percent. No synthetic completion is needed.",
+      "rendering": {
+        "requiresRectangle": {
+          "weather": false
+        },
+        "omittedContentTypes": [
+          "sleep_summary"
+        ],
+        "reason": "Priority 5 does not fill unused slots. The two selected weather groups benefit from separate presentation.",
+        "widgets": [
+          {
+            "contentType": "weather",
+            "shape": "circular",
+            "size": "M",
+            "metricGroups": [
+              "temperature_range"
+            ]
+          },
+          {
+            "contentType": "weather",
+            "shape": "circular",
+            "size": "M",
+            "metricGroups": [
+              "precipitation"
+            ]
+          }
+        ],
+        "retainedContentTypeCount": 1,
+        "widgetCount": 2,
+        "rectangleHeightsPx": []
+      },
+      "fitFallback": "Not needed: assume widget design and whole-face validation accept the two M circles. A narrower request selecting only temperature_range would instead use one L circle; three selected groups expanded into three circles would use S for each."
     },
     {
-      "id": "checklist-first",
-      "rankedContentTypes": [
-        "checklist",
-        "weather",
-        "timer"
-      ],
-      "retainedContentTypes": [
-        "checklist"
-      ],
-      "rule": "Render checklist_full_face alone."
+      "id": "checklist-precedence-before-shape-counting",
+      "purpose": "Show both checklist outcomes and their effect on other scoped content.",
+      "cases": [
+        {
+          "request": {
+            "time": "18:00",
+            "location": "Bellevue",
+            "goal": "Show my grocery checklist."
+          },
+          "eligibility": "The grocery checklist is available in additionalContext before its planned pickup time.",
+          "rankedCandidates": [
+            {
+              "contentType": "checklist",
+              "priority": 1,
+              "reason": "Explicit goal."
+            },
+            {
+              "contentType": "weather",
+              "priority": 4,
+              "reason": "Supports the trip."
+            }
+          ],
+          "contentScope": [
+            {
+              "contentType": "checklist",
+              "selectedGroups": [
+                "list"
+              ],
+              "requiredMetadata": {
+                "title": "Grocery pickup list",
+                "items": [
+                  "Greek yogurt",
+                  "Blueberries",
+                  "Bananas",
+                  "Spinach",
+                  "Eggs",
+                  "Salmon",
+                  "Brown rice",
+                  "Sparkling water",
+                  "Coffee beans",
+                  "Trail mix"
+                ],
+                "completed_items": [],
+                "mark_complete_action": "mark selected item complete"
+              },
+              "optionalMetadata": {},
+              "displayedDetailFields": [
+                "title",
+                "items",
+                "completed_items"
+              ],
+              "displayedControlFields": [
+                "mark_complete_action"
+              ]
+            },
+            {
+              "contentType": "weather",
+              "selectedGroups": [
+                "temperature_range"
+              ],
+              "requiredMetadata": {
+                "current_temperature": 59
+              },
+              "optionalMetadata": {},
+              "displayedDetailFields": [],
+              "displayedControlFields": []
+            }
+          ],
+          "rendering": {
+            "requiresRectangle": {
+              "checklist": true,
+              "weather": false
+            },
+            "widgets": [
+              {
+                "contentType": "checklist",
+                "shape": "rectangular",
+                "template": "checklist_full_face",
+                "requiredHeightPx": 251
+              }
+            ],
+            "retainedContentTypeCount": 1,
+            "widgetCount": 1,
+            "omittedContentTypes": [
+              "weather"
+            ],
+            "reason": "Checklist ranks first and owns the full face, including its component-owned time/date slots."
+          },
+          "fitFallback": "Not needed assuming content satisfies the fixed checklist contract; ordinary rectangle-height branches are skipped."
+        },
+        {
+          "request": {
+            "time": "18:00",
+            "location": "Bellevue",
+            "goal": "Show the next event."
+          },
+          "eligibility": "Grocery pickup at 18:15 is a known plan; its checklist and the 18:00 weather reading are also available.",
+          "rankedCandidates": [
+            {
+              "contentType": "upcoming_event",
+              "priority": 1,
+              "reason": "Explicit goal."
+            },
+            {
+              "contentType": "checklist",
+              "priority": 2,
+              "reason": "Upcoming pickup makes it timely."
+            },
+            {
+              "contentType": "weather",
+              "priority": 4,
+              "reason": "Useful for the trip."
+            }
+          ],
+          "contentScope": [
+            {
+              "contentType": "upcoming_event",
+              "selectedGroups": [
+                "upcoming_event"
+              ],
+              "requiredMetadata": {
+                "event_name": "Grocery pickup",
+                "time": "today 18:15"
+              },
+              "optionalMetadata": {},
+              "displayedDetailFields": [
+                "event_name"
+              ],
+              "displayedControlFields": []
+            },
+            {
+              "contentType": "checklist",
+              "selectedGroups": [
+                "list"
+              ],
+              "requiredMetadata": {
+                "title": "Grocery pickup list",
+                "items": [
+                  "Greek yogurt",
+                  "Blueberries",
+                  "Bananas",
+                  "Spinach",
+                  "Eggs",
+                  "Salmon",
+                  "Brown rice",
+                  "Sparkling water",
+                  "Coffee beans",
+                  "Trail mix"
+                ],
+                "completed_items": [],
+                "mark_complete_action": "mark selected item complete"
+              },
+              "optionalMetadata": {},
+              "displayedDetailFields": [
+                "title",
+                "items",
+                "completed_items"
+              ],
+              "displayedControlFields": [
+                "mark_complete_action"
+              ]
+            },
+            {
+              "contentType": "weather",
+              "selectedGroups": [
+                "temperature_range"
+              ],
+              "requiredMetadata": {
+                "current_temperature": 59
+              },
+              "optionalMetadata": {},
+              "displayedDetailFields": [],
+              "displayedControlFields": []
+            }
+          ],
+          "rendering": {
+            "requiresRectangle": {
+              "upcoming_event": true,
+              "checklist": true,
+              "weather": false
+            },
+            "heightAssumption": "Widget design returns a 108px event rectangle.",
+            "widgets": [
+              {
+                "contentType": "upcoming_event",
+                "shape": "rectangular",
+                "template": "generated_rectangular_widget",
+                "requiredHeightPx": 108
+              },
+              {
+                "contentType": "weather",
+                "shape": "circular",
+                "size": "M",
+                "metricGroups": [
+                  "temperature_range"
+                ]
+              }
+            ],
+            "retainedContentTypeCount": 2,
+            "widgetCount": 2,
+            "omittedContentTypes": [
+              "checklist"
+            ],
+            "reason": "Drop rank-two checklist before counting rectangle requirements. Weather remains; do not apply the original two-rectangle count and accidentally drop it."
+          },
+          "fitFallback": "Not needed assuming whole-face fit passes."
+        }
+      ]
     },
     {
-      "id": "checklist-second",
-      "rankedContentTypes": [
-        "workout",
-        "checklist",
-        "weather"
+      "id": "fit-fallback-preserves-top-content",
+      "purpose": "Show placement retry, dropping the lowest-ranked type, and removing optional metadata only after earlier recovery steps fail.",
+      "request": {
+        "time": "09:00",
+        "location": "Bellevue office",
+        "goal": "Show my next event with its venue."
+      },
+      "eligibility": "The 09:15 planning sync and its venue are known in advance. The 09:00 heart-rate sample is available. No future readings are used.",
+      "rankedCandidates": [
+        {
+          "contentType": "upcoming_event",
+          "priority": 1,
+          "reason": "Event and venue are explicit intent."
+        },
+        {
+          "contentType": "heart_rate",
+          "priority": 4,
+          "reason": "Assume the model judges the recent reading useful supporting information in this scenario."
+        }
       ],
-      "retainedContentTypes": [
-        "workout",
-        "weather"
+      "contentScope": [
+        {
+          "contentType": "upcoming_event",
+          "selectedGroups": [
+            "upcoming_event"
+          ],
+          "requiredMetadata": {
+            "event_name": "Weekly planning sync",
+            "time": "today 09:15"
+          },
+          "optionalMetadata": {
+            "location": "Bellevue office, 5th floor conference room",
+            "time_to_leave": "today 09:10"
+          },
+          "displayedDetailFields": [
+            "event_name",
+            "location"
+          ],
+          "displayedControlFields": []
+        },
+        {
+          "contentType": "heart_rate",
+          "selectedGroups": [
+            "heart_rate"
+          ],
+          "requiredMetadata": {
+            "last_reading": 78
+          },
+          "optionalMetadata": {},
+          "displayedDetailFields": [],
+          "displayedControlFields": []
+        }
       ],
-      "rule": "Drop checklist before counting rectangle requirements; preserve the other scoped candidates without backfilling."
+      "dataProvenance": "The departure suggestion is an illustrative planning estimate. Event and heart-rate values are supplied-context examples. Venue is optional in the taxonomy but essential to this request.",
+      "initialRendering": {
+        "requiresRectangle": {
+          "upcoming_event": true,
+          "heart_rate": false
+        },
+        "widgets": [
+          {
+            "contentType": "upcoming_event",
+            "shape": "rectangular",
+            "template": "generated_rectangular_widget",
+            "requiredHeightPx": 190
+          },
+          {
+            "contentType": "heart_rate",
+            "shape": "circular",
+            "size": "S",
+            "metricGroups": [
+              "heart_rate"
+            ]
+          }
+        ],
+        "heightAssumption": "A hypothetical valid event widget requires 190px with all selected information. Whole-face validation reports no legal placement with the required time treatment."
+      },
+      "fitFallback": [
+        {
+          "step": 1,
+          "action": "Try alternate legal placements.",
+          "assumedResult": "Still fails."
+        },
+        {
+          "step": 2,
+          "action": "Drop heart_rate, the lowest-ranked type; rerun rendering.",
+          "assumedResult": "The sole 190px event rectangle still fails whole-face fit."
+        },
+        {
+          "step": 3,
+          "action": "Skip: no lower-ranked content types remain."
+        },
+        {
+          "step": 4,
+          "action": "Skip: no lower-ranked optional metadata remains."
+        },
+        {
+          "step": 5,
+          "action": "Remove time_to_leave, the nonessential optional field. Preserve required event_name/time and the explicitly requested location.",
+          "assumedResult": "Widget redesign returns a 160px rectangle and whole-face validation passes. Stop."
+        }
+      ],
+      "finalRendering": {
+        "widgets": [
+          {
+            "contentType": "upcoming_event",
+            "shape": "rectangular",
+            "template": "generated_rectangular_widget",
+            "requiredHeightPx": 160
+          }
+        ],
+        "retainedContentTypeCount": 1,
+        "widgetCount": 1,
+        "omittedContentTypes": [
+          "heart_rate"
+        ],
+        "omittedMetadata": {
+          "upcoming_event": [
+            "time_to_leave"
+          ]
+        },
+        "preservedMetadata": {
+          "upcoming_event": [
+            "event_name",
+            "time",
+            "location"
+          ]
+        }
+      }
     }
-  ]
+  ],
+  "exampleUsage": "These are illustrative decision traces, not additional rules or final layout JSON. Rankings are contextual judgments for the stated inputs, not fixed content-type priorities. Hypothetical widget-design heights and fit-check results are explicit inputs to the examples, not measured validation claims. Component and variant choices remain delegated. Use actual request data and measured designs at runtime."
 }
