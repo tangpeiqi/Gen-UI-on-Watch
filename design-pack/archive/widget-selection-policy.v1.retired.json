@@ -1,0 +1,394 @@
+{
+  "schemaVersion": "1.2.0",
+  "purpose": "Canonical widget selection policy. Owns content eligibility, strict template overrides, and composition caps before layout placement.",
+  "sourceDocuments": [
+    "widget-content-types.json",
+    "circular-widget-guidelines/circular-widget-catalog.json",
+    "rectangular-widget-guidelines/rectangular-widget-catalog.json"
+  ],
+  "globalRules": [
+    {
+      "id": "max-three-rendered-widgets",
+      "strictness": "must",
+      "rule": "Render at most three widgets."
+    },
+    {
+      "id": "semantic-before-shape",
+      "strictness": "must",
+      "rule": "Select semantic content types before selecting widget count, shape, component, variant, or position."
+    },
+    {
+      "id": "strict-template-overrides-first",
+      "strictness": "must",
+      "rule": "Apply strict rectangular template overrides before generic widget selection."
+    },
+    {
+      "id": "no-strict-template-borrowing",
+      "strictness": "must",
+      "rule": "Do not use music_control, reminder, timer_rectangular, or checklist_full_face templates for another content type."
+    },
+    {
+      "id": "circular-content-type-whitelist",
+      "strictness": "must",
+      "rule": "Only workout, timer, heart_rate, iot_control, and weather may render as circular widgets. All other content types must render as rectangular widgets."
+    },
+    {
+      "id": "message-intent-primary",
+      "strictness": "must",
+      "rule": "When the user asks about messages, texts, chat, DMs, unread items, sender, or their latest/last message, select last_message as the primary content type. Match semantic intent, not incidental typography or wording."
+    },
+    {
+      "id": "max-three-semantic-content-types",
+      "strictness": "must",
+      "rule": "Use live context plus available pseudo context to rank candidates and retain at most three semantic content types before applying the top-three/two-rectangle rule and strict standalone overrides."
+    }
+  ],
+  "selectionSequence": [
+    {
+      "step": "rank-candidate-content-types",
+      "rule": "Rank candidate content types by usefulness to the current context before deciding how many widgets to render."
+    },
+    {
+      "step": "choose-renderable-composition",
+      "rule": "Select the top three ranked content types first, then determine their required shapes before applying composition caps. Do not demote higher-ranked content merely to prefer an all-circular composition."
+    },
+    {
+      "step": "choose-widget-shapes",
+      "rule": "Choose circular or rectangular rendering for each selected content type according to circular eligibility, strict template rules, density, controls, and context needs. This rule applies universally: among the top three ranked content types (or all candidates if fewer than three), if at least two require rectangular rendering, drop the third-ranked content type if present and render the top two as rectangular widgets, even if one of those two could otherwise use a circle. Preserve their original ranking and use each content type's permitted rectangular template or generated composition. Prioritize legibility and enough useful information over retaining a third content type. If fewer than two require rectangles, retain the selected content types when the legal composition fits. Never substitute lower-ranked circular content solely to fit three widgets. Strict standalone requirements take precedence: checklist_full_face renders alone."
+    },
+    {
+      "step": "cap-rendered-content-types",
+      "rule": "Allow up to three circular widgets with no rectangles; one rectangle plus up to two circular widgets; or two rectangles with no other widgets. Checklist renders alone. All content must still fit."
+    },
+    {
+      "step": "emit-final-widgets",
+      "rule": "Emit only the selected widgets that fit the final legal composition, and log omitted or deferred content types."
+    }
+  ],
+  "circularEligibility": {
+    "allowedContentTypes": [
+      "workout",
+      "timer",
+      "heart_rate",
+      "iot_control",
+      "weather"
+    ],
+    "rule": "Circular widgets are only legal for compact metric or status content. Eligibility does not force circular rendering; each eligible content type may still choose rectangular rendering when the context needs more detail or controls.",
+    "rectangularOnlyRule": "Every content type not listed in allowedContentTypes is rectangular-only. Use its strict template when defined; otherwise use generated_rectangular_widget when permitted by generated-rectangular-widget-schema.json."
+  },
+  "circularSelectionDelegation": {
+    "rule": "For eligible compact metric/status content, select circular shape and apply the policy size constraints. Delegate component/property-variant design and fixed rendering tokens to circular-widget-catalog.json, circular-widget-visual-specs.json, and circular-widget-guidelines/README.md.",
+    "focusedOneWidgetRule": "When the final composition contains exactly one widget and it is circular, use L, except a passive timer may use M or L. Apply content-specific selection exceptions first: weather-only requests use a generated summary or three S circular weather widgets; detail or control requests use the appropriate rectangle.",
+    "mustUseApprovedComponents": [
+      "close_gauge",
+      "open_gauge"
+    ],
+    "mustUseApprovedSizes": [
+      "S",
+      "M",
+      "L"
+    ]
+  },
+  "compositionRules": {
+    "allCircular": {
+      "maxWidgets": 3,
+      "rule": "When every rendered widget is circular, the layout may render up to three widgets."
+    },
+    "rectangularPresent": {
+      "maxWidgets": 3,
+      "maxRectangularWidgets": 2,
+      "rule": "Allow up to three circular widgets with no rectangles; one rectangle plus up to two circular widgets; or two rectangles with no other widgets. Checklist renders alone. All content must still fit.",
+      "maxWidgetsWithTwoRectangular": 2
+    },
+    "checklistOnly": {
+      "maxWidgets": 1,
+      "rule": "Checklist uses checklist_full_face and must be the only rendered widget."
+    }
+  },
+  "strictTemplateRules": {
+    "music_control": {
+      "renderingMode": "strict_rectangular_template",
+      "requiredTemplate": "music_control",
+      "customLayoutAllowed": false,
+      "selectionReason": "Playback controls require the preserved music_control template."
+    },
+    "reminder": {
+      "renderingMode": "strict_rectangular_template",
+      "requiredTemplate": "reminder",
+      "customLayoutAllowed": false,
+      "selectionReason": "Reminder content and completion affordance require the preserved reminder template."
+    },
+    "checklist": {
+      "renderingMode": "strict_full_face_template",
+      "requiredTemplate": "checklist_full_face",
+      "mustBeOnlyWidget": true,
+      "customLayoutAllowed": false,
+      "selectionReason": "Checklist rows require the full-face checklist template and cannot share the face with other widgets."
+    },
+    "timer": {
+      "renderingMode": "conditional",
+      "allowedCircular": {
+        "component": "close_gauge",
+        "variant": {
+          "property": "icon"
+        },
+        "useWhen": "Countdown status is the only visible timer need and controls, labels, creation, and duration setup are not required.",
+        "allowedSizes": [
+          "S",
+          "M",
+          "L"
+        ],
+        "sizeRule": "Use M or L when this is the only rendered widget; select an approved size that fits when it has companions."
+      },
+      "allowedRectangularTemplate": "timer_rectangular",
+      "customRectangularLayoutAllowed": false,
+      "selectionReason": "Timer may be compact as a circular close_gauge for passive countdown status, but timer creation, labeled timers, duration setup, and visible controls must use timer_rectangular."
+    }
+  },
+  "generativeContentRules": {
+    "rule": "For content types outside strictTemplateRules, choose circular widgets only when the content type is listed in circularEligibility.allowedContentTypes and the user needs compact progress or status. Choose generated_rectangular_widget when an eligible content type needs readable summary/detail text or controls. For workout, choose shape based on the information actually displayed. Numeric values and targets, including calorie_goal and target_duration, do not by themselves require a rectangle. During or after a workout, time_progress and calorie_progress may use a circular Close Gauge with compact numeric labels. Use generated_rectangular_widget when a fuller breakdown, explanatory text, or multiple labeled values cannot fit legibly in an approved circular widget. For weather specifically, when weather is the only selected content type, prioritize either one generated_rectangular_widget weather summary or three S circular widgets split into condition, temperature range, and precipitation chance; do not use a single L circular weather widget. For iot_control specifically, control, toggle, turn on/off, set, adjust, dim, lock/unlock, room, thermostat, temperature, light, fan, heater, or AC requests should use generated_rectangular_widget. Timer is a strict-template exception: timer creation, labeled timers, duration setup, and visible controls should use timer_rectangular. All circular component, variant, and size decisions must be made by applying circular-widget-catalog.json, circular-widget-visual-specs.json, and circular-widget-guidelines/README.md. Other supported generative content types use generated_rectangular_widget."
+  },
+  "deterministicExamples": [
+    {
+      "id": "one-circular-widget",
+      "selectedContentTypes": [
+        "workout"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "workout",
+          "shape": "circular",
+          "component": "close_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "L"
+          },
+          "reason": "Focused one-widget circular layouts use L size, and a solo close_gauge uses icon to communicate the data type."
+        }
+      ]
+    },
+    {
+      "id": "two-circular-widgets",
+      "selectedContentTypes": [
+        "workout",
+        "weather"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "workout",
+          "shape": "circular",
+          "component": "close_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "Workout uses compact progress, and a solo close_gauge for this content type uses icon to communicate the data type."
+        },
+        {
+          "contentType": "weather",
+          "shape": "circular",
+          "component": "open_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "Precipitation chance gives the open arc a numeric percentage."
+        }
+      ]
+    },
+    {
+      "id": "one-rectangular-widget",
+      "selectedContentTypes": [
+        "reminder"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "reminder",
+          "shape": "rectangular",
+          "template": "reminder",
+          "reason": "Reminder is a strict rectangular template content type."
+        }
+      ]
+    },
+    {
+      "id": "mixed-circular-and-rectangular",
+      "selectedContentTypes": [
+        "timer",
+        "weather"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "timer",
+          "shape": "rectangular",
+          "template": "timer_rectangular",
+          "reason": "Timer controls or detail fields make rectangular rendering useful; timer_rectangular is mandatory when rectangular."
+        },
+        {
+          "contentType": "weather",
+          "shape": "circular",
+          "component": "open_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "Weather remains compact as precipitation chance."
+        }
+      ]
+    },
+    {
+      "id": "two-rectangular-widgets",
+      "selectedContentTypes": [
+        "music_control",
+        "reminder"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "music_control",
+          "shape": "rectangular",
+          "template": "music_control",
+          "reason": "Music control is a strict rectangular template content type."
+        },
+        {
+          "contentType": "reminder",
+          "shape": "rectangular",
+          "template": "reminder",
+          "reason": "Reminder may be the second widget in a rectangular-present composition."
+        }
+      ]
+    },
+    {
+      "id": "three-compact-circular-widgets",
+      "selectedContentTypes": [
+        "workout",
+        "timer",
+        "weather"
+      ],
+      "selectedWidgets": [
+        {
+          "contentType": "workout",
+          "shape": "circular",
+          "component": "close_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "Workout progress is compact, and a solo close_gauge for this content type uses icon."
+        },
+        {
+          "contentType": "timer",
+          "shape": "circular",
+          "component": "close_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "A compact countdown can render as a circular close_gauge when timer controls are not needed, and a solo close_gauge for this content type uses icon."
+        },
+        {
+          "contentType": "weather",
+          "shape": "circular",
+          "component": "open_gauge",
+          "variant": {
+            "property": "icon",
+            "size": "S"
+          },
+          "reason": "Precipitation chance is compact and numeric."
+        }
+      ]
+    }
+  ],
+  "contentExpansionRules": {
+    "rule": "One semantic content type may expand to multiple widgets only along the metricGroups defined in widget-content-types.json, when separate groups benefit from separate presentation and the final composition respects compositionRules. Keep each group's related values, goals, derived metrics, and controls together. Use the required and optional metadata in the selected content type's metricGroups; for workout, use the groups for the current situation. When separate widgets need an identifying label, reuse metadata from that content type as needed. Multiple groups may share one widget; do not automatically create one widget per group. Compact rendering may omit supporting labels without moving a goal or progress indicator to an unrelated widget. Groups do not force separate widgets or override strict templates, circular eligibility, or standalone requirements. Do not expand at the expense of a higher-ranked retained content type. Weather-only selection follows its explicit exception; use a rectangular summary when the data needed for its three-circle option is unavailable. Content density does not independently impose a one-rectangle cap; use the top-three/two-rectangle ranking rule and whole-face feasibility."
+  },
+  "semanticInputs": {
+    "taxonomy": "widget-content-types.json",
+    "steps": [
+      "read_current_context",
+      "combine_with_prepopulated_pseudo_context",
+      "rank_candidate_content_types",
+      "extract_required_and_available_optional_metadata",
+      "identify_available_metric_groups_and_preserve_field_relationships",
+      "identify_detail_and_control_fields",
+      "apply_selection_sequence_before_widget_design"
+    ]
+  },
+  "contentRenderingRules": {
+    "workout": {
+      "rules": [
+        "For workout, choose shape based on the information actually displayed. Numeric values and targets, including calorie_goal and target_duration, do not by themselves require a rectangle. During or after a workout, time_progress and calorie_progress may use a circular Close Gauge with compact numeric labels. Use generated_rectangular_widget when a fuller breakdown, explanatory text, or multiple labeled values cannot fit legibly in an approved circular widget."
+      ]
+    },
+    "timer": {
+      "renderingConstraints": {
+        "allowedShapes": [
+          "circular",
+          "rectangular"
+        ],
+        "circularComponent": "close_gauge",
+        "rectangularTemplate": "rectangular_layout_templates.timer_rectangular",
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
+      },
+      "rules": [
+        "Visible controls require rectangular rendering.",
+        "Timer creation, labeled timers, duration setup, or cooking/task-specific timers should use rectangular_layout_templates.timer_rectangular.",
+        "Passive countdown status may use a circular Close Gauge only when controls, labels, and setup details are not needed.",
+        "Timer may render as a Close Gauge circular widget, or as a rectangular widget using rectangular_layout_templates.timer_rectangular."
+      ]
+    },
+    "last_message": {
+      "rules": [
+        "Message previews need rectangular text space."
+      ]
+    },
+    "iot_control": {
+      "rules": [
+        "Visible controls require rectangular rendering.",
+        "Device control, toggle, turn on/off, setpoint, room, thermostat, temperature, light, fan, heater, AC, lock/unlock, or adjustment requests should use generated_rectangular_widget so device name, state, and action remain readable.",
+        "Passive compact device status may use a circular widget only when no control action or setpoint/detail text is needed."
+      ]
+    },
+    "music_control": {
+      "renderingConstraints": {
+        "allowedShapes": [
+          "rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.music_control",
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
+      },
+      "rules": [
+        "Visible playback controls require rectangular rendering.",
+        "Must use rectangular_layout_templates.music_control when rendered."
+      ]
+    },
+    "reminder": {
+      "renderingConstraints": {
+        "allowedShapes": [
+          "rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.reminder",
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json"
+      },
+      "rules": [
+        "Visible mark complete controls require rectangular rendering.",
+        "Must use rectangular_layout_templates.reminder when rendered."
+      ]
+    },
+    "checklist": {
+      "renderingConstraints": {
+        "allowedShapes": [
+          "full_watch_face_rectangular"
+        ],
+        "rectangularTemplate": "rectangular_layout_templates.checklist_full_face",
+        "templateCatalog": "rectangular-widget-guidelines/rectangular-widget-catalog.json",
+        "mustBeOnlyWidget": true
+      },
+      "rules": [
+        "Checklist is a locked full-face Figma component; fill content only.",
+        "Must use rectangular_layout_templates.checklist_full_face.",
+        "Must be the only widget on the watch face.",
+        "Must preserve widget frame x=0 y=0 width=205 height=251; date slot x=16 y=16 width=70 height=22; time slot x=139 y=16 width=50 height=22 right-aligned SF Compact Regular 19pt; title slot x=16 y=42; list region x=6 y=71 width=193.",
+        "Do not generate a separate large watch-face time/date stack or any extra widgets around checklist."
+      ]
+    }
+  }
+}

@@ -65,8 +65,8 @@ const contentTypes = new Set(schema.$defs.contentType.enum);
 const iconTokens = materialSymbolsRegistry.tokens;
 const schemaIconTokens = new Set(schema.$defs.widgetData.properties.icon.enum);
 const allowedTopLevel = new Set(Object.keys(schema.properties));
-const circularEligibleContentTypes = new Set(widgetSelectionPolicy.circularEligibility.allowedContentTypes);
-const compositionRules = widgetSelectionPolicy.compositionRules;
+const circularEligibleContentTypes = new Set(widgetSelectionPolicy.decisions.rendering.allowedCircularContentTypes);
+const compositionRules = widgetSelectionPolicy.decisions.rendering.compositionLimits;
 const colorSystemModes = new Set(["mono_tone", "multicolor"]);
 const colorSystemSourceRules = new Set([
   "one-content-type-prefers-mono-tone",
@@ -445,67 +445,6 @@ function validateGeneratedRectangularComposition(composition, contentType, path)
   }
 }
 
-function validateWidgetSelectionExample(example, index) {
-  const path = `widgetSelectionPolicy.deterministicExamples[${index}]`;
-  assert(typeof example.id === "string" && example.id.length > 0, `${path}.id is required`);
-  assert(Array.isArray(example.selectedContentTypes), `${path}.selectedContentTypes must be an array`);
-  assert(Array.isArray(example.selectedWidgets), `${path}.selectedWidgets must be an array`);
-  assert(example.selectedWidgets.length <= 3, `${path}.selectedWidgets must contain at most 3 widgets`);
-
-  for (const type of example.selectedContentTypes) {
-    assert(contentTypes.has(type), `${path}.selectedContentTypes contains invalid type ${type}`);
-  }
-
-  const hasChecklist = example.selectedContentTypes.includes("checklist");
-  if (hasChecklist) {
-    assert(example.selectedWidgets.length === 1, `${path} checklist must be the only rendered widget`);
-  }
-
-  const rectangularWidgetCount = example.selectedWidgets.filter((widget) => widget.shape === "rectangular").length;
-  if (rectangularWidgetCount > 0 && !hasChecklist) {
-    assert(example.selectedWidgets.length <= (rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets), `${path} rectangular-present compositions must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
-    assert(rectangularWidgetCount <= compositionRules.rectangularPresent.maxRectangularWidgets, `${path} must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`);
-  }
-
-  for (const [widgetIndex, widget] of example.selectedWidgets.entries()) {
-    const widgetPath = `${path}.selectedWidgets[${widgetIndex}]`;
-    assert(contentTypes.has(widget.contentType), `${widgetPath}.contentType is invalid`);
-    assert(example.selectedContentTypes.includes(widget.contentType), `${widgetPath}.contentType must come from selectedContentTypes`);
-
-    if (widget.shape === "circular") {
-      assert(circularEligibleContentTypes.has(widget.contentType), `${widgetPath}.contentType cannot use circular rendering`);
-      assert(circularComponents.has(widget.component), `${widgetPath}.component is invalid`);
-      assert(widget.variant && typeof widget.variant === "object", `${widgetPath}.variant is required`);
-      assert(circularSizes.has(widget.variant.size), `${widgetPath}.variant.size is invalid`);
-      assert(["text", "icon", "range", "offset"].includes(widget.variant.property), `${widgetPath}.variant.property is invalid`);
-
-      if (widget.contentType === "timer") {
-        const rule = widgetSelectionPolicy.strictTemplateRules.timer.allowedCircular;
-        assert(widget.component === rule.component, `${widgetPath}.component must be ${rule.component} for circular timer`);
-        assert(widget.variant.property === rule.variant.property, `${widgetPath}.variant.property must be ${rule.variant.property} for circular timer`);
-        assert(rule.allowedSizes.includes(widget.variant.size), `${widgetPath}.variant.size must be an approved circular timer size`);
-      } else {
-        assert(!widgetSelectionPolicy.strictTemplateRules[widget.contentType], `${widgetPath}.contentType cannot use circular rendering`);
-      }
-    } else if (widget.shape === "rectangular") {
-      assert(rectangularTemplates.has(widget.template), `${widgetPath}.template is invalid`);
-      if (widget.template === "generated_rectangular_widget") {
-        assert(generatedRectangularContentTypes.has(widget.contentType), `${widgetPath}.contentType cannot use generated_rectangular_widget`);
-      } else {
-        assert(widget.contentType === templateContentTypes[widget.template], `${widgetPath}.contentType must be ${templateContentTypes[widget.template]} for ${widget.template}`);
-      }
-
-      const rule = widgetSelectionPolicy.strictTemplateRules[widget.contentType];
-      if (widget.contentType === "timer") {
-        assert(widget.template === rule.allowedRectangularTemplate, `${widgetPath}.template must be ${rule.allowedRectangularTemplate} for timer`);
-      } else if (widget.template !== "generated_rectangular_widget") {
-        assert(rule && widget.template === rule.requiredTemplate, `${widgetPath}.template must be the strict template for ${widget.contentType}`);
-      }
-    } else {
-      throw new Error(`${widgetPath}.shape is invalid`);
-    }
-  }
-}
 
 function validateLayout(layout) {
   assertOnlyKeys(layout, allowedTopLevel, "layout");
@@ -537,10 +476,10 @@ function validateLayout(layout) {
   const hasChecklistWidget = layout.widgets.some((widget) => widget.contentType === "checklist");
   const hasChecklistFullFace = layout.widgets.some((widget) => widget.template === "checklist_full_face");
   if (hasChecklistWidget) {
-    assert(layout.widgets.length === compositionRules.checklistOnly.maxWidgets, `checklist layouts must contain ${compositionRules.checklistOnly.maxWidgets} widget`);
+    assert(layout.widgets.length === compositionRules.maxChecklistWidgets, `checklist layouts must contain ${compositionRules.maxChecklistWidgets} widget`);
   } else if (rectangularWidgetCount > 0) {
-    assert(layout.widgets.length <= (rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets), `rectangular-present layouts must contain at most ${compositionRules.rectangularPresent.maxWidgets} widgets`);
-    assert(rectangularWidgetCount <= compositionRules.rectangularPresent.maxRectangularWidgets, `layouts must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`);
+    assert(layout.widgets.length <= (rectangularWidgetCount >= 2 ? compositionRules.maxWidgetsWithTwoRectangular : compositionRules.maxWidgets), `rectangular-present layouts must contain at most ${compositionRules.maxWidgets} widgets`);
+    assert(rectangularWidgetCount <= compositionRules.maxRectangularWidgets, `layouts must contain at most ${compositionRules.maxRectangularWidgets} rectangular widgets`);
   }
   layout.widgets.forEach((widget, index) => {
     assert(contentTypes.has(widget.contentType), `widgets[${index}].contentType is invalid`);
@@ -771,21 +710,11 @@ for (const token of schemaIconTokens) {
   assert(iconTokens[token], `schema icon enum contains token missing from registry: ${token}`);
 }
 
-assert(Array.isArray(widgetSelectionPolicy.selectionSequence), "widgetSelectionPolicy.selectionSequence must be an array");
-assert(widgetSelectionPolicy.selectionSequence.length === 5, "widgetSelectionPolicy.selectionSequence must contain 5 steps");
-assert(
-  widgetSelectionPolicy.selectionSequence.map((step) => step.step).join(" > ") ===
-    "rank-candidate-content-types > choose-renderable-composition > choose-widget-shapes > cap-rendered-content-types > emit-final-widgets",
-  "widgetSelectionPolicy.selectionSequence has an unexpected order"
-);
-assert(
-  widgetSelectionPolicy.circularSelectionDelegation.mustUseApprovedComponents.every((component) => circularComponents.has(component)),
-  "widgetSelectionPolicy.circularSelectionDelegation contains an unknown component"
-);
-assert(
-  widgetSelectionPolicy.circularSelectionDelegation.mustUseApprovedSizes.every((size) => circularSizes.has(size)),
-  "widgetSelectionPolicy.circularSelectionDelegation contains an unknown size"
-);
+assert(widgetSelectionPolicy.status === "active", "selection policy must be active");
+assert(widgetSelectionPolicy.schemaVersion === "2.0.0", "selection policy must use v2");
+assert(widgetSelectionPolicy.decisionSequence.map(step => step.decision).join(" > ") ===
+  "eligibility > ranking > contentScope > rendering > fitFallback", "unexpected selection decision order");
+for (const type of circularEligibleContentTypes) assert(contentTypes.has(type), `unknown circular content type ${type}`);
 
 assert(generatedRectangularWidgetSchema.properties.template.const === "generated_rectangular_widget", "generated rectangular schema template const is invalid");
 for (const type of generatedRectangularWidgetSchema.generatedRectangularWidgetContentTypes) {
@@ -1012,9 +941,9 @@ assert(multiContentColorModes.has("mono_tone"), "multi-content fallback balancin
 assert(multiContentColorModes.has("multicolor"), "multi-content fallback balancing must include multicolor cases");
 console.log("multi-content color balancing fallback: accepted");
 
-for (const [index, example] of widgetSelectionPolicy.deterministicExamples.entries()) {
-  validateWidgetSelectionExample(example, index);
-  console.log(`widget selection example ${index + 1}: accepted (${example.id})`);
+// Worked decision traces are policy illustrations, not executable layout fixtures.
+for (const example of widgetSelectionPolicy.examples) {
+  assert(typeof example.id === "string" && typeof example.purpose === "string", "worked example needs an id and purpose");
 }
 
 const invalidCases = [

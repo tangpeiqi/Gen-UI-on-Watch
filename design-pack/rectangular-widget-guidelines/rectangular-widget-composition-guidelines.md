@@ -1,10 +1,71 @@
-# Rectangular Widget Composition Guidelines
+# Rectangular widget design guide
 
-This document defines the atomic visual units available for composing rectangular widgets in the generative watch face. The generated composition schema owns allowed fields and blocks; the selection policy owns strict-template overrides and composition caps. Checklist uses its fixed component slots instead of the general container and time/date rules.
+Design already-selected rectangular content through either a strict template or the generated composition grammar. Selection policy owns rank, scope, shape, count, strict-template assignment, and recovery. Content types own semantics and formulas. This guide owns internal composition and required dimensions; generation guide owns placement and theme assignment.
 
-## Design Intent
+## 1. Consume selected content and the assigned template
 
-Rectangular widgets should be built from a small set of repeatable typographic, icon, and control units. The generator should choose from these units, preserve their visual roles, and compose them inside the rectangular widget container without inventing new type sizes, weights, icon sizes, or control styles.
+Receive content type, selected groups, required and selected optional fields, displayed details/controls, and the assigned template. Preserve relationships among values, goals, labels, and actions. Follow the shared content-preservation contract in ../README.md.
+
+Use eligible data and synthetic demo completion authorized upstream by selection policy; preserve provenance internally. Do not fill component slots with independently invented facts. Available optional metadata is not automatically selected for display.
+
+Selection can propose a representation and request its dimensions before finalizing companion widgets. Return the actual required height; do not force the content into 108px to obtain a preferred composition. The policy owns that threshold and its consequences.
+
+## 2A. Strict-template design path
+
+1. Read the assigned catalog entry and matching visual spec. Music, reminder, rectangular timer, and checklist use their assigned strict templates; do not borrow them for other content types.
+2. Map selected data and supported actions/state into the declared slots. Check taxonomy-to-component naming, such as `play_pause_action` to the supported playback control input.
+3. Preserve required regions, control slots, fixed typography, and dimensions. Do not rearrange or add slots.
+4. Verify that all selected information fits and all required inputs are available. Return incompatibilities to the owning policy stage; do not silently omit information or invent action behavior.
+
+### Checklist full-face exception
+
+Use the locked `checklist_full_face` visual spec, including its title/list structure and component-owned time/date slots. Its frame is 205 × 251 at the origin. Model-authored content fills supported title, items, and checked/completed state. Selection owns standalone eligibility; ordinary face placement and external time/date stacking do not apply.
+
+> **REVIEW_REQUIRED RECT-01 — Fixed-template overflow and checklist access.** Full wrapping can exceed fixed music/reminder/timer slots. Checklist taxonomy calls for a scrollable list, while RectangularWidgets.tsx currently slices to four items. Review full-content access and overflow behavior for each template. Do not shrink fonts, silently cut items, or enlarge locked geometry as an undocumented repair.
+
+## 2B. Generated-composition design path
+
+1. Use `generated_rectangular_widget` and generated-rectangular-widget-schema.json for content assigned that representation.
+2. Map selected fields to approved blocks: `text`, `inline_small_icon_text`, `big_icon_text_group`, `number_text_lockup`, and `edge_progress_bar`.
+3. Establish the primary value/message, identifying context, and supporting selected details using the approved typography roles. Use supported horizontal/vertical composition, gaps, padding, and block limits.
+4. Wrap all text and calculate required height from actual content, icons, padding, gaps, and edge bars. Check all lines remain visible.
+5. Validate against the schema and report unsupported selected information instead of inventing blocks or controls.
+
+For `last_message`, sender/timestamp may use the inline message icon; message content must be plain text without an icon. Plain text uses `unit`; inline icon text uses `textUnit` with body, body_emphasis, or secondary. Semantic icons must come from material-symbols-registry.json.
+
+> **REVIEW_REQUIRED RECT-02 — Generated controls are not represented by the grammar.** IoT may select `control_action`, but the five approved blocks contain no general action-control block. Radio-button primitives in the reference do not authorize a new generated block. Review the required schema/renderer capability or supported representation before claiming such a widget can render.
+
+## 3. Map and format content
+
+Keep required and selected optional fields represented. Equivalent compact formatting is allowed; removing groups, selected details, or controls is a content-scope change governed by policy. Do not turn an action into decorative text and call it a control. Follow the derived-metric guidance below for labels and bounded fills.
+
+> **REVIEW_REQUIRED RECT-03 — Semantic-to-template field coverage.** Catalog required/optional fields do not fully match taxonomy requirements (for example reminder completion action, timer total duration/actions, and checklist title/completed state/action). Review explicit adapters and visible/action coverage. Preserve existing output fields; do not invent schema properties to bridge the mismatch.
+
+## 4. Resolve dimensions and overflow
+
+Regular rectangles are full width. Visual specs own exact typography, geometry, padding, and strict-template sizes; the generated schema owns supported fields and numeric bounds. Preserve 16px padding except the attached edge of an edge progress bar, which uses zero padding. Compute wrapped-content height before whole-face placement; outer clipping is not permission to hide required content.
+
+Do not truncate, ellipsize, line-clamp, emit `maxLines`, or shrink fixed typography. Try supported internal arrangements that preserve selected information. If none fit the permitted contract, report the incompatibility. Whole-face recovery follows the selection policy's ordered `fitFallback`; do not independently remove optional blocks.
+
+> **REVIEW_REQUIRED RECT-04 — Height contracts disagree.** The previous runtime prose allowed generated heights 108–251px, while generated-rectangular-widget-schema.json permits 108–180px. Review the intended supported range and align schema, validation, renderer, and examples together. For current output, obey the schema; a required height outside its range is an incompatibility, not permission to clamp or clip. The selection policy's 108px branch and generation guide's two-rectangle budget are separate composition decisions.
+
+## 5. Apply the supplied theme
+
+Consume the accent pair and `surfaceMode` assigned by generation guide. Apply those roles through visual specs: dark background/white foreground for accent_surface, black background/light-accent foreground for black_surface, with the prescribed secondary opacity. Keep geometry unchanged. Always emit the supported surfaceMode field.
+
+> **REVIEW_REQUIRED RECT-05 — Surface assignment conflict.** The catalog restricts two rectangles to one accent_surface, but generation guide permits either surface for the additional rectangle. Generation guide owns assignment. Review and align the catalog and runtime checks; local templates must not independently choose a competing assignment. Also reconcile the catalog's off-white secondary token with the guide's white-at-60% contract.
+
+## 6. Validate and hand off
+
+Check selected-field/action coverage, strict-template preservation or generated-schema validity, full text visibility, metric meaning, supported icons, and required dimensions. Hand the complete internal design to face composition, which supplies final placement/theme without changing geometry. Do not emit unsupported reasoning or diagnostic fields.
+
+Review markers below and above identify editorial decisions, not extra output fields or permission to relax contracts. See ../widget-guidelines-review.md for the shared index.
+
+## Detailed component and composition reference
+
+The retained reference below documents existing units, patterns, and strict-template anatomy. Catalogs own component inputs; visual specs own exact fixed tokens; the generated schema owns allowed blocks/fields. Repeated token tables are reference copies, not independent authorities. The design procedure above governs content preservation and stage boundaries.
+
+> **REVIEW_REQUIRED SHARED-01 — Repeated specification ownership.** Markdown/YAML, catalog JSON, visual specs, and TSX still repeat some tokens and guidance. Audit parity and derive or remove duplicate copies in a follow-up; do not change fixed visual tokens during this structural pass. Some generated-unit/pattern definitions currently exist only in this reference, so retain them until an authoritative structured replacement exists.
 
 ## Atomic Units
 
@@ -154,7 +215,7 @@ atomic_units:
 - Use 0 letter spacing.
 - Let text width and height be determined by the actual text content and the widget layout.
 - Never truncate, ellipsize, or line-clamp rectangular-widget text. If text does not fit on the current line, wrap it to the next line below.
-- Choose short enough text, fewer blocks, a vertical composition, or a taller rectangular frame so every wrapped line remains visible inside the widget bounds.
+- Use equivalent compact formatting, a vertical composition, or a taller permitted frame so every wrapped line remains visible. Removing selected fields or groups requires an explicit content-scope revision under selection policy.
 - Do not use `maxLines` or any equivalent clamping hint in `generated_rectangular_widget` composition.
 - Keep text vertically centered in its layout region.
 - Do not synthesize additional text styles unless a future guideline explicitly adds them.
@@ -190,7 +251,7 @@ colors:
 - On `black_surface`, text, Material Symbols icons, and progress-bar values use the light role of `widget_accent_color`; secondary text and icons use the same light accent at 60% opacity.
 - On `accent_surface`, the widget background uses the dark role of `widget_accent_color`; text, Material Symbols icons, and progress-bar values use white; secondary text and icons use white at 60% opacity.
 - Icon containers have no fill.
-- `widget_accent_color` is resolved by `generation-guide.md` using `widget-content-types.md`, `widget-content-types.json`, and other layout or context factors.
+- `widget_accent_color` is assigned exclusively by `generation-guide.md`; consume its resolved theme inputs.
 - Progress bars use a muted base layer and a value layer that aligns with the widget's chosen accent color.
 - Radio buttons use a muted stroke when unselected and a full-opacity stroke plus inner dot when selected.
 
@@ -601,35 +662,6 @@ rectangular_layout_templates:
 - Do not use Progress Bar as an arbitrary divider between text rows.
 - Do not invent extra variants of these lockups unless the guideline adds them.
 
-## Composition Placeholders
-
-The following sections are intentionally left as placeholders for the next design pass:
-
-- Widget anatomy
-- Required and optional regions
-- Alignment rules
-- Text truncation behavior
-- Data binding rules
-- Empty, loading, and error states
-- Accepted and rejected examples
-
-## Runtime widget design contract
-
-- Consume the selected content type, rectangular shape, and permitted template from widget-selection-policy.json. Finalize the widget's content, internal design, and required dimensions before watch-face placement. Strict templates preserve their required regions and only substitute supported content/state.
-- For generated_rectangular_widget, follow generated-rectangular-widget-schema.json, not a copied example as an alternative grammar. The frame width is 205, height is 108–251 subject to whole-face feasibility, cornerRadius is 54, cornerSmoothing is 60, and composition.padding is required. Use only the schema's supported layout, gap, and block fields.
-- Use 16px internal padding on all sides, except top edge progress bars use 0px top padding and bottom edge progress bars use 0px bottom padding. Other sides remain 16px. Strict components retain their fixed internals.
-- inline_small_icon_text.textUnit supports body, body_emphasis, or secondary; never primary. Plain text blocks use unit, not textUnit.
-- For last_message, the sender/timestamp line may use inline_small_icon_text with the message icon. Message content must be plain text without an icon.
-- Text must wrap in full; never truncate, ellipsize, line-clamp, or emit maxLines. Calculate required height from text wrapping, icons, controls, padding, and gaps. Shorten optional copy or reduce optional blocks when necessary; preserve required information and fixed typography.
-- Prioritize required metadata over optional detail. Populate available context data only; do not invent missing real-world values. Use compatible semantic icon tokens from material-symbols-registry.json.
-- Accept the face theme, semantic light/dark accents, and surfaceMode role from generation-guide.md. accent_surface uses the dark accent background with white text/icons; black_surface uses black with the assigned light accent. Apply secondary opacity and other details from the visual specs. Always include surfaceMode.
-- If completed widgets cannot fit with time/date, return to widget design for optional-detail reduction or to selection under widget-selection-policy.json. Do not silently shrink fonts or discard higher-priority content during face composition.
-
-### Checklist fixed component contract
-
-checklist_full_face is a locked full-face component. Its frame is {x:0,y:0,width:205,height:251}, verticalAlignment is top, surfaceMode is accent_surface, cornerRadius is 54, and cornerSmoothing is 60. Model-authored widget content is data.title, data.items, and supported checked/completed state only. Preserve the fixed visual-spec title/list structure.
-
-The component supplies the top-level date slot {x:16,y:16,width:70,height:22} and time slot {x:139,y:16,width:50,height:22}. Time uses one right-aligned compact container with SF Compact Regular 19pt. Do not add an external large time/date stack. These fixed slots override general face stacking, anchoring, prominence, and widget/date-overlap rules. Selection and standalone eligibility remain owned by widget-selection-policy.json.
 
 ## Derived metric rendering
 
@@ -642,7 +674,7 @@ Shape selection and fixed-template requirements remain owned by `../widget-selec
 | Timer: `remaining_progress` | Linear progress bar for remaining time, full at 1 and empty at 0, within the required timer template. |
 
 
-Required metadata takes priority over optional metadata; include optional values when available and space permits. Rendering must not change the underlying derived metric. Keep ratios above 1 intact even when a bounded visual fill is capped. A completed workout must not be drawn as 100% solely because it ended.
+Preserve required and selected optional metadata. Do not add available but unselected fields or remove selected fields independently. Rendering must not change the underlying derived metric. Keep ratios above 1 intact even when a bounded visual fill is capped. A completed workout must not be drawn as 100% solely because it ended.
 
 Use `min(1, max(0, ratio))` for bounded bar fill. Preserve the actual ratio in percentage labels: a ratio of 1.5 is labeled “150% of daily limit” for sitting or “150% of daily goal” for standing/walking, even when the bar is full. Exceeding the sitting limit must not be presented as positive goal achievement. Timer progress already has a defined range of 0–1; use it directly, decreasing as the timer counts down.
 

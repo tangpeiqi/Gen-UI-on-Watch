@@ -20,7 +20,7 @@ assert.strictEqual(payload.layoutSchema, pack.schema);
 assert.strictEqual(payload.generatedRectangularWidgetSchema, pack.generatedRectangularWidgetSchema);
 assert.strictEqual(payload.widgetDesignResources, pack.widgetDesignResources);
 assert.strictEqual(payload.widgetDesignResources.circular.visualSpecs, pack.circularVisualSpecs);
-for (const [shape, path] of [["circular", "circular-widget-guidelines/README.md"], ["rectangular", "rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md"]]) {
+for (const [shape, path] of [["circular", "circular-widget-guidelines/circular-widget-design-guidelines.md"], ["rectangular", "rectangular-widget-guidelines/rectangular-widget-composition-guidelines.md"]]) {
   assert.strictEqual(payload.widgetDesignResources[shape].guidelines, fs.readFileSync(`design-pack/${path}`, "utf8"));
   assert.ok(payload.widgetDesignResources[shape].catalog);
   assert.ok(payload.widgetDesignResources[shape].visualSpecs);
@@ -75,7 +75,8 @@ for (const component of catalog.components) {
     assert.deepEqual(frame, payload.circularTokens[size].frame, `${component.id}/${size} catalog size drift`);
   }
 }
-assert.ok(pack.widgetSelectionPolicy.strictTemplateRules.timer.allowedCircular.allowedSizes.includes("L"), "Solo timer must allow the runtime's L size");
+assert.equal(pack.widgetSelectionPolicy.status, "active", "Runtime must load the official policy");
+assert.ok(pack.widgetSelectionPolicy.decisions.rendering.allowedCircularContentTypes.includes("timer"));
 console.log("Design pack: prompt source, policy, raw examples, shared tokens, and catalog sizes verified.");
 
 // Check count policy independently of geometry: adding cloned widgets can cause

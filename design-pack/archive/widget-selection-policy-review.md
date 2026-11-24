@@ -1,6 +1,8 @@
-# Widget selection policy draft review
+# Widget selection policy review
 
-Reviewed 2026-11-03 against `widget-selection-policy.json` (1.2.0), the current draft, taxonomy, generation guide, and widget catalogs. This is a policy comparison and example review, not runtime activation or a rendered-layout test. The phrase “privacy review” is interpreted in the conversation's context as the final policy review; this is not a privacy/security audit of the application.
+Promotion update, 2026-11-20: the reviewed policy is now official at [widget-selection-policy.json](../widget-selection-policy.json), version 2.0.0. The separate draft has been removed. The retired v1 policy is historical only. Runtime policy readers now consume the v2 structure. The terminal fit-fallback decision remains open; promotion does not invent a sixth recovery step. The remainder records the historical review and is not a competing policy.
+
+Reviewed 2026-11-03 against `widget-selection-policy.v1.retired.json` (1.2.0), the then-current draft, taxonomy, generation guide, and widget catalogs. This is a policy comparison and example review, not runtime activation or a rendered-layout test. The phrase “privacy review” is interpreted in the conversation's context as the final policy review; this is not a privacy/security audit of the application.
 
 ## Old policy coverage
 

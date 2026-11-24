@@ -27,8 +27,8 @@ export function createLayoutValidator({
   const contentTypes = new Set(schema.$defs.contentType.enum);
   const iconTokens = materialSymbolsRegistry.tokens;
   const allowedTopLevel = new Set(Object.keys(schema.properties));
-  const circularEligibleContentTypes = new Set(widgetSelectionPolicy.circularEligibility.allowedContentTypes);
-  const compositionRules = widgetSelectionPolicy.compositionRules;
+  const circularEligibleContentTypes = new Set(widgetSelectionPolicy.decisions.rendering.allowedCircularContentTypes);
+  const compositionRules = widgetSelectionPolicy.decisions.rendering.compositionLimits;
   const colorSystemModes = new Set(["mono_tone", "multicolor"]);
   const colorSystemSourceRules = new Set([
     "one-content-type-prefers-mono-tone",
@@ -783,12 +783,12 @@ export function createLayoutValidator({
     if (!hasChecklistFullFace(layout) && layout.date.style.fontSize > largestTimeFontSize * 0.45) errors.push(error("rule", "date_not_secondary", "date.style.fontSize", "date must remain visually secondary to time"));
     const rectangularWidgetCount = layout.widgets.filter((widget) => widget.shape === "rectangular").length;
     const hasChecklistWidget = layout.widgets.some((widget) => widget.contentType === "checklist");
-    if (hasChecklistWidget && layout.widgets.length !== compositionRules.checklistOnly.maxWidgets) {
-      errors.push(error("rule", "checklist_must_be_only_widget", "widgets", `checklist layouts must contain ${compositionRules.checklistOnly.maxWidgets} widget`));
+    if (hasChecklistWidget && layout.widgets.length !== compositionRules.maxChecklistWidgets) {
+      errors.push(error("rule", "checklist_must_be_only_widget", "widgets", `checklist layouts must contain ${compositionRules.maxChecklistWidgets} widget`));
     } else if (rectangularWidgetCount > 0) {
-      const maxWidgets = rectangularWidgetCount >= 2 ? compositionRules.rectangularPresent.maxWidgetsWithTwoRectangular : compositionRules.rectangularPresent.maxWidgets;
+      const maxWidgets = rectangularWidgetCount >= 2 ? compositionRules.maxWidgetsWithTwoRectangular : compositionRules.maxWidgets;
       if (layout.widgets.length > maxWidgets) errors.push(error("rule", "rectangular_present_widget_cap", "widgets", `layouts with ${rectangularWidgetCount} rectangular widgets must contain at most ${maxWidgets} widgets`));
-      if (rectangularWidgetCount > compositionRules.rectangularPresent.maxRectangularWidgets) errors.push(error("rule", "rectangular_count_cap", "widgets", `layouts must contain at most ${compositionRules.rectangularPresent.maxRectangularWidgets} rectangular widgets`));
+      if (rectangularWidgetCount > compositionRules.maxRectangularWidgets) errors.push(error("rule", "rectangular_count_cap", "widgets", `layouts must contain at most ${compositionRules.maxRectangularWidgets} rectangular widgets`));
     }
     layout.widgets.forEach((widget, index) => {
       const path = `widgets[${index}]`;

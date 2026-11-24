@@ -73,7 +73,7 @@ export function loadDesignPack(cwd = process.cwd()) {
     widgetContentTypes: readJson("design-pack/widget-content-types.json"),
     widgetDesignResources: {
       circular: {
-        guidelines: fs.readFileSync(`${cwd}/design-pack/circular-widget-guidelines/README.md`, "utf8"),
+        guidelines: fs.readFileSync(`${cwd}/design-pack/circular-widget-guidelines/circular-widget-design-guidelines.md`, "utf8"),
         catalog: readJson("design-pack/circular-widget-guidelines/circular-widget-catalog.json"),
         visualSpecs: circularVisualSpecs
       },

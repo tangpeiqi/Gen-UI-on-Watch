@@ -1,5 +1,7 @@
 # Design pack ownership
 
+The official selection policy is [widget-selection-policy.json](widget-selection-policy.json), version 2.0.0, promoted from the reviewed draft. Retired versions under `archive/` are historical only.
+
 Use one owner for each decision. generation-guide.md is the sole watch-face layout guide; selection and widget-internal instructions live in their own resources.
 
 | Owner | Responsibility |
@@ -18,15 +20,23 @@ Use one owner for each decision. generation-guide.md is the sole watch-face layo
 Follow these stages in order within each generation request; they are not separate API calls:
 
 1. **Select widgets.** Read widgetSelectionPolicy first, using live/past context and widgetContentTypes. Rank content and determine the retained content types, widget count, circular/rectangular shapes, strict templates, and applicable size constraints. Selection decisions belong only to that policy.
-2. **Design widgets.** Read the matching widgetDesignResources. Populate real available data and semantic icons, resolve component/property variants or rectangular blocks, and finalize each widget's internal design and required dimensions using its catalog, grammar, and visual specs. Preserve strict component internals. Every widget must be concrete and complete before face composition.
+2. **Design widgets.** Read the matching widgetDesignResources. Use eligible data and permitted synthetic demo completion under the policy, select semantic icons, resolve component/property variants or rectangular blocks, and finalize each widget's internal design and required dimensions using its catalog, grammar, and visual specs. Preserve strict component internals. Every widget must be concrete and complete before face composition.
 3. **Compose the watch face.** Apply generationGuide to the completed widgets. Place widgets, reserve date space, size and place time/date, establish hierarchy/layers, and select the face theme and semantic accents. Widget specs apply theme inputs internally without changing the completed geometry.
-4. **Validate the result.** Check the layout schema, selection policy, widget contracts, and face rules. If the face does not fit, return to widget design to simplify optional detail or to selection according to its policy; then repeat face composition and validation. Never silently shrink fixed widget typography or substitute lower-ranked content during placement. Checklist's component-owned full-face slots remain fixed.
+4. **Validate the result.** Check the layout schema, selection policy, widget contracts, and face rules. If the face does not fit, follow `widgetSelectionPolicy.decisions.fitFallback` in its defined order, then repeat face composition and validation. Never silently shrink fixed widget typography or substitute lower-ranked content during placement. Checklist's component-owned full-face slots remain fixed.
 
 ## Boundary contracts
 
 **Color:** generation-guide.md owns theme selection, semantic accent pairs, palette coordination, and time/date colors. Widget resources own how supplied theme inputs apply to surfaces, text, icons, controls, and gauges. They do not select a competing face theme.
 
+**Content preservation:** Content types define available metadata; selection's content scope chooses groups and fields; widget design maps that selected information to supported visible slots and controls. Include required metadata for each selected group and preserve selected optional fields and goal-essential details. Do not add available but unselected fields merely to fill space, or silently remove selected fields to fit. Equivalent formatting may preserve meaning; removing information requires an explicit scope revision under the selection policy. Consume eligible observations and permitted upstream synthetic demo completion with their provenance preserved internally, without adding unsupported output fields.
+
 **Dimensions:** Widget design establishes content, internal composition, and required dimensions before face layout. Flexible widgets expose their permitted sizing bounds and full-content height requirements. Face composition positions those completed widgets; infeasible combinations return to an earlier stage rather than clipping content or inventing new font sizes.
+
+## Widget guideline entry points and review
+
+Read [circular guidelines](circular-widget-guidelines/README.md) or [rectangular guidelines](rectangular-widget-guidelines/README.md) for the common resource map and design procedure. Selection may request widget dimensions/feasibility before finalizing its representation and companion count; this is an exchange within the existing stages, not a new API call. Complete widget geometry before face composition; apply assigned theme roles afterward without changing geometry.
+
+Open decisions are indexed in [widget-guidelines-review.md](widget-guidelines-review.md). Search `REVIEW_REQUIRED` to find stable issue IDs and local explanations. Mark resolved items explicitly after their owning contracts and implementations agree.
 
 ## Time styling contract alignment
 
